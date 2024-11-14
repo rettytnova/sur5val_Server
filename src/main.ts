@@ -1,8 +1,8 @@
 import Server from './class/server.js';
 
-let server = new Server();
+const server: Server = new Server();
 
 function main() {
-  server.initializeProto();
+  server.start();
 }
 main();
