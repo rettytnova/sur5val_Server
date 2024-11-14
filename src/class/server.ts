@@ -11,8 +11,9 @@ class Server {
   getDir(): string {
     const __filename: string = fileURLToPath(import.meta.url);
     const __dirname: string = path.dirname(__filename);
-
-    return __dirname;
+    const protoDir = path.join(__dirname, '../../src/protobuf');
+    //console.log('protoroDir', protoDir);
+    return protoDir;
   }
 
   getAllFiles(
@@ -39,9 +40,16 @@ class Server {
       const protoFileDir: string = this.getDir();
       const protoFiles: string[] = this.getAllFiles(protoFileDir, '.proto');
 
+      console.log('filePath : ', protoFiles);
+
       const root = new protobuf.Root();
 
-      await Promise.all(protoFiles.map((file: string) => root.load(file)));
+      await Promise.all(
+        protoFiles.map((file: string) => {
+          console.log('file', file);
+          root.load(file);
+        }),
+      );
 
       for (const [packetName, types] of Object.entries(packetNames)) {
         this.protoMessages[packetName] = {};

@@ -1,7 +1,7 @@
 {
   "name": "sur5val",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "./dist/main.js",
   "type":"module",
   "scripts": {
     "server": "tsc && node ./dist/main.js",
