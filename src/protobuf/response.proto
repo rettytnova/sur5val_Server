@@ -1,0 +1,104 @@
+syntax = "proto3";
+
+package reponse;
+
+// 회원가입 요청 응답
+message S2CRegisterResponse {
+    bool success = 1;
+    string message = 2;
+    GlobalFailCode failCode = 3;
+}
+
+// 로그인 요청 응답
+message S2CLoginResponse {
+    bool success = 1;
+    string message = 2;
+    string token = 3;
+    UserData myInfo = 4;
+    GlobalFailCode failCode = 5;
+}
+
+// 방 생성 요청 응답
+message S2CCreateRoomResponse {
+    bool success = 1;
+    RoomData room = 2;
+    GlobalFailCode failCode = 3;
+}
+
+// 방 목록 요청 응답
+message S2CGetRoomListResponse{
+    repeated RoomData rooms = 1;
+}
+
+// 방 참가 요청 응답
+message S2CJoinRoomResponse {
+    bool success = 1;
+    RoomData room = 2;
+    GlobalFailCode failCode = 3;
+}
+
+// 방 랜덤 입장 요청 응답
+message S2CJoinRandomRoomResponse {
+    bool success = 1;
+    RoomData room = 2;
+    GlobalFailCode failCode = 3;
+}
+
+// 방 퇴장 요청 응답
+message S2CLeaveRoomResponse {
+    bool success = 1;
+    GlobalFailCode failCode = 2;
+}
+
+// 게임 준비 요청 응답
+message S2CGamePrepareResponse {
+    bool success = 1;
+    GlobalFailCode failCode = 2;
+}
+
+// 게임 시작 요청 응답
+message S2CGameStartResponse {
+    bool success = 1;
+    GlobalFailCode failCode = 2;
+}
+
+// 위치 동기화 요청 응답
+message S2CPositionUpdateResponse {
+    bool success = 1;
+    GlobalFailCode failCode = 2;
+}
+
+// 카드 사용 요청 응답
+message S2CUseCardResponse { // 성공 여부만 반환하고 대상 유저 효과는 S2CUserUpdateNotification로 통지
+    bool success = 1;
+    GlobalFailCode failCode = 2;
+}
+
+// 상점 아이템 선택 요청 응답
+message S2CFleaMarketPickResponse {
+    bool success = 1;
+    GlobalFailCode failCode = 2;
+}
+
+// 리액션(이모션) 요청 응답
+message S2CReactionResponse {
+    bool success = 1;
+    GlobalFailCode failCode = 2;
+}
+
+// 카드 삭제 요청 응답
+message S2CDestroyCardResponse {
+    repeated CardData handCards = 1;
+}
+
+// 디버프 넘기기 요청 응답
+message S2CPassDebuffResponse {
+    bool success = 1;
+    GlobalFailCode failCode = 2;
+}
+
+// 카드 선택 요청 응답
+message S2CCardSelectResponse {
+    bool success = 1;
+    GlobalFailCode failCode = 2;
+}

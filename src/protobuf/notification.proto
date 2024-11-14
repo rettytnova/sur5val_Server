@@ -1,0 +1,74 @@
+﻿syntax = "proto3";
+
+package notification;
+
+// 방 입장 알림
+message S2CJoinRoomNotification {
+    UserData joinUser = 1;
+}
+// 방 퇴장 알림
+message S2CLeaveRoomNotification {
+    string userId = 1;
+}
+// 게임 준비 알림
+message S2CGamePrepareNotification {
+    RoomData room = 1;
+}
+// 게임 시작 알림
+message S2CGameStartNotification {
+    GameStateData gameState = 1;
+    repeated UserData users = 2;
+    repeated CharcterPositionData characterPositions = 3;
+}
+// 위치 동기화 알림
+message S2CPositionUpdateNotification {
+    repeated CharacterPositionData characterPositions = 1;
+}
+// 카드 사용 알림
+message S2CUseCardNotification {
+    CardType cardType = 1;
+    string userId = 2;
+    string targetUserId = 3; // 타겟 없으면 빈 값
+}
+// 카드 장착 알림
+message S2CEquipCardNotification {
+    CardType cardType = 1;
+    string userId = 2;
+}
+// 카드 효과 알림
+message S2CCardEffectNotification {
+    CardType cardType = 1;
+    string userId = 2;
+    bool success = 3;
+}
+// 플리마켓 사용 알림
+message S2CFleaMarketNotification {
+    repeated CardType cardTypes = 1;
+    repeated int32 pickIndex = 2;
+}
+// 유저 상태 알림
+message S2CUserUpdateNotification {
+    repeated UserData user = 1;
+}
+// 페이즈(낮, 밤) 알림
+message S2CPhaseUpdateNotification {
+    PhaseType phaseType = 1; // DAY 1, EVENING 2, END 3
+    int64 nextPhaseAt = 2; // 다음 페이즈 시작 시점(밀리초 타임스탬프)
+    repeated CharacterPositionData characterPositions = 3; // 변경된 캐릭터 위치
+}
+
+// 게임 종료 알림
+message S2CGameEndNotification {
+    repeated string winners = 1;
+    WinType winType = 2;
+}
+// (폭탄 발동)경고 알림
+message S2CWarningNotification {
+    WarningType warningType = 1;
+    int64 expectedAt = 2; // 밀리초 타임스탬프
+}
+// 애니메이션(이펙트) 알림
+message S2CAnimationNotification {
+    string userId = 1;
+    AnimationType animationType = 2;
+}
