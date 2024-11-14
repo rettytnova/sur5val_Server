@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "server": "tsc && node ./dist/main.js",
+    "client": "tsc && node ./dist/dummyClient.js",
     "build": "tsc --build",
     "clean": "tsc --build --clean"
   },
