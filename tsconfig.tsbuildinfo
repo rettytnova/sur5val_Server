@@ -1,1 +1,1 @@
-{"root":["./src/main.ts","./src/class/server.ts","./src/config/config.ts","./src/events/ondata.ts","./src/events/onend.ts","./src/events/onerror.ts","./src/protobuf/packetnames.ts"],"version":"5.6.3"}
+{"root":["./src/dummyclient.ts","./src/main.ts","./src/class/server.ts","./src/config/config.ts","./src/events/ondata.ts","./src/events/onend.ts","./src/events/onerror.ts","./src/protobuf/packetnames.ts"],"version":"5.6.3"}
