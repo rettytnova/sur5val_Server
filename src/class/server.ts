@@ -8,15 +8,14 @@ import { config } from '../config/config.js';
 import { onData } from '../events/onData.js';
 import { onEnd } from '../events/onEnd.js';
 import { onError } from '../events/onError.js';
-
-interface SocketWithBuffer extends net.Socket { buffer: Buffer }
+import { CustomSocket } from '../interface/interface.js';
 
 class Server {
   private protoMessages: { [key: string]: any } = {};  
   private server: net.Server;
 
   constructor() {
-    this.server = net.createServer();
+    this.server = net.createServer(this.clientConnection);
   }
 
   getDir(): string {
@@ -70,14 +69,15 @@ class Server {
   
   clientConnection(socket : net.Socket)
   {
-    console.log(`Client connected from: ${socket.remoteAddress}:${socket.remotePort}`);
-    
-    const customSocket = socket as SocketWithBuffer;
+    const customSocket = socket as CustomSocket;
+
+    console.log(`Client connected from: ${socket.remoteAddress}:${socket.remotePort}`);    
+      
     customSocket.buffer = Buffer.alloc(0);
 
-    socket.on('data', onData(customSocket));
-    socket.on('end', onEnd(customSocket));
-    socket.on('error', onError(customSocket));
+    customSocket.on('data', onData(customSocket));
+    customSocket.on('end', onEnd(customSocket));
+    customSocket.on('error', onError(customSocket));
   }
 
   listen () {
