@@ -12,7 +12,7 @@ class Server {
     const __filename: string = fileURLToPath(import.meta.url);
     const __dirname: string = path.dirname(__filename);
     const protoDir = path.join(__dirname, '../../src/protobuf');
-    //console.log('protoroDir', protoDir);
+
     return protoDir;
   }
 
@@ -36,20 +36,14 @@ class Server {
   }
 
   async initializeProto() {
-    try {
+    try {      
       const protoFileDir: string = this.getDir();
-      const protoFiles: string[] = this.getAllFiles(protoFileDir, '.proto');
-
-      console.log('filePath : ', protoFiles);
+      const protoFiles: string[] = this.getAllFiles(protoFileDir, '.proto');      
 
       const root = new protobuf.Root();
 
-      await Promise.all(
-        protoFiles.map((file: string) => {
-          console.log('file', file);
-          root.load(file);
-        }),
-      );
+      // {} return 해줘야함
+      await Promise.all(protoFiles.map((file: string) => { return root.load(file) }));
 
       for (const [packetName, types] of Object.entries(packetNames)) {
         this.protoMessages[packetName] = {};
@@ -57,7 +51,6 @@ class Server {
           this.protoMessages[packetName][type] = root.lookupType(typeName);
         }
       }
-
       console.log('Protobuf 파일이 로드되었습니다.');
     } catch (err) {
       console.error('Protobuf 파일 로드 중 오류가 발생했습니다.', err);
