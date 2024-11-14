@@ -1,1 +1,35 @@
 ### sur5val_Server
+
+### 코드 컨벤션
+
+enum, 상수 : UPPER_CASE
+클래스 : PascalCase
+변수, 함수, 메서드 : camelCase
+파일명 : camelCase
+폴더명 : snake_case
+
+
+
+
+예외 >
+
+Boolean 타입 : 접두사 is_ 가 들어간 snake_case
+
+ex> is_car_available
+- src / main.js : 서버가 구동되는 main 파일
+
+
+#### tsconfig option
+"strict": true, 
+"target": "es2016",  
+"module": "NodeNext", // Node 최신모듈버전
+"moduleResolution": "NodeNext",
+"esModuleInterop": true, 
+
+"allowJs": true, 
+"checkJs": true, 
+"outDir": "./dist",  
+"rootDir": "./src",
+
+"forceConsistentCasingInFileNames": true,
+"skipLibCheck": true,
