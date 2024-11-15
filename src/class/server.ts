@@ -10,6 +10,7 @@ import { onEnd } from '../events/onEnd.js';
 import { onError } from '../events/onError.js';
 import { CustomSocket } from '../interface/interface.js';
 import DatabaseManager from '../database/databaseManager.js';
+import { getRedis } from '../database/redis.js';
 
 class Server {
   private static gInstance: Server | null = null;
@@ -112,6 +113,7 @@ class Server {
     DatabaseManager.getInstance().testAllDBConnection();
 
     this.initializeProto();
+
     this.listen();
   }
 }

@@ -14,6 +14,10 @@ const LOCK_DEFAULT_TTL = 5000; // 밀리초 단위의 기본 락 유지 시간
  * - 단일 데이터 제거
  *   await redisClient.del('myKey');
  *   console.log('Key "myKey" has been removed.');
+ * hset: 해시 필드 추가/업데이트.
+ * rpush, lpush: 리스트 데이터 추가.
+ * sadd: 집합(Set) 데이터 추가.
+ * zadd: 정렬된 집합 데이터 추가/업데이트.
  */
 
 interface RedisConfig {
