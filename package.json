@@ -14,13 +14,14 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "bcrypt": "^5.1.1",
     "dotenv": "^16.4.5",
     "joi": "^17.13.3",
-    "mysql": "^2.18.1",
-    "net": "^1.0.2",
+    "ioredis": "^5.4.1",
+    "mysql2": "^3.11.4",
     "protobufjs": "^7.4.0",
-    "uuid": "^11.0.3"
+    "uuid": "^11.0.3",
+    "bcrypt": "^5.1.1",
+    "net": "^1.0.2"
   },
   "devDependencies": {
     "nodemon": "^3.1.7",
