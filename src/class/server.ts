@@ -9,6 +9,7 @@ import { onData } from '../events/onData.js';
 import { onEnd } from '../events/onEnd.js';
 import { onError } from '../events/onError.js';
 import { CustomSocket } from '../interface/interface.js';
+import DatabaseManager from '../database/databaseManager.js';
 
 class Server {
   private static gInstance : Server | null = null;
@@ -103,6 +104,8 @@ class Server {
 
   start()
   {
+    DatabaseManager.getInstance().TestAllDBConnection();
+
     this.initializeProto();
     
     this.listen();
