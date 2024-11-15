@@ -104,7 +104,7 @@ class Server {
 
   start()
   {
-    DatabaseManager.getInstance().TestAllDBConnection();
+    DatabaseManager.getInstance().testAllDBConnection();
 
     this.initializeProto();
     
