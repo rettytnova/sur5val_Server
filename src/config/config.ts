@@ -1,3 +1,7 @@
+import dotenv from 'dotenv';
+
+dotenv.config();
+
 const PORT: number = 5555;
 const HOST: string = '127.0.0.1';
 
@@ -5,17 +9,32 @@ export const TOTAL_LENGTH = 11;
 export const VERSION_START = 3;
 export const SEQUENCE_SIZE = 4;
 
-export const TYPE_LENGTH = 2;
-export const VERSION_LENGTH = 1;
+const TYPE_LENGTH = 2;
+const VERSION_LENGTH = 1;
 export const CLIENT_VERSION = "1.0.0";
-export const SEQUENCE_LENGTH = 4;
-export const PAYLOAD_LENGTH = 4;
+const SEQUENCE_LENGTH = 4;
+const PAYLOAD_LENGTH = 4;
+
+const USER_DB_NAME = process.env.DB_NAME;
+const USER_DB_USER = process.env.DB_USER;
+const USER_DB_PASSWORD = process.env.DB_PASSWORD;
+const USER_DB_HOST = process.env.DB_HOST;
+const USER_DB_PORT = process.env.DB_PORT;
 
 export const config = {
     server: {
         port: PORT,
         host: HOST
     },
+    databases:{
+        userDB:{
+            name: USER_DB_NAME,
+            user: USER_DB_USER,
+            password: USER_DB_PASSWORD,
+            host: USER_DB_HOST,
+            port: USER_DB_PORT
+        }
+    },    
     packet: {
         typeLength: TYPE_LENGTH,
         versionLength: VERSION_LENGTH,
