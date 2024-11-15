@@ -30,7 +30,6 @@
     S2CLeaveRoomResponse: 'response.S2CLeaveRoomResponse',
     S2CGamePrepareResponse: 'response.S2CGamePrepareResponse',
     S2CGameStartResponse: 'response.S2CGameStartResponse',
-    S2CPositionUpdateResponse: 'response.S2CPositionUpdateResponse', // gamePacket.proto에서 누락됨
     S2CUseCardResponse: 'response.S2CUseCardResponse',
     S2CFleaMarketPickResponse: 'response.S2CFleaMarketPickResponse',
     S2CReactionResponse: 'response.S2CReactionResponse',
