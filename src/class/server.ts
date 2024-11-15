@@ -11,11 +11,21 @@ import { onError } from '../events/onError.js';
 import { CustomSocket } from '../interface/interface.js';
 
 class Server {
+  private static gInstance : Server | null = null;
   private protoMessages: { [key: string]: any } = {};  
   private server: net.Server;
 
-  constructor() {
+  private constructor() {
     this.server = net.createServer(this.clientConnection);
+  }
+
+  static getInstance(){
+    if(Server.gInstance === null)
+    {
+      Server.gInstance = new Server();
+    }
+
+    return Server.gInstance;
   }
 
   getDir(): string {
@@ -65,6 +75,10 @@ class Server {
     } catch (err) {
       console.error('Protobuf 파일 로드 중 오류가 발생했습니다.', err);
     }
+  }
+
+  getProtoMessages(){
+    return {...this.protoMessages};
   }
   
   clientConnection(socket : net.Socket)
