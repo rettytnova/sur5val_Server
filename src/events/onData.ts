@@ -55,7 +55,7 @@ export const onData = (socket: CustomSocket) => async (data: Buffer) => {
       if (socket.buffer.length >= length) {
         // 헤더부터 끝까지
         let payload = socket.buffer.subarray(offset, offset + payloadLength);
-        //console.log (`payload: ${payload}`)
+        //console.log(`payload: ${payload}`)
 
         const parsedData = packetParser(packetType, payload);
 
