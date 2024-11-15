@@ -5,6 +5,10 @@ dotenv.config();
 const PORT: number = 5555;
 const HOST: string = '127.0.0.1';
 
+export const REDIS_PORT = process.env.REDIS_PORT;
+export const REDIS_HOST = process.env.REDIS_HOST;
+export const REDIS_PASSWORD = process.env.REDIS_PASSWORD;
+
 export const TOTAL_LENGTH = 11;
 export const VERSION_START = 3;
 export const SEQUENCE_SIZE = 4;
