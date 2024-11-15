@@ -4,9 +4,9 @@ package request;
 
 // 회원가입 요청
 message C2SRegisterRequest {
-    string id = 1;
-    string password = 2;
-    string email = 3;
+    string email = 1;
+    string id = 2;
+    string password = 3;    
 }
 
 // 로그인 요청

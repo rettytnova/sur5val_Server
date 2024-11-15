@@ -50,7 +50,7 @@ const createRedisClient = (isSubscriber = false): Redis => {
 };
 
 // Redis에 연결합니다. 연결 실패 시 에러를 던집니다.
-export const connect = async (): Promise<void> => {
+export const connectRedis = async (): Promise<void> => {
   if (!redis) {
     redis = createRedisClient();
     console.info('Redis connected');
@@ -65,16 +65,11 @@ export const connect = async (): Promise<void> => {
   }
 };
 
-// 초기 Redis 연결용 함수
-export const connectRedis = async (): Promise<void> => {
-  await connect();
-};
-
 // Redis 클라이언트를 반환합니다.
 export const getRedis = async (): Promise<Redis> => {
   if (!redis) {
     console.warn('Redis is null. It will try to connect.');
-    await connect();
+    await connectRedis();
   }
   return redis as Redis;
 };
@@ -83,7 +78,7 @@ export const getRedis = async (): Promise<Redis> => {
 export const getSubscriberRedis = async (): Promise<Redis> => {
   if (!subscriberRedis) {
     console.warn('Subscriber Redis is null. It will try to connect.');
-    await connect();
+    await connectRedis();
   }
   return subscriberRedis as Redis;
 };
