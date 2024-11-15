@@ -4,28 +4,26 @@ import { v4 as uuidv4 } from 'uuid';
 const LOCK_DEFAULT_TTL = 5000; // 밀리초 단위의 기본 락 유지 시간
 
 /*
-* - Redis 클라이언트 가져오기
-*   const redisClient = await getRedis();
-* - 데이터 추가
-*   await redisClient.set('abc', '111'); // key, value
-*   console.log('Data added to Redis');
-* - 데이터 조회
-*   console.log('redis: ', await redisClient.get('abc'));
-* - 단일 데이터 제거
-*   await redisClient.del('myKey');
-*   console.log('Key "myKey" has been removed.');
-*/
+ * - Redis 클라이언트 가져오기
+ *   const redisClient = await getRedis();
+ * - 데이터 추가
+ *   await redisClient.set('abc', '111'); // key, value
+ *   console.log('Data added to Redis');
+ * - 데이터 조회
+ *   console.log('redis: ', await redisClient.get('abc'));
+ * - 단일 데이터 제거
+ *   await redisClient.del('myKey');
+ *   console.log('Key "myKey" has been removed.');
+ */
 
 interface RedisConfig {
   REDIS_HOST: string;
   REDIS_PORT: number;
-  REDIS_PASSWORD?: string;
 }
 
 const configs: RedisConfig = {
   REDIS_HOST: process.env.REDIS_HOST || '127.0.0.1',
   REDIS_PORT: parseInt(process.env.REDIS_PORT || '6379', 10),
-  REDIS_PASSWORD: process.env.REDIS_PASSWORD,
 };
 
 // Redis 클라이언트 변수 선언
@@ -36,7 +34,6 @@ const createRedisClient = (isSubscriber = false): Redis => {
   const client = new Redis({
     host: configs.REDIS_HOST,
     port: configs.REDIS_PORT,
-    password: configs.REDIS_PASSWORD,
   });
 
   client.on('error', (err: Error) => {

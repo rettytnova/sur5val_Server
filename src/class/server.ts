@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import net from "net";
+import net from 'net';
 import { fileURLToPath } from 'url';
 import { packetNames } from '../protobuf/packetNames.js';
 import protobuf from 'protobufjs';
@@ -12,17 +12,16 @@ import { CustomSocket } from '../interface/interface.js';
 import DatabaseManager from '../database/databaseManager.js';
 
 class Server {
-  private static gInstance : Server | null = null;
-  private protoMessages: { [key: string]: any } = {};  
+  private static gInstance: Server | null = null;
+  private protoMessages: { [key: string]: any } = {};
   private server: net.Server;
 
   private constructor() {
     this.server = net.createServer(this.clientConnection);
   }
 
-  static getInstance(){
-    if(Server.gInstance === null)
-    {
+  static getInstance() {
+    if (Server.gInstance === null) {
       Server.gInstance = new Server();
     }
 
@@ -57,14 +56,18 @@ class Server {
   }
 
   async initializeProto() {
-    try {      
+    try {
       const protoFileDir: string = this.getDir();
-      const protoFiles: string[] = this.getAllFiles(protoFileDir, '.proto');      
+      const protoFiles: string[] = this.getAllFiles(protoFileDir, '.proto');
 
       const root = new protobuf.Root();
 
       // {} return 해줘야함
-      await Promise.all(protoFiles.map((file: string) => { return root.load(file) }));
+      await Promise.all(
+        protoFiles.map((file: string) => {
+          return root.load(file);
+        }),
+      );
 
       for (const [packetName, types] of Object.entries(packetNames)) {
         this.protoMessages[packetName] = {};
@@ -78,16 +81,17 @@ class Server {
     }
   }
 
-  getProtoMessages(){
-    return {...this.protoMessages};
+  getProtoMessages() {
+    return { ...this.protoMessages };
   }
-  
-  clientConnection(socket : net.Socket)
-  {
+
+  clientConnection(socket: net.Socket) {
     const customSocket = socket as CustomSocket;
 
-    console.log(`Client connected from: ${socket.remoteAddress}:${socket.remotePort}`);    
-      
+    console.log(
+      `Client connected from: ${socket.remoteAddress}:${socket.remotePort}`,
+    );
+
     customSocket.buffer = Buffer.alloc(0);
 
     customSocket.on('data', onData(customSocket));
@@ -95,19 +99,19 @@ class Server {
     customSocket.on('error', onError(customSocket));
   }
 
-  listen () {
+  listen() {
     this.server.listen(config.server.port, config.server.host, () => {
-      console.log(`서버가 ${config.server.host}:${config.server.port}에서 실행 중입니다.`);
+      console.log(
+        `서버가 ${config.server.host}:${config.server.port}에서 실행 중입니다.`,
+      );
       console.log(this.server.address());
     });
   }
 
-  start()
-  {
+  start() {
     DatabaseManager.getInstance().testAllDBConnection();
 
     this.initializeProto();
-    
     this.listen();
   }
 }
