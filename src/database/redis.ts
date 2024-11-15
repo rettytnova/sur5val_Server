@@ -65,6 +65,11 @@ export const connect = async (): Promise<void> => {
   }
 };
 
+// 초기 Redis 연결용 함수
+export const connectRedis = async (): Promise<void> => {
+  await connect();
+};
+
 // Redis 클라이언트를 반환합니다.
 export const getRedis = async (): Promise<Redis> => {
   if (!redis) {
