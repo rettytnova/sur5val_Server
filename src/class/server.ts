@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import net from 'net';
+import { v4 as uuidv4 } from 'uuid';
 import { fileURLToPath } from 'url';
 import { packetNames } from '../protobuf/packetNames.js';
 import protobuf from 'protobufjs';
@@ -93,6 +94,7 @@ class Server {
       `Client connected from: ${socket.remoteAddress}:${socket.remotePort}`,
     );
 
+    customSocket.id = uuidv4();
     customSocket.buffer = Buffer.alloc(0);
 
     customSocket.on('data', onData(customSocket));
