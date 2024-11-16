@@ -20,7 +20,7 @@ message CommonPacket{
 */
 message RoomData {
     int32 id = 1;
-    string ownerId = 2;
+    int64 ownerId = 2;
     string name = 3;
     int32 maxUserNum = 4;
     RoomStateType state = 5; // WAIT 0, PREPARE 1, INAGAME 2
