@@ -38,6 +38,13 @@ export const config = {
       port: USER_DB_PORT,
     },
   },
+  jwtToken: {
+    secretKey: process.env.JWT_SECRET,
+    expiresIn: process.env.JWT_EXPIRES_IN,
+    refreshSecret: process.env.JWT_REFRESH_SECRET,
+    refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN,
+    algorithm: process.env.JWT_ALGORITHM,
+  },
   packet: {
     typeLength: TYPE_LENGTH,
     versionLength: VERSION_LENGTH,

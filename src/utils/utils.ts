@@ -35,3 +35,27 @@ export const toSnakeCase = (obj: unknown): unknown => {
 export const timeFormatting = (time: Date): string => {
   return time.toISOString().slice(0, 19).replace('T', ' ');
 };
+
+/**
+ * - 시간을 초 단위로 변환 해주는 함수(매개변수 예시 - '7d', '7h', '7m')
+ * @param {string} time - 시간
+ * @returns {number} 초 단위의 시간
+ */
+export const timeConversion = (time: string): number => {
+  // 마지막 문자(시간 단위 부분) 추출
+  const timeString = time.slice(-1);
+  // 시간 문자열을 정수로 변환
+  const timeNumber = parseInt(time.slice(0, -1), 10);
+
+  // 시간 단위에 따라 시간 정수를 초 단위의 시간으로 변환
+  switch (timeString) {
+    case 'd': // Days
+      return timeNumber * 86400;
+    case 'h': // Hours
+      return timeNumber * 3600;
+    case 'm': // Minutes
+      return timeNumber * 60;
+    default: // Seconds
+      return timeNumber;
+  }
+};

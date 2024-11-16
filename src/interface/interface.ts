@@ -1,5 +1,6 @@
 import net from 'net';
 
 export interface CustomSocket extends net.Socket {
-    buffer: Buffer;
+  buffer: Buffer;
+  id: string;
 }

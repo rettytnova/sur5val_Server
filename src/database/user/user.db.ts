@@ -6,18 +6,86 @@ import { toSnakeCase, timeFormatting } from '../../utils/utils.js';
 const dbManager = DatabaseManager.getInstance();
 
 /**
- * 사용자를 ID로 조회하는 함수
- * @param userId 사용자 ID
+ * 사용자를 Nickname로 조회하는 함수
+ * @param userNickname 사용자 Nickname
  * @returns 사용자 정보 (스네이크케이스로 변환된 객체)
  */
-export const findUserById = async (
-  userId: string,
-): Promise<Record<string, unknown> | null> => {
-  const [rows] = await dbManager.query('USER_DB', SQL_QUERIES.FIND_USER_BY_ID, [
-    userId,
-  ]);
-  const result = Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
-  return result ? (toSnakeCase(result) as Record<string, unknown>) : null;
+export const findUserByNickname = async (
+  userNickname: string,
+): Promise<ResultSetHeader | null> => {
+  try {
+    // SQL 쿼리 실행
+    const [rows] = await dbManager.query(
+      'USER_DB',
+      SQL_QUERIES.FIND_USER_BY_NICKNAME,
+      [userNickname],
+    );
+
+    // 결과 확인 및 반환
+    const result = Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
+    if (!result) console.warn('해당 닉네임를 가진 사용자를 찾을 수 없습니다');
+    return result ? (toSnakeCase(result) as ResultSetHeader) : null;
+  } catch (error) {
+    // 에러 로깅
+    console.error(`Error by Nickname: ${error}`);
+    return null;
+  }
+};
+
+/**
+ * 사용자를 Email로 조회하는 함수
+ * @param userEmail 사용자 Email
+ * @returns 사용자 정보 (스네이크케이스로 변환된 객체)
+ */
+export const findUserByEmail = async (
+  userEmail: string,
+): Promise<ResultSetHeader | null> => {
+  try {
+    // SQL 쿼리 실행
+    const [rows] = await dbManager.query(
+      'USER_DB',
+      SQL_QUERIES.FIND_USER_BY_EMAIL,
+      [userEmail],
+    );
+
+    // 결과 확인 및 반환
+    const result = Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
+    if (!result) console.warn('해당 이메일을 가진 사용자를 찾을 수 없습니다');
+    return result ? (toSnakeCase(result) as ResultSetHeader) : null;
+  } catch (error) {
+    // 에러 로깅
+    console.error(`Error by email: ${error}`);
+    return null;
+  }
+};
+
+/**
+ * 사용자를 Email과 Pw로 조회하는 함수
+ * @param userEmail 사용자 Email
+ * @param userPw 사용자 PW
+ * @returns 사용자 정보 (스네이크케이스로 변환된 객체)
+ */
+export const findUserByEmailPw = async (
+  userEmail: string,
+  userPw: string,
+): Promise<ResultSetHeader | null> => {
+  try {
+    // SQL 쿼리 실행
+    const [rows] = await dbManager.query(
+      'USER_DB',
+      SQL_QUERIES.FIND_USER_BY_EMAIL_AND_PW,
+      [userEmail, userPw],
+    );
+
+    // 결과 확인 및 반환
+    const result = Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
+    if (!result) console.warn('해당 계정을 가진 사용자를 찾을 수 없습니다');
+    return result ? (toSnakeCase(result) as ResultSetHeader) : null;
+  } catch (error) {
+    // 에러 로깅
+    console.error(`Error by email and password: ${error}`);
+    return null;
+  }
 };
 
 /**
@@ -28,7 +96,7 @@ export const findUserById = async (
  * @returns MySQL 실행 결과
  */
 export const createUser = async (
-  id: string,
+  nickName: string,
   email: string,
   password: string,
 ): Promise<ResultSetHeader> => {
@@ -38,7 +106,7 @@ export const createUser = async (
   const lose = 0;
 
   const [result] = await dbManager.execute('USER_DB', SQL_QUERIES.INSERT_USER, [
-    id,
+    nickName,
     email,
     password,
     createdAt,
