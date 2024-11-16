@@ -1,6 +1,6 @@
 import net from "net"
 import joi from 'joi';
-import { sendPacket } from "../../packet/createPacket.js";
+import { sendPacket } from "../../packet/sendPacket.js";
 import { config } from "../../config/config.js";
 
 

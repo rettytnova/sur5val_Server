@@ -1,4 +1,13 @@
 ﻿export const packetNames = {
+  data:{
+    RoomData: 'packet.RoomData',
+    UserData: 'packet.UserData',
+    CharacterData: 'packet.CharacterData',
+    CharacterPositionData: 'packet.CharacterPositionData',
+    CardData: 'packet.CardData',
+    GameStateData: 'packet.GameStateData',
+    CharacterStateInfoData: 'packet.CharacterStateInfoData',
+  },
   packet: {
     GamePacket: 'packet.GamePacket',
   },
