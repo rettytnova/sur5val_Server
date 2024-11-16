@@ -11,7 +11,7 @@ import { onEnd } from '../events/onEnd.js';
 import { onError } from '../events/onError.js';
 import { CustomSocket } from '../interface/interface.js';
 import DatabaseManager from '../database/databaseManager.js';
-import { getRedis } from '../database/redis.js';
+import { connectRedis } from '../database/redis.js';
 
 class Server {
   private static gInstance: Server | null = null;
@@ -77,9 +77,12 @@ class Server {
           this.protoMessages[packetName][type] = root.lookupType(typeName);
         }
       }
+
       console.log('Protobuf 파일이 로드되었습니다.');
     } catch (err) {
       console.error('Protobuf 파일 로드 중 오류가 발생했습니다.', err);
+    } finally {
+      connectRedis();
     }
   }
 
