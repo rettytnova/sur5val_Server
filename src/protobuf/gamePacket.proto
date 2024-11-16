@@ -31,7 +31,7 @@ message RoomData {
 // 하루 종료 시 체력만큼의 카드만 남길 수 있음.
 // 이후 낮이 될때마다 카드 두장 받고 시작
 message UserData {
-    string id = 1;
+    int64 id = 1;
     string nickname = 2;
     CharacterData character = 3;
 }

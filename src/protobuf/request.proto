@@ -4,14 +4,14 @@ package request;
 
 // 회원가입 요청
 message C2SRegisterRequest {
-    string id = 1;
-    string password = 2;
-    string email = 3;
+    string email = 1;
+    string nickname = 2;
+    string password = 3;
 }
 
 // 로그인 요청
 message C2SLoginRequest {
-    string id = 1;
+    string email = 1;
     string password = 2;
 }
 
@@ -33,7 +33,6 @@ message C2SJoinRoomRequest {
 
 // 방 랜덤 입장 요청
 message C2SJoinRandomRoomRequest {
-    int32 roomId = 1;
 }
 
 // 방 퇴장 요청
@@ -60,7 +59,7 @@ message C2SPositionUpdateRequest {
 // 카드 사용 요청
 message C2SUseCardRequest {
     CardType cardType = 1;
-    string targetUserId = 2; // 타겟 없으면 빈 값
+    int64 targetUserId = 2; // 타겟 없으면 0
 }
 
 // 상점 아이템 선택 요청
