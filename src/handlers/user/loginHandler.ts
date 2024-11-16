@@ -66,7 +66,7 @@ export const loginHandler = async (
     const userDatas: RedisResponse[] = await getRedisData('userData');
     if (userDatas) {
       const userData = userDatas.find(
-        (userData: any) => userData.myInfo.id === userByEmailPw.id,
+        (userData: UserData) => userData.id === userByEmailPw.id,
       );
       if (userData) {
         responseData.success = false;
