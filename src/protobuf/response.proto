@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package reponse;
+package response;
 
 // 회원가입 요청 응답
 message S2CRegisterResponse {

@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-import "../request.proto";
-import "../reponse.proto";
-import "../notification.proto";
+import "./request.proto";
+import "./response.proto";
+import "./notification.proto";
 
 package packet;
 
