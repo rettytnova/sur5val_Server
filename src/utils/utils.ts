@@ -37,9 +37,9 @@ export const timeFormatting = (time: Date): string => {
 };
 
 /**
- * - 시간을 초 단위로 변환 해주는 함수(매개변수 예시 - '7d', '7h', '7m')
+ * - 시간을 sec 단위로 변환 해주는 함수(매개변수 예시 - '7d', '7h', '7m')
  * @param {string} time - 시간
- * @returns {number} 초 단위의 시간
+ * @returns {number} sec 단위의 시간
  */
 export const timeConversion = (time: string): number => {
   // 마지막 문자(시간 단위 부분) 추출

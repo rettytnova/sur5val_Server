@@ -12,7 +12,6 @@ import { onError } from '../events/onError.js';
 import { CustomSocket } from '../interface/interface.js';
 import DatabaseManager from '../database/databaseManager.js';
 import { connectRedis } from '../database/redis.js';
-import { v4 as uuidv4 } from 'uuid';
 
 class Server {
   private static gInstance: Server | null = null;
@@ -93,7 +92,6 @@ class Server {
 
   clientConnection(socket: net.Socket) {
     const customSocket = socket as CustomSocket;
-    customSocket.id = uuidv4();
 
     console.log(
       `Client connected from: ${socket.remoteAddress}:${socket.remotePort}`,
