@@ -80,8 +80,7 @@ export interface LoginResponse {
 }
 
 /* 레디스 타입 정의 */
-export interface RedisResponse {
-  myInfo: UserData | null;
+export interface RedisResponse extends UserData {
   refreshToken: string;
 }
 

@@ -113,7 +113,7 @@ export const loginHandler = async (
 
     // Redis에 보낼 데이터 정리
     const redisResponseData: RedisResponse = {
-      myInfo: responseData.myInfo,
+      ...responseData.myInfo,
       refreshToken,
     };
 
