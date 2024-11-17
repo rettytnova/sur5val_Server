@@ -1,10 +1,10 @@
 import {
   CustomSocket,
   RedisUserData,
-  UserData,
+  User,
   LoginRequest,
   LoginResponse,
-  CharacterData,
+  Character,
 } from '../../interface/interface.js';
 import jwt, { SignOptions } from 'jsonwebtoken';
 import { sendPacket } from '../../packet/createPacket.js';
@@ -65,7 +65,7 @@ export const loginHandler = async (
     const userDatas: RedisUserData[] = await getRedisData('userData');
     if (userDatas) {
       const userData = userDatas.find(
-        (userData: UserData) => userData.id === userByEmailPw.id,
+        (userData: User) => userData.id === userByEmailPw.id,
       );
       if (userData) {
         responseData.success = false;
@@ -95,18 +95,24 @@ export const loginHandler = async (
     responseData.token = accessToken;
     responseData.myInfo = {
       id: userByEmailPw.id as number,
-      nickname: userByEmailPw.nickname as string,
+      nickName: userByEmailPw.nickName as string,
       character: {
-        roleType: 0,
-        hp: 0,
-        weapon: 0,
-        stateInfo: 0,
-        equips: null,
-        debuffs: null,
-        handCards: null,
-        bbangCount: 0,
-        handCardsCount: 0,
-      } as CharacterData,
+        characterType:0,
+        roleType:0,
+        hp:0,
+        weapon:0,
+        stateInfo:{
+          state:0,
+          nextState:0,
+          nextStateAt:0,
+          stateTargetUserId:0
+        },
+        equips: [],
+        debuffs: [],
+        handCards: [],
+        bbangCount:0,
+        handCardsCount:0
+      }
     };
 
     // Redis에 보낼 데이터 정리
