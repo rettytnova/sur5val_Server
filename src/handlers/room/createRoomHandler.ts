@@ -18,47 +18,72 @@ export const createRoomHandler = async (socket: net.Socket, payload: Object) => 
         failCode = 4;
     }
     else {
-        const user: User = {
-            id: redisUserData?.id,
-            nickName: redisUserData?.nickName,
-            character: redisUserData?.character
-        }
-
-        // 클라로부터 받은 roomName과 maxUserNum이 undefine과 null이 아닐 경우
-        // user가 null일 경우
-        if ((!createRoomPayload.roomName && !createRoomPayload.maxUserNum) || user === null) {
+        // 클라로부터 받은 roomName과 maxUserNum이 undefine과 null이 아닐 경우        
+        if ((!createRoomPayload.name || !createRoomPayload.maxUserNum)) {
             success = false;
             failCode = 4;
         }
         else {
-            const rooms = await getRedisData('roomData');
-            if (rooms === null) {
-                const users: User[] = [];
-                users.push(user);
+            const user: User = {
+                id: redisUserData?.id,
+                nickName: redisUserData?.nickName,
+                character: redisUserData?.character
+            }
 
-                const newRoom: Room = {
+            let existRoom = false;
+
+            const users: User[] = [];
+            users.push(user);
+
+            const rooms = await getRedisData('roomData');           
+            if (!rooms) {
+                const newRoom: Room[] = [{
                     id: gRoomId,
                     ownerId: user.id,
-                    name: createRoomPayload.roomName,
+                    name: createRoomPayload.name,
                     maxUserNum: createRoomPayload.maxUserNum,
                     state: 0,
                     users: users
-                }
-
-                gRoomId++;
+                }]
 
                 await setRedisData('roomData', newRoom);
             }
             else {
-                success = false;
-                failCode = 4;
+                // 방을 이미 만들었는지 검사
+                for (let i = 0; i < rooms.length; i++) {
+                    if (rooms[i].ownerId === user.id) {
+                        existRoom = true;
+                        break;
+                    }
+                }
+
+                if (existRoom === false) {
+                    const newRoom: Room = {
+                        id: gRoomId,
+                        ownerId: user.id,
+                        name: createRoomPayload.name,
+                        maxUserNum: createRoomPayload.maxUserNum,
+                        state: 0,
+                        users: users
+                    }
+
+                    rooms.push(newRoom);
+
+                    await setRedisData('roomData', rooms);
+
+                    gRoomId++;
+                }
+                else {
+                    success = false;
+                    failCode = 4;
+                }
             }
         }
     }
 
     sendPacket(socket, config.packetType.CREATE_ROOM_RESPONSE, {
         success,
-        room: createRoomPayload.roomName,
+        room: createRoomPayload.name,
         failCode
     });
 }
