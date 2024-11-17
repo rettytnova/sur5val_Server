@@ -1,18 +1,17 @@
-import { CustomSocket, UserData } from '../../interface/interface.js';
+import {
+  CustomSocket,
+  RedisUserData,
+  UserData,
+  LoginRequest,
+  LoginResponse,
+  CharacterData,
+} from '../../interface/interface.js';
 import jwt, { SignOptions } from 'jsonwebtoken';
 import { sendPacket } from '../../packet/createPacket.js';
 import { config } from '../../config/config.js';
-import { getRedis } from '../../database/redis.js';
 import { getRedisData, setRedisData } from '../../handlers/handlerMethod.js';
 import { dbManager } from '../../database/user/user.db.js';
 import { GlobalFailCode } from '../enumTyps.js';
-import { timeConversion } from '../../utils/utils.js';
-import {
-  LoginRequest,
-  LoginResponse,
-  RedisResponse,
-  CharacterData,
-} from '../../interface/interface.js';
 
 const { jwtToken, packetType } = config;
 
@@ -63,7 +62,7 @@ export const loginHandler = async (
     }
 
     // 이미 로그인 했는지 Redis의 캐싱 기록 검사
-    const userDatas: RedisResponse[] = await getRedisData('userData');
+    const userDatas: RedisUserData[] = await getRedisData('userData');
     if (userDatas) {
       const userData = userDatas.find(
         (userData: UserData) => userData.id === userByEmailPw.id,
@@ -107,14 +106,14 @@ export const loginHandler = async (
         handCards: null,
         bbangCount: 0,
         handCardsCount: 0,
-        socketId: 0,
       } as CharacterData,
     };
 
     // Redis에 보낼 데이터 정리
-    const redisResponseData: RedisResponse = {
+    const redisResponseData: RedisUserData = {
       ...responseData.myInfo,
       refreshToken,
+      socketId: socket.id,
     };
 
     // Redis에 데이터 보내기
