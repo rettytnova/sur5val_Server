@@ -1,14 +1,7 @@
-import net from 'net';
-import {
-  VERSION_START,
-  SEQUENCE_SIZE,
-  TOTAL_LENGTH,
-  config,
-} from '../config/config.js';
+import { VERSION_START, TOTAL_LENGTH, config } from '../config/config.js';
 import { CustomSocket } from '../interface/interface.js';
 import { packetParser } from '../packet/packetParser.js';
 import { getHandlerByPacketType } from '../handlers/handlerIndex.js';
-import { sendPacket } from '../packet/createPacket.js';
 
 export const onData = (socket: CustomSocket) => async (data: Buffer) => {
   socket.buffer = Buffer.concat([socket.buffer, data]);

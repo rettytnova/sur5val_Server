@@ -2,7 +2,11 @@ import net from 'net';
 
 export interface CustomSocket extends net.Socket {
   buffer: Buffer;
-  id?: string;
+  id: string;
+}
+
+export interface joinRoomPayload {
+  roomId: number;
 }
 
 export interface CreateRoomPayload {
@@ -80,7 +84,8 @@ export interface LoginResponse {
 }
 
 /* 레디스 타입 정의 */
-export interface RedisResponse extends UserData {
+export interface RedisUserData extends UserData {
+  socketId: string;
   refreshToken: string;
 }
 
@@ -105,7 +110,6 @@ export interface CharacterData {
   handCards: Object | null;
   bbangCount: number;
   handCardsCount: number;
-  socketId: number;
 }
 
 /* CharacterPositionData 타입 정의 */
