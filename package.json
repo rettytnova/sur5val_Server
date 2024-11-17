@@ -7,6 +7,7 @@
     "server": "tsc && node ./dist/main.js",
     "client": "tsc && node ./dist/dummyClient.js",
     "build": "tsc --build",
+    "postbuild": "copyfiles -u 1 src/database/schema.sql dist",
     "clean": "tsc --build --clean"
   },
   "keywords": [],
@@ -18,12 +19,18 @@
     "dotenv": "^16.4.5",
     "ioredis": "^5.4.1",
     "joi": "^17.13.3",
+    "jsonwebtoken": "^9.0.2",
+    "lodash": "^4.17.21",
+    "lodash-es": "^4.17.21",
     "mysql2": "^3.11.4",
     "net": "^1.0.2",
     "protobufjs": "^7.4.0",
     "uuid": "^11.0.3"
   },
   "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.7",
+    "@types/lodash": "^4.17.13",
+    "copyfiles": "^2.4.1",
     "nodemon": "^3.1.7",
     "prettier": "^3.3.3"
   }
