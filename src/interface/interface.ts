@@ -1,5 +1,7 @@
 import net from 'net';
+//#region 레디스 인터페이스
 
+//#endregion
 export interface CustomSocket extends net.Socket {
   buffer: Buffer;
   id: string;
@@ -10,7 +12,7 @@ export interface joinRoomPayload {
 }
 
 export interface CreateRoomPayload {
-  roomName: string;
+  name: string;
   maxUserNum: Number;
 }
 
@@ -79,47 +81,15 @@ export interface LoginResponse {
   success: boolean;
   message: string;
   token: string;
-  myInfo: UserData | null;
+  myInfo: User | null;
   failCode: number;
 }
 
 /* 레디스 타입 정의 */
-export interface RedisUserData extends UserData {
+export interface RedisUserData extends User {
   socketId: string;
   refreshToken: string;
 }
 
-/* RoomData 타입 정의 */
-export interface RoomData {}
-
-/* UserData 타입 정의 */
-export interface UserData {
-  id: number;
-  nickname: string;
-  character: CharacterData | null;
-}
-
-/* CharacterData 타입 정의 */
-export interface CharacterData {
-  roleType: number;
-  hp: number;
-  weapon: number;
-  stateInfo: number;
-  equips: Object | null;
-  debuffs: Object | null;
-  handCards: Object | null;
-  bbangCount: number;
-  handCardsCount: number;
-}
-
 /* CharacterPositionData 타입 정의 */
 export interface CharacterPositionData {}
-
-/* CardData 타입 정의 */
-export interface CardData {}
-
-/* GameStateData 타입 정의 */
-export interface GameStateData {}
-
-/* CharacterStateInfoData 타입 정의 */
-export interface CharacterStateInfoData {}
