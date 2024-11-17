@@ -36,6 +36,8 @@ export const getUserBySocket = async (socket: CustomSocket) => {
       }
     }
   }
+
+  return null;
 };
 
 // socket으로 유저 데이터 가져오기
