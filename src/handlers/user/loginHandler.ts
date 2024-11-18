@@ -1,10 +1,8 @@
 import {
   CustomSocket,
-  RedisUserData,
   User,
   LoginRequest,
   LoginResponse,
-  Character,
 } from '../../interface/interface.js';
 import jwt, { SignOptions } from 'jsonwebtoken';
 import { sendPacket } from '../../packet/createPacket.js';
@@ -16,7 +14,6 @@ import {
 } from '../../handlers/handlerMethod.js';
 import { dbManager } from '../../database/user/user.db.js';
 import { GlobalFailCode } from '../enumTyps.js';
-import { socketSessions } from '../../session/socketSession.js';
 
 const { jwtToken, packetType } = config;
 
