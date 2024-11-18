@@ -27,7 +27,7 @@ export const joinRoomHandler = async (
   if (redisRoomDatas) {
     for (let i = 0; i < redisRoomDatas.length; i++) {
       if (redisRoomDatas[i].id === roomId) {
-        // 존재하는 방 번호지만 인원이 꽉 차 있을 시 살패 response
+        // 존재하는 방 번호지만 인원이 꽉 차 있을 시 실패 response
         if (redisRoomDatas[i].maxUserNum <= redisRoomDatas[i].users.length) {
           const sendData = {
             success: 0,
@@ -71,6 +71,7 @@ export const joinRoomHandler = async (
             console.error('socket을 찾을 수 없습니다.');
             return;
           }
+
           sendPacket(roomUserSocket, config.packetType.JOIN_ROOM_NOTIFICATION, {
             joinUser: userData,
           });
@@ -79,7 +80,7 @@ export const joinRoomHandler = async (
       }
     }
   } else {
-    // 존재하지 않는 방 번호 요청 시 살패 response
+    // 존재하지 않는 방 번호 요청 시 실패 response
     const sendData = {
       success: 0,
       room: {},

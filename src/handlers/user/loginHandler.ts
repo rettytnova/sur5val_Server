@@ -67,7 +67,7 @@ export const loginHandler = async (
     }
 
     // 이미 로그인 했는지 Redis의 캐싱 기록 검사
-    const userDatas: User[] = await getRedisData('userData');
+    const userDatas: User[] | null = await getRedisData('userData');
     if (userDatas) {
       const userData = userDatas.find(
         (userData: User) => userData.id === userByEmailPw.id,
@@ -100,7 +100,7 @@ export const loginHandler = async (
     responseData.token = accessToken;
     responseData.myInfo = {
       id: userByEmailPw.id as number,
-      nickName: userByEmailPw.nickname as string,
+      nickname: userByEmailPw.nickname as string,
       character: {
         characterType: 0,
         roleType: 0,
