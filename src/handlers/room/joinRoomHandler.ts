@@ -1,9 +1,5 @@
 import { config } from '../../config/config.js';
-import {
-  CustomSocket,
-  joinRoomPayload,
-  User,
-} from '../../interface/interface.js';
+import { CustomSocket, joinRoomPayload } from '../../interface/interface.js';
 import { sendPacket } from '../../packet/createPacket.js';
 import { GlobalFailCode } from '../enumTyps.js';
 import {

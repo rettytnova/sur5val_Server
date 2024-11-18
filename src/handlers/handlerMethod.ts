@@ -1,10 +1,5 @@
 import { getRedis } from '../database/redis.js';
-import {
-  CustomSocket,
-  RedisUserData,
-  Room,
-  User,
-} from '../interface/interface.js';
+import { CustomSocket, User } from '../interface/interface.js';
 import { socketSessions } from '../session/socketSession.js';
 
 // 레디스에서 데이터 가져오기 ex: getRedisData("roomData")
@@ -44,6 +39,7 @@ export const getUserBySocket = async (socket: CustomSocket) => {
   return null;
 };
 
+// roomData 가지고 오기
 export const getRooms = async () => {
   const rooms = await getRedisData('roomData');
   if (!rooms) {
