@@ -13,21 +13,55 @@ import { GlobalFailCode } from '../enumTyps.js';
 export const leaveRoomHandler = async (socket: net.Socket) => {
   // 해당 소켓으로 전달받는 데이터에 유저가 있는지
   const user: User = await getUserBySocket(socket as CustomSocket);
-
   if (!user) {
-    console.log('유저를 찾을 수 없습니다.');
+    sendPacket(socket, config.packetType.LEAVE_ROOM_RESPONSE, {
+      success: false,
+      failCode: GlobalFailCode.LEAVE_ROOM_FAILED,
+    });
+    console.log('비정상적인 접근입니다. => 유저를 찾을 수 없습니다.');
     return;
   }
 
+  // 모든 방 데이터
   const roomData: Room[] = await getRedisData('roomData');
+  if (!roomData) {
+    sendPacket(socket, config.packetType.LEAVE_ROOM_RESPONSE, {
+      success: false,
+      failCode: GlobalFailCode.LEAVE_ROOM_FAILED,
+    });
+    console.log('비정상적인 접근입니다. => 방을 찾을 수 없습니다.');
+    return;
+  }
 
   for (let i = 0; i < roomData.length; i++) {
-    let is_find: boolean = false;
+    let isFind: boolean = false;
     for (let j = 0; j < roomData[i].users.length; j++) {
       if (roomData[i].users[j].id === user.id) {
-        is_find = true;
+        isFind = true;
+
+        roomData[i].users.splice(j, 1);
+        let isClosedRoom: boolean = false;
+        // 방 인원이 0명
+        if (roomData[i].users.length === 0) {
+          roomData.splice(i, 1);
+          isClosedRoom = true;
+        } else {
+          // 나가는 인원이 방장일 경우
+          if (user.id === roomData[i].ownerId) {
+            roomData[i].ownerId = roomData[i].users[0].id;
+          }
+        }
+
+        sendPacket(socket, config.packetType.LEAVE_ROOM_RESPONSE, {
+          success: 1,
+          fail: GlobalFailCode.NONE,
+        });
+        await setRedisData('roomData', roomData);
 
         // 전체 인원에게 방 나간다고 알려주기 (notification)
+        if (isClosedRoom) {
+          return;
+        }
         for (let userIdx = 0; userIdx < roomData[i].users.length; userIdx++) {
           const roomUserSocket = await getSocketByUser(
             roomData[i].users[userIdx],
@@ -59,26 +93,10 @@ export const leaveRoomHandler = async (socket: net.Socket) => {
           );
         }
 
-        // 방 인원이 부족할 경우 터트리기
-        if (roomData[i].users.length === 1) {
-          roomData.splice(i, 1);
-        } else {
-          roomData[i].users.splice(j, 1);
-          // 나가는 인원이 방장일 경우 방장 위임
-          if (user.id === roomData[i].ownerId) {
-            roomData[i].ownerId = roomData[i].users[0].id;
-          }
-        }
-        sendPacket(socket, config.packetType.LEAVE_ROOM_RESPONSE, {
-          success: 1,
-          fail: GlobalFailCode.NONE,
-        });
-        await setRedisData('roomData', roomData);
-
         break;
       }
     }
-    if (is_find) {
+    if (isFind) {
       break;
     }
   }
