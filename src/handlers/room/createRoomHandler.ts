@@ -88,7 +88,6 @@ export const createRoomHandler = async (
           success = false;
           failCode = GlobalFailCode.CREATE_ROOM_FAILED;
         }
-      }
     }
   }
 
