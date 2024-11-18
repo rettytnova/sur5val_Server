@@ -1,5 +1,5 @@
 import { config } from '../../config/config.js';
-import { CustomSocket, User } from '../../interface/interface.js';
+import { CustomSocket } from '../../interface/interface.js';
 import { sendPacket } from '../../packet/createPacket.js';
 import { GlobalFailCode } from '../enumTyps.js';
 import {
