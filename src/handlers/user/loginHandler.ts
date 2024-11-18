@@ -1,17 +1,22 @@
 import {
   CustomSocket,
   RedisUserData,
-  UserData,
+  User,
   LoginRequest,
   LoginResponse,
-  CharacterData,
+  Character,
 } from '../../interface/interface.js';
 import jwt, { SignOptions } from 'jsonwebtoken';
 import { sendPacket } from '../../packet/createPacket.js';
 import { config } from '../../config/config.js';
-import { getRedisData, setRedisData } from '../../handlers/handlerMethod.js';
+import {
+  getRedisData,
+  saveSocketSession,
+  setRedisData,
+} from '../../handlers/handlerMethod.js';
 import { dbManager } from '../../database/user/user.db.js';
 import { GlobalFailCode } from '../enumTyps.js';
+import { socketSessions } from '../../session/socketSession.js';
 
 const { jwtToken, packetType } = config;
 
@@ -62,10 +67,10 @@ export const loginHandler = async (
     }
 
     // 이미 로그인 했는지 Redis의 캐싱 기록 검사
-    const userDatas: RedisUserData[] = await getRedisData('userData');
+    const userDatas: User[] | null = await getRedisData('userData');
     if (userDatas) {
       const userData = userDatas.find(
-        (userData: UserData) => userData.id === userByEmailPw.id,
+        (userData: User) => userData.id === userByEmailPw.id,
       );
       if (userData) {
         responseData.success = false;
@@ -97,32 +102,34 @@ export const loginHandler = async (
       id: userByEmailPw.id as number,
       nickname: userByEmailPw.nickname as string,
       character: {
+        characterType: 0,
         roleType: 0,
         hp: 0,
         weapon: 0,
-        stateInfo: 0,
-        equips: null,
-        debuffs: null,
-        handCards: null,
+        stateInfo: {
+          state: 0,
+          nextState: 0,
+          nextStateAt: 0,
+          stateTargetUserId: 0,
+        },
+        equips: [],
+        debuffs: [],
+        handCards: [],
         bbangCount: 0,
         handCardsCount: 0,
-      } as CharacterData,
-    };
-
-    // Redis에 보낼 데이터 정리
-    const redisResponseData: RedisUserData = {
-      ...responseData.myInfo,
-      refreshToken,
-      socketId: socket.id,
+      },
     };
 
     // Redis에 데이터 보내기
     if (!userDatas) {
-      await setRedisData('userData', [redisResponseData]);
+      await setRedisData('userData', [responseData.myInfo]);
     } else {
-      userDatas.push(redisResponseData);
+      userDatas.push(responseData.myInfo);
       await setRedisData('userData', userDatas);
     }
+
+    // socketSession에 socket 저장하기
+    saveSocketSession(userByEmailPw.id, socket);
 
     // 로그 처리 ----------------------------------------------------------------------
     console.info(`로그인 성공 : ${userByEmailPw.id}`);

@@ -1,5 +1,10 @@
 import { getRedis } from '../database/redis.js';
-import { CustomSocket, RedisUserData } from '../interface/interface.js';
+import {
+  CustomSocket,
+  RedisUserData,
+  Room,
+  User,
+} from '../interface/interface.js';
 import { socketSessions } from '../session/socketSession.js';
 
 // 레디스에서 데이터 가져오기 ex: getRedisData("roomData")
@@ -30,16 +35,34 @@ export const getUserBySocket = async (socket: CustomSocket) => {
   const userDatas = await getRedisData('userData');
   if (userDatas) {
     for (let i = 0; i < userDatas.length; i++) {
-      if (userDatas[i].socketId === socket.id) {
-        const userData = userDatas[i] as RedisUserData;
-        return userData;
+      if (socketSessions[userDatas[i].id] === socket) {
+        return userDatas[i];
       }
+    }
+  }
+
+  return null;
+};
+
+export const getRooms = async () => {
+  const rooms = await getRedisData('roomData');
+  if (!rooms) {
+    return null;
+  }
+
+  return rooms;
+};
+
+// socket으로 유저 데이터 가져오기
+export const getSocketByUser = async (user: User) => {
+  const redisUserDatas = await getRedisData('userData');
+  for (let i = 0; i < redisUserDatas.length; i++) {
+    if (redisUserDatas[i].id === user.id) {
+      return socketSessions[redisUserDatas[i].id];
     }
   }
 };
 
-// socket으로 유저 데이터 가져오기
-export const getSocketByUserData = async (userData: RedisUserData) => {
-  const socketId = userData.socketId;
-  return socketSessions[socketId];
+export const saveSocketSession = (userId: number, socket: CustomSocket) => {
+  socketSessions[userId] = socket;
 };
