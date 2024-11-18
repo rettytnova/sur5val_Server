@@ -43,7 +43,7 @@ export interface Character {
 
 export interface User {
   id: Number;
-  nickName: string;
+  nickname: string;
   character: Character;
 }
 

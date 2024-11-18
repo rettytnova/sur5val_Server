@@ -2,12 +2,16 @@
 import Server from '../class/server.js';
 import net from 'net';
 
-export const sendPacket = (socket: net.Socket, packetType: number, data: Object) => {
+export const sendPacket = (
+  socket: net.Socket,
+  packetType: number,
+  data: Object,
+) => {
   try {
     const protoMessages = Server.getInstance().getProtoMessages();
     const gamePacket = protoMessages.packet.GamePacket;
 
-    const packet: { [key: string]: object } = {};    
+    const packet: { [key: string]: object } = {};
     packet[packetMaps[packetType]] = data;
 
     //const responseGamePacket = gamePacket.create(packet);
@@ -16,7 +20,9 @@ export const sendPacket = (socket: net.Socket, packetType: number, data: Object)
     const serializedPacket = serializer(gamePacketBuffer, packetType);
     socket.write(serializedPacket);
 
-    console.log(`Sent packet of ${packetType} to client.`);
+    const deserializedPacket = gamePacket.decode(gamePacketBuffer);
+
+    console.dir(deserializedPacket, { depth: null });
   } catch (error) {
     console.error('Error sending response packet', error);
   }
@@ -56,4 +62,3 @@ export const serializer = (
     gamePacketBuffer,
   ]);
 };
-
