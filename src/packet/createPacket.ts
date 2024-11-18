@@ -20,9 +20,9 @@ export const sendPacket = (
     const serializedPacket = serializer(gamePacketBuffer, packetType);
     socket.write(serializedPacket);
 
-    const deserializedPacket = gamePacket.decode(gamePacketBuffer);
+    //const deserializedPacket = gamePacket.decode(gamePacketBuffer);
 
-    console.dir(deserializedPacket, { depth: null });
+    //console.dir(deserializedPacket, { depth: null });
   } catch (error) {
     console.error('Error sending response packet', error);
   }

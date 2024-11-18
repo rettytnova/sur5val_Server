@@ -67,7 +67,7 @@ export const config = {
     JOIN_ROOM_NOTIFICATION: 13,
     LEAVE_ROOM_REQUEST: 14,
     LEAVE_ROOM_RESPONSE: 15,
-    LEAVE_RROM_NOTIFICATION: 16,
+    LEAVE_ROOM_NOTIFICATION: 16,
     GAME_PREPARE_REQUEST: 17,
     GAME_PREPARE_RESPONSE: 18,
     GAME_PREPARE_NOTIFICATION: 19,
@@ -121,7 +121,7 @@ export const packetMaps = {
 
   [config.packetType.LEAVE_ROOM_REQUEST]: 'leaveRoomRequest',
   [config.packetType.LEAVE_ROOM_RESPONSE]: 'leaveRoomResponse',
-  [config.packetType.LEAVE_RROM_NOTIFICATION]: 'leaveRoomNotification',
+  [config.packetType.LEAVE_ROOM_NOTIFICATION]: 'leaveRoomNotification',
 
   [config.packetType.GAME_PREPARE_REQUEST]: 'gamePrepareRequest',
   [config.packetType.GAME_PREPARE_RESPONSE]: 'gamePrepareResponse',
