@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-import "../request.proto";
-import "../reponse.proto";
-import "../notification.proto";
+import "./request.proto";
+import "./response.proto";
+import "./notification.proto";
 
 package packet;
 
@@ -20,7 +20,7 @@ message CommonPacket{
 */
 message RoomData {
     int32 id = 1;
-    string ownerId = 2;
+    int64 ownerId = 2;
     string name = 3;
     int32 maxUserNum = 4;
     RoomStateType state = 5; // WAIT 0, PREPARE 1, INAGAME 2
@@ -31,7 +31,7 @@ message RoomData {
 // 하루 종료 시 체력만큼의 카드만 남길 수 있음.
 // 이후 낮이 될때마다 카드 두장 받고 시작
 message UserData {
-    string id = 1;
+    int64 id = 1;
     string nickname = 2;
     CharacterData character = 3;
 }
@@ -50,7 +50,7 @@ message CharacterData {
 }
 
 message CharacterPositionData {
-    string id = 1;
+    int64 id = 1;
     double x = 2;
     double y = 3;
 }
@@ -69,7 +69,7 @@ message CharacterStateInfoData {
     CharacterStateType state = 1;
     CharacterStateType nextState = 2;
     int64 nextStateAt = 3; // state가 nextState로 풀리는 밀리초 타임스탬프. state가 NONE이면 0
-    string stateTargetUserId = 4; // state에 target이 있을 경우
+    int64 stateTargetUserId = 4; // state에 target이 있을 경우
 }
 
 /* 

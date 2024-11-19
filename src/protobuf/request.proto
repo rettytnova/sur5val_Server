@@ -4,14 +4,14 @@ package request;
 
 // 회원가입 요청
 message C2SRegisterRequest {
-    string id = 1;
-    string password = 2;
-    string email = 3;
+    string email = 1;
+    string nickname = 2;
+    string password = 3;
 }
 
 // 로그인 요청
 message C2SLoginRequest {
-    string id = 1;
+    string email = 1;
     string password = 2;
 }
 
@@ -21,6 +21,11 @@ message C2SCreateRoomRequest {
     int32 maxUserNum = 2;
 }
 
+// 방 목록 요청
+message C2SGetRoomListRequest {
+    
+}
+
 // 방 입장 요청
 message C2SJoinRoomRequest {
     int32 roomId = 1;
@@ -28,12 +33,6 @@ message C2SJoinRoomRequest {
 
 // 방 랜덤 입장 요청
 message C2SJoinRandomRoomRequest {
-    int32 roomId = 1;
-}
-
-// 방 목록 요청
-message C2SGetRoomListRequest {
-    
 }
 
 // 방 퇴장 요청
@@ -60,7 +59,7 @@ message C2SPositionUpdateRequest {
 // 카드 사용 요청
 message C2SUseCardRequest {
     CardType cardType = 1;
-    string targetUserId = 2; // 타겟 없으면 빈 값
+    int64 targetUserId = 2; // 타겟 없으면 0
 }
 
 // 상점 아이템 선택 요청
@@ -73,12 +72,6 @@ message C2SReactionRequest {
     ReactionType reactionType = 1; // NOT_USE_CARD = 1
 }
 
-// 디버프 넘기기 요청
-message C2SPassDebuffRequest {
-    string targetUserId = 1;
-    CardType debuffCardType = 2;
-}
-
 // 카드 삭제 요청
 message C2SDestroyCardRequest {
     repeated CardData destroyCards = 1;
@@ -88,4 +81,10 @@ message C2SDestroyCardRequest {
 message C2SCardSelectRequest {
     SelectCardType selectType = 1; // 0: 핸드, 1: 장비, 2: 무기, 3: 디버프
     CardType selectCardType = 2; // selectType이  0일 경우 0, / 1, 2, 3일 경우 원하는 장비의 cardType
+}
+
+// 디버프 넘기기 요청
+message C2SPassDebuffRequest {
+    string targetUserId = 1;
+    CardType debuffCardType = 2;
 }
