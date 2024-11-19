@@ -65,7 +65,7 @@ export const gameStartHandler = async (
         characterPositionDatas[room.id].push(characterPositionData);
       }
 
-      await setRedisData('characterPostionDatas', characterPositionDatas);
+      await setRedisData('characterPositionDatas', characterPositionDatas);
 
       // // ------------------------------- 최성원 ------------------------
       // let characterPositionDatas = await getRedisData('characterPositionDatas');
