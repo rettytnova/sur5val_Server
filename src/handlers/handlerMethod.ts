@@ -52,9 +52,7 @@ export const getRooms = async () => {
 // userid로 방 찾기
 export const getRoomByUserId = async (userId: number) => {
   const rooms: Room[] = await getRedisData('roomData');
-  const room = rooms.find((room) =>
-    room.users.some((user) => user.id === userId),
-  );
+  const room = rooms.find((room) => room.users.some((user) => user.id === userId));
   if (!room) {
     //throw new Error('getRoomByUserId: Room not found');
     console.error('getRoomByUserId: Room not found');
@@ -109,4 +107,13 @@ export const getSocketByUser = async (user: User) => {
 
 export const saveSocketSession = (userId: number, socket: CustomSocket) => {
   socketSessions[userId] = socket;
+};
+
+export const getSocketByUserId = async (user: User) => {
+  const redisUserDatas = await getRedisData('userData');
+  for (let i = 0; i < redisUserDatas.length; i++) {
+    if (redisUserDatas[i].id === user.id) {
+      return socketSessions[redisUserDatas[i].id];
+    }
+  }
 };
