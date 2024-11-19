@@ -1,4 +1,5 @@
 import net from 'net';
+import { PhaseType, RoomStateType } from '../handlers/enumTyps.js';
 //#region 레디스 인터페이스
 
 //#endregion
@@ -13,47 +14,52 @@ export interface joinRoomPayload {
 
 export interface CreateRoomPayload {
   name: string;
-  maxUserNum: Number;
+  maxUserNum: number;
 }
 
 export interface Card {
-  type: Number;
-  count: Number;
+  type: number;
+  count: number;
 }
 
 export interface CharacterStateInfo {
-  state: Number;
-  nextState: Number;
-  nextStateAt: Number;
-  stateTargetUserId: Number;
+  state: number;
+  nextState: number;
+  nextStateAt: number;
+  stateTargetUserId: number;
 }
 
 export interface Character {
-  characterType: Number;
-  roleType: Number;
-  hp: Number;
-  weapon: Number;
+  characterType: number;
+  roleType: number;
+  hp: number;
+  weapon: number;
   stateInfo: CharacterStateInfo;
-  equips: Number[];
-  debuffs: Number[];
+  equips: number[];
+  debuffs: number[];
   handCards: Card[];
-  bbangCount: Number;
-  handCardsCount: Number;
+  bbangCount: number;
+  handCardsCount: number;
 }
 
 export interface User {
-  id: Number;
+  id: number;
   nickname: string;
   character: Character;
 }
 
 export interface Room {
-  id: Number;
-  ownerId: Number;
+  id: number;
+  ownerId: number;
   name: string;
-  maxUserNum: Number;
-  state: Number;
+  maxUserNum: number;
+  state: RoomStateType;
   users: User[];
+}
+
+export interface GameStateData {
+  phaseType: PhaseType;
+  nextPhaseAt: number;
 }
 
 /* 회원가입 요청 페이로드 타입 정의 */
@@ -91,5 +97,22 @@ export interface RedisUserData extends User {
   refreshToken: string;
 }
 
+/* CharacterData 타입 정의 */
+export interface CharacterData {
+  roleType: number;
+  hp: number;
+  weapon: number;
+  stateInfo: number;
+  equips: Object | null;
+  debuffs: Object | null;
+  handCards: Object | null;
+  bbangCount: number;
+  handCardsCount: number;
+}
+
 /* CharacterPositionData 타입 정의 */
-export interface CharacterPositionData {}
+export interface CharacterPositionData {
+  id: number;
+  x: number;
+  y: number;
+}
