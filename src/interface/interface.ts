@@ -17,6 +17,10 @@ export interface CreateRoomPayload {
   maxUserNum: number;
 }
 
+export interface positionUpdatePayload {
+  x: number;
+  y: number;
+}
 export interface Card {
   type: number;
   count: number;
