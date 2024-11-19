@@ -1,16 +1,17 @@
-import net from "net"
-import { sendPacket } from "../../packet/createPacket.js";
-import { config } from "../../config/config.js";
-import { getRedisData, getUserBySocket, setRedisData } from "../handlerMethod.js";
-import { CreateRoomPayload, CustomSocket, RedisUserData, Room, User } from "../../interface/interface.js";
+import net from 'net';
+import { sendPacket } from '../../packet/createPacket.js';
+import { config } from '../../config/config.js';
+import { getRedisData, getUserBySocket, setRedisData } from '../handlerMethod.js';
+import { CreateRoomPayload, CustomSocket, RedisUserData, Room, User, } from '../../interface/interface.js';
 import { GlobalFailCode } from '../enumTyps.js';
 
 let gRoomId = 1;
 
-export const createRoomHandler = async (socket: net.Socket, payload: Object) => {
+export const createRoomHandler = async (socket: net.Socket, payload: Object,) => {
     let failCode: Number = GlobalFailCode.NONE;
     let success: boolean = true;
     let roomDatas: Room[] = [];
+    let newRoom;
 
     const createRoomPayload = payload as CreateRoomPayload;
 
@@ -20,8 +21,8 @@ export const createRoomHandler = async (socket: net.Socket, payload: Object) => 
         failCode = GlobalFailCode.CREATE_ROOM_FAILED;
     }
     else {
-        // 클라로부터 받은 roomName과 maxUserNum이 undefine과 null이 아닐 경우        
-        if ((!createRoomPayload.name || !createRoomPayload.maxUserNum)) {
+        // 클라로부터 받은 roomName과 maxUserNum이 undefine과 null이 아닐 경우
+        if (!createRoomPayload.name || !createRoomPayload.maxUserNum) {
             success = false;
             failCode = GlobalFailCode.CREATE_ROOM_FAILED;
         }
@@ -31,18 +32,18 @@ export const createRoomHandler = async (socket: net.Socket, payload: Object) => 
 
             roomDatas = await getRedisData('roomData');
             if (!roomDatas) {
-                const newRoom: Room[] = [{
+                newRoom = {
                     id: gRoomId,
                     ownerId: redisUserData.id,
                     name: createRoomPayload.name,
                     maxUserNum: createRoomPayload.maxUserNum,
                     state: 0,
-                    users: users
-                }]
+                    users: users,
+                }
+                
+                roomDatas = [newRoom];         
 
-                roomDatas = newRoom;
-
-                await setRedisData('roomData', newRoom);
+                await setRedisData('roomData', roomDatas);
 
                 gRoomId++;
             }
@@ -58,7 +59,7 @@ export const createRoomHandler = async (socket: net.Socket, payload: Object) => 
                 }
 
                 if (existRoom === false) {
-                    const newRoom: Room = {
+                    newRoom = {
                         id: gRoomId,
                         ownerId: redisUserData.id,
                         name: createRoomPayload.name,
@@ -79,11 +80,11 @@ export const createRoomHandler = async (socket: net.Socket, payload: Object) => 
                 }
             }
         }
-    }
 
-    sendPacket(socket, config.packetType.CREATE_ROOM_RESPONSE, {
-        success,
-        room: roomDatas,
-        failCode
-    });
-}
+        sendPacket(socket, config.packetType.CREATE_ROOM_RESPONSE, {
+            success,
+            room: newRoom,
+            failCode,
+        });
+    }
+};
