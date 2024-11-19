@@ -18,7 +18,7 @@ message S2CGamePrepareNotification {
 message S2CGameStartNotification {
     GameStateData gameState = 1;
     repeated UserData users = 2;
-    repeated CharcterPositionData characterPositions = 3;
+    repeated CharacterPositionData characterPositions = 3;
 }
 // 위치 동기화 알림
 message S2CPositionUpdateNotification {
