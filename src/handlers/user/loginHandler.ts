@@ -1,17 +1,8 @@
-import {
-  CustomSocket,
-  User,
-  LoginRequest,
-  LoginResponse,
-} from '../../interface/interface.js';
+import { CustomSocket, User, LoginRequest, LoginResponse } from '../../interface/interface.js';
 import jwt, { SignOptions } from 'jsonwebtoken';
 import { sendPacket } from '../../packet/createPacket.js';
 import { config } from '../../config/config.js';
-import {
-  getRedisData,
-  saveSocketSession,
-  setRedisData,
-} from '../../handlers/handlerMethod.js';
+import { getRedisData, saveSocketSession, setRedisData } from '../../handlers/handlerMethod.js';
 import { dbManager } from '../../database/user/user.db.js';
 import { GlobalFailCode } from '../enumTyps.js';
 
@@ -26,10 +17,7 @@ const { jwtToken, packetType } = config;
  * @param {Object} param.payload - 요청 데이터의 페이로드
  * @returns {Promise<void>} 별도의 반환 값은 없으며, 성공 여부와 메시지를 클라이언트에게 전송.
  */
-export const loginHandler = async (
-  socket: CustomSocket,
-  payload: Object,
-): Promise<void> => {
+export const loginHandler = async (socket: CustomSocket, payload: Object): Promise<void> => {
   const { email, password } = payload as LoginRequest;
   // 데이터 초기화 ----------------------------------------------------------------------
   let responseData: LoginResponse = {
@@ -37,7 +25,7 @@ export const loginHandler = async (
     message: '',
     token: '',
     myInfo: null,
-    failCode: GlobalFailCode.NONE,
+    failCode: GlobalFailCode.NONE
   };
 
   try {
@@ -52,10 +40,7 @@ export const loginHandler = async (
     }
 
     // 비밀번호 유효성 검사
-    const userByEmailPw: any = await dbManager.findUserByEmailPw(
-      email,
-      password,
-    );
+    const userByEmailPw: any = await dbManager.findUserByEmailPw(email, password);
     if (!userByEmailPw) {
       responseData.success = false;
       responseData.message = '비밀번호를 틀렸습니다.';
@@ -66,9 +51,7 @@ export const loginHandler = async (
     // 이미 로그인 했는지 Redis의 캐싱 기록 검사
     const userDatas: User[] | null = await getRedisData('userData');
     if (userDatas) {
-      const userData = userDatas.find(
-        (userData: User) => userData.id === userByEmailPw.id,
-      );
+      const userData = userDatas.find((userData: User) => userData.id === userByEmailPw.id);
       if (userData) {
         responseData.success = false;
         responseData.message = '이미 로그인한 유저입니다.';
@@ -81,16 +64,8 @@ export const loginHandler = async (
     // 토큰 생성
     const options: SignOptions = { expiresIn: '30m', algorithm: 'HS256' };
     const refreshOptions: SignOptions = { expiresIn: '7d', algorithm: 'HS256' };
-    let accessToken = jwt.sign(
-      userByEmailPw,
-      jwtToken.secretKey as string,
-      options,
-    );
-    let refreshToken = jwt.sign(
-      userByEmailPw,
-      jwtToken.secretKey as string,
-      refreshOptions,
-    );
+    let accessToken = jwt.sign(userByEmailPw, jwtToken.secretKey as string, options);
+    let refreshToken = jwt.sign(userByEmailPw, jwtToken.secretKey as string, refreshOptions);
 
     // 클라이언트에 보낼 데이터 정리
     responseData.message = '로그인에 성공 했습니다.';
@@ -107,14 +82,14 @@ export const loginHandler = async (
           state: 0,
           nextState: 0,
           nextStateAt: 0,
-          stateTargetUserId: 0,
+          stateTargetUserId: 0
         },
-        equips: [],
+        equips: 0,
         debuffs: [],
         handCards: [],
         bbangCount: 0,
-        handCardsCount: 0,
-      },
+        handCardsCount: 0
+      }
     };
 
     // Redis에 데이터 보내기

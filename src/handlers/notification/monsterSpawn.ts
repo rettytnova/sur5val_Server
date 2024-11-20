@@ -71,7 +71,7 @@ export const monsterSpawn = async (roomData: Room, n: number) => {
         nextStateAt: 0,
         stateTargetUserId: 0
       },
-      equips: [],
+      equips: 0,
       debuffs: [],
       handCards: [],
       bbangCount: 0,

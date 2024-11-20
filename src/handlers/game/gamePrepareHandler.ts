@@ -1,11 +1,6 @@
 import net from 'net';
 import { GlobalFailCode } from '../enumTyps.js';
-import {
-  CustomSocket,
-  RedisUserData,
-  Room,
-  User,
-} from '../../interface/interface.js';
+import { CustomSocket, RedisUserData, Room, User } from '../../interface/interface.js';
 import { config } from '../../config/config.js';
 import { sendPacket } from '../../packet/createPacket.js';
 import {
@@ -14,13 +9,10 @@ import {
   getSocketByUser,
   getUserBySocket,
   setCharacterInfoInit,
-  setRedisData,
+  setRedisData
 } from '../handlerMethod.js';
 
-export const gamePrepareHandler = async (
-  socket: CustomSocket,
-  payload: Object,
-) => {
+export const gamePrepareHandler = async (socket: CustomSocket, payload: Object) => {
   try {
     // requset 보낸 유저
     const user: RedisUserData = await getUserBySocket(socket);
@@ -35,24 +27,16 @@ export const gamePrepareHandler = async (
         console.error('게임을 시작 할 수 없습니다(인원 부족).');
         const responseData = {
           success: false,
-          failCode: GlobalFailCode.INVALID_REQUEST,
+          failCode: GlobalFailCode.INVALID_REQUEST
         };
-        sendPacket(
-          socket,
-          config.packetType.GAME_PREPARE_RESPONSE,
-          responseData,
-        );
+        sendPacket(socket, config.packetType.GAME_PREPARE_RESPONSE, responseData);
       } else {
         // 게임준비 시작 요건 충족
         const responseData = {
           success: true,
-          failCode: GlobalFailCode.NONE,
+          failCode: GlobalFailCode.NONE
         };
-        sendPacket(
-          socket,
-          config.packetType.GAME_PREPARE_RESPONSE,
-          responseData,
-        );
+        sendPacket(socket, config.packetType.GAME_PREPARE_RESPONSE, responseData);
 
         // 방에있는 유저들 캐릭터 랜덤 배정하기
         room.users = setCharacterInfoInit(room.users);
@@ -80,7 +64,7 @@ export const gamePrepareHandler = async (
           }
           //console.dir(room, { depth: null });
           sendPacket(userSocket, config.packetType.GAME_PREPARE_NOTIFICATION, {
-            room,
+            room
           });
         }
       }
@@ -88,14 +72,14 @@ export const gamePrepareHandler = async (
       console.error('위치: gamePrepareHandler, 유저를 찾을 수 없습니다.');
       const responseData = {
         success: false,
-        failCode: GlobalFailCode.INVALID_REQUEST,
+        failCode: GlobalFailCode.INVALID_REQUEST
       };
       sendPacket(socket, config.packetType.GAME_PREPARE_RESPONSE, responseData);
     }
   } catch (err) {
     const responseData = {
       success: false,
-      failCode: GlobalFailCode.INVALID_REQUEST,
+      failCode: GlobalFailCode.INVALID_REQUEST
     };
     sendPacket(socket, config.packetType.GAME_PREPARE_RESPONSE, responseData);
     console.error('gameStartHandler 오류', err);

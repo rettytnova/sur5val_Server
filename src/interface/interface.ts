@@ -39,7 +39,7 @@ export interface Character {
   hp: number;
   weapon: number;
   stateInfo: CharacterStateInfo;
-  equips: number[];
+  equips: number;
   debuffs: number[];
   handCards: Card[];
   bbangCount: number;
@@ -119,4 +119,35 @@ export interface CharacterPositionData {
   id: number;
   x: number;
   y: number;
+}
+
+/* CardSelectRequest 타입 정의 */
+export interface CardSelectRequest {
+  selectType: number;
+  selectCardType: number;
+}
+
+/* CardSelectResponse 타입 정의 */
+export interface CardSelectResponse {
+  success: boolean;
+  failCode: number;
+}
+
+/* UseCardRequest 타입 정의 */
+export interface UseCardRequest {
+  cardType: number;
+  targetUserId: number;
+}
+
+/* UseCardResponse 타입 정의 */
+export interface UseCardResponse {
+  success: boolean;
+  failCode: number;
+}
+
+/* CardEffectNotification 타입 정의 */
+export interface CardEffectNotification {
+  cardType: number;
+  userId: number;
+  success: boolean;
 }
