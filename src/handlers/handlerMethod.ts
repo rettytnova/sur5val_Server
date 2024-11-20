@@ -78,6 +78,11 @@ export const setCharacterInfoInit = (users: User[]) => {
     [numbers[i], numbers[j]] = [numbers[j], numbers[i]];
   }
 
+  // 보스가 선택되지 않는 예외처리 추가
+  const selectedNumbers = numbers.slice(0, users.length - 1);
+  selectedNumbers.push(5);
+
+  // 직업 부여 랜덤 로직
   for (let i = 0; i < users.length; i++) {
     switch (numbers[i]) {
       case 1:
@@ -86,13 +91,13 @@ export const setCharacterInfoInit = (users: User[]) => {
           users[i].character.characterType = UserCharacterType.SWIM_GLASSES;
           users[i].character.roleType = 2;
           users[i].character.hp = 5;
-          users[i].character.weapon = 15;
-          users[i].character.equips = 1;
+          users[i].character.weapon = 1; // 무기 아닙니다 기획 따라 바뀌어서 스킬입니다
+          users[i].character.equips = 14;
           users[i].character.handCards = [
-            // 미장착 스킬 목록(추후 변수명 및 수정)
             { type: 2, count: 1 },
-            { type: 3, count: 1 },
-            { type: 15, count: 1 }
+            { type: 17, count: 1 },
+            { type: 21, count: 3 },
+            { type: 22, count: 1 }
           ];
         }
         break;
@@ -102,13 +107,13 @@ export const setCharacterInfoInit = (users: User[]) => {
           users[i].character.characterType = UserCharacterType.FROGGY;
           users[i].character.roleType = 2;
           users[i].character.hp = 3;
-          users[i].character.weapon = 16;
-          users[i].character.equips = 1;
+          users[i].character.weapon = 4; // 무기 아닙니다 기획 따라 바뀌어서 스킬입니다
+          users[i].character.equips = 13;
           users[i].character.handCards = [
-            // 미장착 스킬 목록(추후 변수명 및 수정)
-            { type: 2, count: 1 },
-            { type: 3, count: 1 },
-            { type: 15, count: 1 }
+            { type: 5, count: 1 },
+            { type: 18, count: 1 },
+            { type: 21, count: 3 },
+            { type: 22, count: 1 }
           ];
         }
         break;
@@ -118,13 +123,13 @@ export const setCharacterInfoInit = (users: User[]) => {
           users[i].character.characterType = UserCharacterType.MASK;
           users[i].character.roleType = 2;
           users[i].character.hp = 2;
-          users[i].character.weapon = 13;
-          users[i].character.equips = 1;
+          users[i].character.weapon = 7; // 무기 아닙니다 기획 따라 바뀌어서 스킬입니다
+          users[i].character.equips = 16;
           users[i].character.handCards = [
-            // 미장착 스킬 목록(추후 변수명 및 수정)
-            { type: 2, count: 1 },
-            { type: 3, count: 1 },
-            { type: 15, count: 1 }
+            { type: 8, count: 1 },
+            { type: 19, count: 1 },
+            { type: 21, count: 3 },
+            { type: 22, count: 1 }
           ];
         }
         break;
@@ -134,13 +139,13 @@ export const setCharacterInfoInit = (users: User[]) => {
           users[i].character.characterType = UserCharacterType.RED;
           users[i].character.roleType = 2;
           users[i].character.hp = 1;
-          users[i].character.weapon = 14;
-          users[i].character.equips = 1;
+          users[i].character.weapon = 10; // 무기 아닙니다 기획 따라 바뀌어서 스킬입니다
+          users[i].character.equips = 15;
           users[i].character.handCards = [
-            // 미장착 스킬 목록(추후 변수명 및 수정)
-            { type: 2, count: 1 },
-            { type: 3, count: 1 },
-            { type: 15, count: 1 }
+            { type: 11, count: 1 },
+            { type: 19, count: 1 },
+            { type: 21, count: 3 },
+            { type: 22, count: 1 }
           ];
         }
         break;
@@ -150,13 +155,27 @@ export const setCharacterInfoInit = (users: User[]) => {
           users[i].character.characterType = UserCharacterType.PINK_SLIME;
           users[i].character.roleType = 3;
           users[i].character.hp = 5;
-          users[i].character.weapon = 14;
-          users[i].character.equips = 1;
+          users[i].character.weapon = 1; // 무기 아닙니다 기획 따라 바뀌어서 스킬입니다
+          users[i].character.equips = 20;
           users[i].character.handCards = [
-            // 미장착 스킬 목록(추후 변수명 및 수정)
             { type: 2, count: 1 },
             { type: 3, count: 1 },
-            { type: 15, count: 1 }
+            { type: 4, count: 1 },
+            { type: 5, count: 1 },
+            { type: 6, count: 1 },
+            { type: 7, count: 1 },
+            { type: 8, count: 1 },
+            { type: 9, count: 1 },
+            { type: 10, count: 1 },
+            { type: 11, count: 1 },
+            { type: 12, count: 1 },
+            { type: 13, count: 1 },
+            { type: 14, count: 1 },
+            { type: 15, count: 1 },
+            { type: 16, count: 1 },
+            { type: 23, count: 5 },
+            { type: 21, count: 10 },
+            { type: 22, count: 3 }
           ];
         }
         break;
