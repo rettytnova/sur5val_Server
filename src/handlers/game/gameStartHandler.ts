@@ -1,24 +1,12 @@
 import net from 'net';
-import {
-  CharacterPositionData,
-  CustomSocket,
-  RedisUserData,
-} from '../../interface/interface.js';
+import { CharacterPositionData, CustomSocket, RedisUserData } from '../../interface/interface.js';
 import { GlobalFailCode, PhaseType } from '../enumTyps.js';
 import { sendPacket } from '../../packet/createPacket.js';
-import { config } from '../../config/config.js';
-import {
-  getRedisData,
-  getRoomByUserId,
-  getSocketByUser,
-  getUserBySocket,
-  setRedisData,
-} from '../handlerMethod.js';
+import { config, spawnPoint } from '../../config/config.js';
+import { getRedisData, getRoomByUserId, getSocketByUser, getUserBySocket, setRedisData } from '../handlerMethod.js';
+import { randomNumber } from '../../utils/utils.js';
 
-export const gameStartHandler = async (
-  socket: CustomSocket,
-  payload: Object,
-) => {
+export const gameStartHandler = async (socket: CustomSocket, payload: Object) => {
   // 핸들러가 호출되면 success. response 만들어서 보냄
   // responseData = { success: true, failCode: GlobalFailCode.value }
   // sendPacket(socket, config.packetType.GAME_START_RESPONSE, responseData)
@@ -31,7 +19,7 @@ export const gameStartHandler = async (
       if (room === null) {
         const responseData = {
           success: false,
-          failCode: GlobalFailCode.INVALID_REQUEST,
+          failCode: GlobalFailCode.INVALID_REQUEST
         };
         sendPacket(socket, config.packetType.GAME_START_RESPONSE, responseData);
 
@@ -44,7 +32,7 @@ export const gameStartHandler = async (
 
       const responseData = {
         success: true,
-        failCode: GlobalFailCode.NONE,
+        failCode: GlobalFailCode.NONE
       };
       sendPacket(socket, config.packetType.GAME_START_RESPONSE, responseData);
 
@@ -56,11 +44,13 @@ export const gameStartHandler = async (
       }
 
       for (let i = 0; i < room.users.length; i++) {
-        // 위치 데이터 로직 필요
+        // 랜덤 스폰포인트
+        const spawnPointArray = Object.values(spawnPoint);
+        const randomSpawnPoint = spawnPointArray[randomNumber(1, 20)];
         const characterPositionData: CharacterPositionData = {
           id: room.users[i].id,
-          x: 0 + 1 * i,
-          y: 0 - 1 * i,
+          x: randomSpawnPoint.x,
+          y: randomSpawnPoint.y
         };
         characterPositionDatas[room.id].push(characterPositionData);
       }
@@ -74,13 +64,9 @@ export const gameStartHandler = async (
           console.error('gameStartHandler: socket not found');
           const responseData = {
             success: false,
-            failCode: GlobalFailCode.INVALID_REQUEST,
+            failCode: GlobalFailCode.INVALID_REQUEST
           };
-          sendPacket(
-            socket,
-            config.packetType.GAME_START_RESPONSE,
-            responseData,
-          );
+          sendPacket(socket, config.packetType.GAME_START_RESPONSE, responseData);
           return;
         }
         // noti 데이터
@@ -89,28 +75,24 @@ export const gameStartHandler = async (
         const notifiData = {
           gameState: gameStateData,
           users: room.users,
-          characterPositions: characterPositionDatas[room.id],
+          characterPositions: characterPositionDatas[room.id]
         };
 
-        sendPacket(
-          userSocket,
-          config.packetType.GAME_START_NOTIFICATION,
-          notifiData,
-        );
+        sendPacket(userSocket, config.packetType.GAME_START_NOTIFICATION, notifiData);
       }
     } else {
       console.error('위치: gameStartHandler, 유저를 찾을 수 없습니다.');
 
       const responseData = {
         success: false,
-        failCode: GlobalFailCode.INVALID_REQUEST,
+        failCode: GlobalFailCode.INVALID_REQUEST
       };
       sendPacket(socket, config.packetType.GAME_START_RESPONSE, responseData);
     }
   } catch (err) {
     const responseData = {
       success: false,
-      failCode: GlobalFailCode.INVALID_REQUEST,
+      failCode: GlobalFailCode.INVALID_REQUEST
     };
     sendPacket(socket, config.packetType.GAME_START_RESPONSE, responseData);
     console.log('gameStartHandler 오류', err);
