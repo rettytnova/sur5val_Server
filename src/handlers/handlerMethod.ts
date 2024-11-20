@@ -2,6 +2,12 @@ import { getRedis } from '../database/redis.js';
 import { Character, CustomSocket, Room, User } from '../interface/interface.js';
 import { socketSessions } from '../session/socketSession.js';
 import { CharacterStateType } from './enumTyps.js';
+import {
+  directionChangeBasic,
+  directionChangeRandom,
+  monsterMoveDirection,
+  moveSpeed
+} from './notification/monsterMove.js';
 
 // 레디스에서 데이터 가져오기 ex: getRedisData("roomData")
 export const getRedisData = async (key: string) => {
@@ -115,5 +121,41 @@ export const getSocketByUserId = async (user: User) => {
     if (redisUserDatas[i].id === user.id) {
       return socketSessions[redisUserDatas[i].id];
     }
+  }
+};
+
+// 몬스터 이동 방향 및 거리 설정 / 0:위, 1: 오른쪽, 2: 아래, 3: 왼쪽 (맵의 일정 범위를 벗어날 것으로 예상 되는 경우 반대 방향으로 전환)
+export const monsterMoveAI = (roomId: number, id: number, x: number, y: number) => {
+  let monsterDirection = Math.floor(Math.random() * 4);
+  const monsterdistance = Math.floor(Math.random() * directionChangeRandom + directionChangeBasic);
+  if (monsterDirection === 0 && y + monsterdistance * moveSpeed > 10)
+    monsterDirection = (monsterDirection + 2) % 4;
+  else if (monsterDirection === 1 && x + monsterdistance * moveSpeed > 19)
+    monsterDirection = (monsterDirection + 2) % 4;
+  else if (monsterDirection === 2 && y - monsterdistance * moveSpeed < -10)
+    monsterDirection = (monsterDirection + 2) % 4;
+  else if (monsterDirection === 3 && x - monsterdistance * moveSpeed < -19)
+    monsterDirection = (monsterDirection + 2) % 4;
+
+  let index;
+  for (let i = 0; i < monsterMoveDirection[roomId].length; i++) {
+    if (monsterMoveDirection[roomId][i].id === id) {
+      index = i;
+      break;
+    }
+  }
+
+  if (index === undefined) {
+    monsterMoveDirection[roomId].push({
+      id: id,
+      direction: monsterDirection,
+      distance: monsterdistance
+    });
+  } else {
+    monsterMoveDirection[roomId][index] = {
+      id: id,
+      direction: monsterDirection,
+      distance: monsterdistance
+    };
   }
 };
