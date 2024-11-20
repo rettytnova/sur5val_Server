@@ -53,12 +53,14 @@ export const positionUpdateHandler = async (socket: net.Socket, payload: Object)
         }
 
         // 유저 위치 동기화
-        for (let idx = 0; idx < positionData.length; idx++) {
-          const roomUserSocket = socketSessions[positionData[idx].id];
-          sendPacket(roomUserSocket, config.packetType.POSITION_UPDATE_NOTIFICATION, {
-            characterPositions: positionData
-          });
-        }
+        // for (let idx = 0; idx < positionData.length; idx++) {
+        //   const roomUserSocket = socketSessions[positionData[idx].id];
+        //   if (roomUserSocket) {
+        //     sendPacket(roomUserSocket, config.packetType.POSITION_UPDATE_NOTIFICATION, {
+        //       characterPositions: positionData
+        //     });
+        //   }
+        // }
 
         setRedisData('characterPositionDatas', positionDatas); // 모든 방에 있는 위치데이터 값
       }

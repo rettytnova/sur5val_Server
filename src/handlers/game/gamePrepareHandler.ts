@@ -54,29 +54,22 @@ export const gamePrepareHandler = async (
           responseData,
         );
 
-        // 방에있는 유저들 캐릭터 정하기
-        for (let i = 0; i < room.users.length; i++) {
-          setCharacterInfoInit(room.users[i].character);
-        }
+        // 방에있는 유저들 캐릭터 랜덤 배정하기
+        room.users = setCharacterInfoInit(room.users);
         const rooms: Room[] | null = await getRooms();
         if (!rooms) {
           return;
         }
-
+        // 변경한 정보 덮어쓰기
         for (let i = 0; i < rooms.length; i++) {
           if (rooms[i].id === room.id) {
             rooms[i] = room;
             break;
           }
         }
-
         // 레디스에 있는 룸 배열에서 user가 속해 있는 방을 수정하고,
         // 위에서 수정한 방이 포함되어 있는 전체 배열을 넣음
         await setRedisData('roomData', rooms);
-
-        // sendPacket(socket, config.packetType.GAME_PREPARE_NOTIFICATION, {
-        //   room,
-        // });
 
         // 방에있는 유저들에게 notifi 보내기
         for (let i = 0; i < room.users.length; i++) {

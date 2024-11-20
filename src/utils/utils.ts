@@ -59,3 +59,11 @@ export const timeConversion = (time: string): number => {
       return timeNumber;
   }
 };
+
+/** 랜덤 Number 반환
+ * @param min 최소
+ * @param max 최대
+ */
+export function randomNumber(min: number, max: number): number {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
