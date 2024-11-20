@@ -1,14 +1,14 @@
-import { number } from 'joi';
 import { getRedis } from '../database/redis.js';
-import { Character, CustomSocket, Room, User } from '../interface/interface.js';
+import { CustomSocket, Room, User } from '../interface/interface.js';
 import { socketSessions } from '../session/socketSession.js';
-import { CharacterStateType } from './enumTyps.js';
+import { CharacterType } from './enumTyps.js';
 import {
   directionChangeBasic,
   directionChangeRandom,
   monsterMoveDirection,
   moveSpeed
 } from './notification/monsterMove.js';
+import { randomNumber } from '../utils/utils.js';
 
 // 레디스에서 데이터 가져오기 ex: getRedisData("roomData")
 export const getRedisData = async (key: string) => {
@@ -116,8 +116,7 @@ export const getSocketByUserId = async (user: User) => {
 export const monsterMoveAI = (roomId: number, id: number, x: number, y: number) => {
   let monsterDirection = Math.floor(Math.random() * 4);
   const monsterdistance = Math.floor(Math.random() * directionChangeRandom + directionChangeBasic);
-  if (monsterDirection === 0 && y + monsterdistance * moveSpeed > 10)
-    monsterDirection = (monsterDirection + 2) % 4;
+  if (monsterDirection === 0 && y + monsterdistance * moveSpeed > 10) monsterDirection = (monsterDirection + 2) % 4;
   else if (monsterDirection === 1 && x + monsterdistance * moveSpeed > 19)
     monsterDirection = (monsterDirection + 2) % 4;
   else if (monsterDirection === 2 && y - monsterdistance * moveSpeed < -10)
