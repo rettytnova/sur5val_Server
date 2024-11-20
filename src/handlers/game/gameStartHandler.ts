@@ -1,14 +1,9 @@
 import { CharacterPositionData, CustomSocket, RedisUserData } from '../../interface/interface.js';
 import { GlobalFailCode, PhaseType } from '../enumTyps.js';
 import { sendPacket } from '../../packet/createPacket.js';
-import { config } from '../../config/config.js';
-import {
-  getRedisData,
-  getRoomByUserId,
-  getSocketByUser,
-  getUserBySocket,
-  setRedisData
-} from '../handlerMethod.js';
+import { config, spawnPoint } from '../../config/config.js';
+import { randomNumber } from '../../utils/utils.js';
+import { getRedisData, getRoomByUserId, getSocketByUser, getUserBySocket, setRedisData } from '../handlerMethod.js';
 import { monsterMoveStart } from '../notification/monsterMove.js';
 import { monsterSpawnStart } from '../notification/monsterSpawn.js';
 
@@ -55,12 +50,14 @@ export const gameStartHandler = async (socket: CustomSocket, payload: Object) =>
       }
 
       const userPositionDatas = [];
-      for (let i = 0; i < realUserNumber; i++) {
-        // 위치 데이터
+      for (let i = 0; i < room.users.length; i++) {
+        // 랜덤 스폰포인트
+        const spawnPointArray = Object.values(spawnPoint);
+        const randomSpawnPoint = spawnPointArray[randomNumber(1, 20)];
         const characterPositionData: CharacterPositionData = {
           id: room.users[i].id,
-          x: 0 + 1 * i,
-          y: 0 - 1 * i
+          x: randomSpawnPoint.x,
+          y: randomSpawnPoint.y
         };
         userPositionDatas.push(characterPositionData);
       }
@@ -68,29 +65,10 @@ export const gameStartHandler = async (socket: CustomSocket, payload: Object) =>
 
       await setRedisData('characterPositionDatas', characterPositionDatas);
 
-      // // ------------------------------- 최성원 ------------------------
-      // let characterPositionDatas = await getRedisData('characterPositionDatas');
-      // if (!characterPositionDatas) characterPositionDatas = { [room.id]: [] };
-      // else characterPositionDatas[room.id] = []
-
-      // characterPositionDatas[room.id].push(characterPositionData); // [{id:1, x:2, y:3}, {id:1, x:2, y:3}, {id:1, x:2, y:3} ...]
-
-      // await setRedisData('characterPositionDatas', characterPositionDatas);
-      // // ------------------------------- 최성원 ------------------------
-      // let characterPositionDatas: CharacterPositionData[] = [];
-      // for (let i = 0; i < room.users.length; i++) {
-      //   // 위치 데이터
-      //   const characterPositionData: CharacterPositionData = {
-      //     id: room.users[i].id,
-      //     x: 0 + 12 * i,
-      //     y: 0 - 12 * i,
-      //   };
-      //   characterPositionDatas.push(characterPositionData);
-      // }
-
       // 방에있는 유저들에게 notifi 보내기
       for (let i = 0; i < room.users.length; i++) {
         const userSocket = await getSocketByUser(room.users[i]);
+        // noti 데이터
         const now = Date.now() + 300000;
         const gameStateData = { phaseType: PhaseType.DAY, nextPhaseAt: now };
         const notifiData = {
@@ -101,6 +79,7 @@ export const gameStartHandler = async (socket: CustomSocket, payload: Object) =>
 
         if (userSocket)
           sendPacket(userSocket, config.packetType.GAME_START_NOTIFICATION, notifiData);
+
       }
     } else {
       console.error('위치: gameStartHandler, 유저를 찾을 수 없습니다.');
