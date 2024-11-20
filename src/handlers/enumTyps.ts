@@ -1,6 +1,6 @@
 /* 응답 성공 상태를 나타내는 상수 */
 export const RESPONSE_SUCCESS_CODE = 0;
-/*
+/**
  * GlobalFailCode
  * - 응답 상태에 따른 실패 코드
  */
@@ -24,6 +24,7 @@ export const GlobalFailCode = Object.freeze({
   CHARACTER_CONTAINED: 16,
 });
 
+// 방 상태
 export const RoomStateType = Object.freeze({
   WAIT: 0,
   PREPARE: 1,
@@ -31,6 +32,7 @@ export const RoomStateType = Object.freeze({
 });
 export type RoomStateType = (typeof RoomStateType)[keyof typeof RoomStateType];
 
+// 인게임 페이즈
 export const PhaseType = Object.freeze({
   NONE_PHASE: 0,
   DAY: 1,
@@ -39,6 +41,7 @@ export const PhaseType = Object.freeze({
 });
 export type PhaseType = (typeof PhaseType)[keyof typeof PhaseType];
 
+// 캐릭터 상태
 export const CharacterStateType = Object.freeze({
   NONE_CHARACTER_STATE: 0,
   BBANG_SHOOTER: 1, // 빵야 시전자
@@ -59,3 +62,27 @@ export const CharacterStateType = Object.freeze({
 });
 export type CharacterStateType =
   (typeof CharacterStateType)[keyof typeof CharacterStateType];
+
+// 캐릭터 코드
+export const CharacterType = Object.freeze({
+  RED: 1, // 빨강이
+  SHARK: 3, // 상어군
+  MALANG: 5, // 말랑이
+  FROGGY: 7, // 개굴군
+  PINK: 8, // 핑크군
+  SWIM_GLASSES: 9, // 물안경군
+  MASK: 10, // 가면군
+  DINOSAUR: 12, // 공룡이
+  PINK_SLIME: 13, // 핑크슬라임
+});
+export type CharacterType = (typeof CharacterType)[keyof typeof CharacterType];
+
+// 역할 코드
+export const RoleType = Object.freeze({
+  NONE_ROLE: 0,
+  TARGET: 1,
+  BODYGUARD: 2,
+  HITMAN: 3,
+  PSYCHOPATH: 4,
+});
+export type RoleType = (typeof RoleType)[keyof typeof RoleType];

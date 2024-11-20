@@ -1,7 +1,9 @@
+import { number } from 'joi';
 import { getRedis } from '../database/redis.js';
 import { Character, CustomSocket, Room, User } from '../interface/interface.js';
 import { socketSessions } from '../session/socketSession.js';
-import { CharacterStateType } from './enumTyps.js';
+import { randomNumber } from '../utils/utils.js';
+import { CharacterStateType, CharacterType } from './enumTyps.js';
 
 // 레디스에서 데이터 가져오기 ex: getRedisData("roomData")
 export const getRedisData = async (key: string) => {
@@ -61,38 +63,25 @@ export const getRoomByUserId = async (userId: number) => {
   return room;
 };
 
-/**
- * export interface Character {
-  characterType: number;
-  roleType: number;
-  hp: number;
-  weapon: number;
-  stateInfo: CharacterStateInfo;
-  equips: number[];
-  debuffs: number[];
-  handCards: Card[];
-  bbangCount: number;
-  handCardsCount: number;
-}
-
-export interface CharacterStateInfo {
-  state: number; 0
-  nextState: number; 
-  nextStateAt: number;
-  stateTargetUserId: number;
-}
- */
-function rand(min: number, max: number): number {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-const characterTypes = [1, 3, 5, 7, 8, 9, 10, 12, 13];
-
-export const setCharacterInfoInit = (character: Character) => {
-  const characterTypeIndex = rand(0, 8);
-  character.characterType = characterTypes[characterTypeIndex];
-  character.roleType = rand(1, 4);
-  character.hp = 4;
+// 유저 캐릭터 초기화
+// 생각보다 내용이 더 복잡해질거 같아 일단 보류. (기획에 따라 바뀔것이기 때문)
+export const setCharacterInfoInit = (users: User[]) => {
+  let characterValues = Object.values(CharacterType);
+  const result = [];
+  const usedIndex = new Set<number>();
+  while (result.length < users.length) {
+    const characterTypeIndex = randomNumber(0, characterValues.length - 1);
+    if (!usedIndex.has(characterTypeIndex)) {
+      result.push(characterTypeIndex);
+      usedIndex.add(characterTypeIndex);
+    }
+  }
+  for (let i = 0; i < users.length; i++) {
+    users[i].character.characterType = characterValues[result[i]];
+    users[i].character.roleType = randomNumber(1, 4);
+    users[i].character.hp = 3;
+  }
+  return users;
 };
 
 // socket으로 유저 데이터 가져오기

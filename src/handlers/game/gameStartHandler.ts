@@ -56,7 +56,7 @@ export const gameStartHandler = async (
       }
 
       for (let i = 0; i < room.users.length; i++) {
-        // 위치 데이터
+        // 위치 데이터 로직 필요
         const characterPositionData: CharacterPositionData = {
           id: room.users[i].id,
           x: 0 + 1 * i,
@@ -66,26 +66,6 @@ export const gameStartHandler = async (
       }
 
       await setRedisData('characterPositionDatas', characterPositionDatas);
-
-      // // ------------------------------- 최성원 ------------------------
-      // let characterPositionDatas = await getRedisData('characterPositionDatas');
-      // if (!characterPositionDatas) characterPositionDatas = { [room.id]: [] };
-      // else characterPositionDatas[room.id] = []
-
-      // characterPositionDatas[room.id].push(characterPositionData); // [{id:1, x:2, y:3}, {id:1, x:2, y:3}, {id:1, x:2, y:3} ...]
-
-      // await setRedisData('characterPositionDatas', characterPositionDatas);
-      // // ------------------------------- 최성원 ------------------------
-      // let characterPositionDatas: CharacterPositionData[] = [];
-      // for (let i = 0; i < room.users.length; i++) {
-      //   // 위치 데이터
-      //   const characterPositionData: CharacterPositionData = {
-      //     id: room.users[i].id,
-      //     x: 0 + 12 * i,
-      //     y: 0 - 12 * i,
-      //   };
-      //   characterPositionDatas.push(characterPositionData);
-      // }
 
       // 방에있는 유저들에게 notifi 보내기
       for (let i = 0; i < room.users.length; i++) {
