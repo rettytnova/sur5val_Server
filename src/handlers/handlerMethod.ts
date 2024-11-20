@@ -91,7 +91,8 @@ export const setCharacterInfoInit = (users: User[]) => {
           users[i].character.handCards = [
             // 미장착 스킬 목록(추후 변수명 및 수정)
             { type: 2, count: 1 },
-            { type: 3, count: 1 }
+            { type: 3, count: 1 },
+            { type: 15, count: 1 }
           ];
         }
         break;
@@ -106,7 +107,8 @@ export const setCharacterInfoInit = (users: User[]) => {
           users[i].character.handCards = [
             // 미장착 스킬 목록(추후 변수명 및 수정)
             { type: 2, count: 1 },
-            { type: 3, count: 1 }
+            { type: 3, count: 1 },
+            { type: 15, count: 1 }
           ];
         }
         break;
@@ -121,7 +123,8 @@ export const setCharacterInfoInit = (users: User[]) => {
           users[i].character.handCards = [
             // 미장착 스킬 목록(추후 변수명 및 수정)
             { type: 2, count: 1 },
-            { type: 3, count: 1 }
+            { type: 3, count: 1 },
+            { type: 15, count: 1 }
           ];
         }
         break;
@@ -136,7 +139,8 @@ export const setCharacterInfoInit = (users: User[]) => {
           users[i].character.handCards = [
             // 미장착 스킬 목록(추후 변수명 및 수정)
             { type: 2, count: 1 },
-            { type: 3, count: 1 }
+            { type: 3, count: 1 },
+            { type: 15, count: 1 }
           ];
         }
         break;
@@ -151,7 +155,8 @@ export const setCharacterInfoInit = (users: User[]) => {
           users[i].character.handCards = [
             // 미장착 스킬 목록(추후 변수명 및 수정)
             { type: 2, count: 1 },
-            { type: 3, count: 1 }
+            { type: 3, count: 1 },
+            { type: 15, count: 1 }
           ];
         }
         break;
