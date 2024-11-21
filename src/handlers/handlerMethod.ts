@@ -119,11 +119,11 @@ export const monsterAI = (
   let monsterDirection = Math.floor(Math.random() * 4);
   const monsterdistance = Math.floor(Math.random() * directionChangeRandom + directionChangeBasic);
   if (monsterDirection === 0 && y + monsterdistance * moveSpeed > 10) monsterDirection = (monsterDirection + 2) % 4;
-  else if (monsterDirection === 1 && x + monsterdistance * moveSpeed > 19)
+  else if (monsterDirection === 1 && x + monsterdistance * moveSpeed > 18)
     monsterDirection = (monsterDirection + 2) % 4;
   else if (monsterDirection === 2 && y - monsterdistance * moveSpeed < -10)
     monsterDirection = (monsterDirection + 2) % 4;
-  else if (monsterDirection === 3 && x - monsterdistance * moveSpeed < -19)
+  else if (monsterDirection === 3 && x - monsterdistance * moveSpeed < -18)
     monsterDirection = (monsterDirection + 2) % 4;
 
   let index;

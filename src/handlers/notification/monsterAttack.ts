@@ -1,11 +1,12 @@
 import { config } from '../../config/config.js';
 import { Room, User } from '../../interface/interface.js';
 import { sendPacket } from '../../packet/createPacket.js';
-import { getRedisData, getSocketByUser, setRedisData } from '../handlerMethod.js';
+import { getRedisData, getSocketByUser } from '../handlerMethod.js';
 import { monsterAiDatas } from './monsterMove.js';
+import { monsterDatas } from './monsterSpawn.js';
 import { userUpdateNotification } from './userUpdate.js';
 
-// 공격가능 상태인지
+// 공격가능 상태인지 대상인지 확인
 export const monsterAttackCheck = async (room: Room) => {
   for (let i = 0; i < room.users.length; i++) {
     if (room.users[i].character.roleType === 0) {
@@ -67,28 +68,21 @@ export const monsterAttackPlayer = async (player: User, monster: User, room: Roo
     (monsterPosition.x - playerPosition.x) ** 2 + (monsterPosition.y - playerPosition.y) ** 2 <
     monsterData.attackRange ** 2
   ) {
-    console.log(`${player.nickname}을 ${monster.nickname}이 공격함`);
-    monsterData.attackCool = 1000;
-    player.character.hp -= 1;
-    if (player.character.hp === 0) {
-      console.log('부활띠!');
-      player.nickname = '나는 죽었다';
-      player.character.hp = 5;
-      await setRedisData('characterPositionDatas', characterPositionDatas);
-      console.log('characterPositionDatas', characterPositionDatas);
-      for (let i = 0; i < room.users.length; i++) {
-        const userSocket = await getSocketByUser(room.users[i]);
-        const now = Date.now() + 300000;
-        const gameStateData = { phaseType: 3, nextPhaseAt: now };
-        const notifiData = {
-          gameState: gameStateData,
-          users: room.users,
-          characterPositions: characterPositionDatas[room.id]
-        };
-
-        if (userSocket) sendPacket(userSocket, config.packetType.GAME_START_NOTIFICATION, notifiData);
-      }
+    monsterData.attackCool = monsterDatas[monster.character.characterType].attackCool;
+    // player.character.hp -= 1;
+    monster.character.hp -= 1;
+    if (monster.character.hp <= 0)
+      (monster.character.hp = 5), (monsterPosition.x = -monsterPosition.x), (monsterPosition.y = -monsterPosition.y);
+    if (player.character.hp <= 0) {
+      // 유저 사망 시 발동되야하는 함수 여기로 연결
     }
     userUpdateNotification(room);
+    // for (let i = 0; i < room.users.length; i++) {
+    //   const roomUserSocket = await getSocketByUser(room.users[i]);
+    //   if (roomUserSocket) {
+    //     sendPacket(roomUserSocket, config.packetType.ANIMATION_NOTIFICATION, { userId: monster.id, animationType: 1 });
+    //     sendPacket(roomUserSocket, config.packetType.ANIMATION_NOTIFICATION, { userId: player.id, animationType: 2 });
+    //   }
+    // }
   }
 };
