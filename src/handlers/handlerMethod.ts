@@ -118,13 +118,22 @@ export const monsterAI = (
 ) => {
   let monsterDirection = Math.floor(Math.random() * 4);
   const monsterdistance = Math.floor(Math.random() * directionChangeRandom + directionChangeBasic);
-  if (monsterDirection === 0 && y + monsterdistance * moveSpeed > 10) monsterDirection = (monsterDirection + 2) % 4;
-  else if (monsterDirection === 1 && x + monsterdistance * moveSpeed > 18)
-    monsterDirection = (monsterDirection + 2) % 4;
-  else if (monsterDirection === 2 && y - monsterdistance * moveSpeed < -10)
-    monsterDirection = (monsterDirection + 2) % 4;
-  else if (monsterDirection === 3 && x - monsterdistance * moveSpeed < -18)
-    monsterDirection = (monsterDirection + 2) % 4;
+
+  let nextX = x;
+  let nextY = y;
+  if (monsterDirection === 0) nextY = y + monsterdistance * moveSpeed;
+  else if (monsterDirection === 1) nextX = x + monsterdistance * moveSpeed;
+  else if (monsterDirection === 2) nextY = y - monsterdistance * moveSpeed;
+  else if (monsterDirection === 3) nextX = x - monsterdistance * moveSpeed;
+
+  if (nextX < -19.5) monsterDirection = (monsterDirection + 2) % 4;
+  else if (nextX > 19.5) monsterDirection = (monsterDirection + 2) % 4;
+  else if (nextX > -15.5 && nextX < -1.5 && nextY > 0.5 && nextY < 7.5) monsterDirection = (monsterDirection + 2) % 4;
+  else if (nextX > -15.5 && nextX < -3.5 && nextY > -8.3 && nextY < -2.8) monsterDirection = (monsterDirection + 2) % 4;
+  else if (nextX > 4.5 && nextX < 13.5 && nextY > 1.5 && nextY < 7.5) monsterDirection = (monsterDirection + 2) % 4;
+  else if (nextX > 3.5 && nextX < 14.5 && nextY > -7.5 && nextY < -2.5) monsterDirection = (monsterDirection + 2) % 4;
+  else if (nextY > 10.5) monsterDirection = (monsterDirection + 2) % 4;
+  else if (nextY < -10.5) monsterDirection = (monsterDirection + 2) % 4;
 
   let index;
   for (let i = 0; i < monsterAiDatas[roomId].length; i++) {
