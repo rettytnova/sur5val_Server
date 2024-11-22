@@ -1,7 +1,7 @@
 import { getRedis } from '../database/redis.js';
 import { CustomSocket, Room, User } from '../interface/interface.js';
 import { socketSessions } from '../session/socketSession.js';
-import { CharacterType } from './enumTyps.js';
+import { UserCharacterType } from './enumTyps.js';
 import { directionChangeBasic, directionChangeRandom, monsterAiDatas, moveSpeed } from './notification/monsterMove.js';
 import { randomNumber } from '../utils/utils.js';
 
@@ -64,22 +64,109 @@ export const getRoomByUserId = async (userId: number) => {
 };
 
 // 유저 캐릭터 초기화
-// 생각보다 내용이 더 복잡해질거 같아 일단 보류. (기획에 따라 바뀔것이기 때문)
 export const setCharacterInfoInit = (users: User[]) => {
-  let characterValues = Object.values(CharacterType);
-  const result = [];
-  const usedIndex = new Set<number>();
-  while (result.length < users.length) {
-    const characterTypeIndex = randomNumber(0, characterValues.length - 1);
-    if (!usedIndex.has(characterTypeIndex)) {
-      result.push(characterTypeIndex);
-      usedIndex.add(characterTypeIndex);
-    }
+  const numbers: number[] = [1, 2, 3, 4, 5];
+
+  // 배열을 랜덤으로 섞기 (Fisher-Yates Shuffle Algorithm)
+  for (let i = users.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [numbers[i], numbers[j]] = [numbers[j], numbers[i]];
   }
+
+  // 보스가 선택되지 않는 예외처리 추가
+  const selectedNumbers = numbers.slice(0, users.length);
+  if (!selectedNumbers.includes(5)) {
+    const bossUserIndex = Math.floor(Math.random() * (users.length - 1));
+    selectedNumbers[bossUserIndex] = 5;
+  }
+
+  // 직업 부여 랜덤 로직
   for (let i = 0; i < users.length; i++) {
-    users[i].character.characterType = characterValues[result[i]];
-    users[i].character.roleType = 0;
-    users[i].character.hp = 5;
+    switch (selectedNumbers[i]) {
+      case 1:
+        {
+          // 탱커 - 물안경군
+          users[i].character.characterType = UserCharacterType.SWIM_GLASSES;
+          users[i].character.roleType = 0;
+          users[i].character.hp = 5;
+          users[i].character.weapon = 1; // 무기 아닙니다 기획 따라 바뀌어서 스킬입니다
+          //users[i].character.equips = 14;
+          users[i].character.handCards = [
+            { type: 2, count: 1 },
+            { type: 17, count: 1 },
+            { type: 21, count: 3 },
+            { type: 22, count: 1 }
+          ];
+        }
+        break;
+      case 2:
+        {
+          // 로그 - 개굴군(근딜)
+          users[i].character.characterType = UserCharacterType.FROGGY;
+          users[i].character.roleType = 0;
+          users[i].character.hp = 3;
+          users[i].character.weapon = 4; // 무기 아닙니다 기획 따라 바뀌어서 스킬입니다
+          //users[i].character.equips = 13;
+          users[i].character.handCards = [
+            { type: 5, count: 1 },
+            { type: 18, count: 1 },
+            { type: 21, count: 3 },
+            { type: 22, count: 1 }
+          ];
+        }
+        break;
+      case 3:
+        {
+          // 가면군 - 마법사(원딜)
+          users[i].character.characterType = UserCharacterType.MASK;
+          users[i].character.roleType = 0;
+          users[i].character.hp = 2;
+          users[i].character.weapon = 7; // 무기 아닙니다 기획 따라 바뀌어서 스킬입니다
+          //users[i].character.equips = 16;
+          users[i].character.handCards = [
+            { type: 8, count: 1 },
+            { type: 19, count: 1 },
+            { type: 21, count: 3 },
+            { type: 22, count: 1 }
+          ];
+        }
+        break;
+      case 4:
+        {
+          // 빨강이 - 서포터
+          users[i].character.characterType = UserCharacterType.RED;
+          users[i].character.roleType = 0;
+          users[i].character.hp = 1;
+          users[i].character.weapon = 10; // 무기 아닙니다 기획 따라 바뀌어서 스킬입니다
+          //users[i].character.equips = 15;
+          users[i].character.handCards = [
+            { type: 11, count: 1 },
+            { type: 19, count: 1 },
+            { type: 21, count: 3 },
+            { type: 22, count: 1 }
+          ];
+        }
+        break;
+      case 5:
+        {
+          // 핑크슬라임 - 보스
+          users[i].character.characterType = UserCharacterType.PINK_SLIME;
+          users[i].character.roleType = 1;
+          users[i].character.hp = 5;
+          users[i].character.weapon = 1; // 무기 아닙니다 기획 따라 바뀌어서 스킬입니다
+          //users[i].character.equips = 20;
+          users[i].character.handCards = [
+            { type: 4, count: 1 },
+            { type: 7, count: 1 },
+            { type: 10, count: 1 },
+            { type: 13, count: 1 },
+            { type: 14, count: 1 },
+            { type: 23, count: 1 },
+            { type: 22, count: 1 }
+          ];
+        }
+        break;
+    }
   }
   return users;
 };
