@@ -16,8 +16,8 @@ export const monsterAiDatas: {
 } = {};
 
 export const moveSpeed = 0.03; // 프레임당 몬스터 이동 속도 (약 30프레임)
-export const directionChangeBasic = 40; // 프레임 당 방향 전환 기본 값
-export const directionChangeRandom = 20; // 프레임 당 방향 전환 랜덤 값
+export const directionChangeBasic = 20; // 프레임 당 방향 전환 기본 값
+export const directionChangeRandom = 10; // 프레임 당 방향 전환 랜덤 값
 
 export const monsterMoveStart = async (roomId: number, totalTime: number) => {
   const roomDatas: Room[] = await getRedisData('roomData');
@@ -72,7 +72,7 @@ export const monsterMoveStart = async (roomId: number, totalTime: number) => {
         monsterAiDatas[roomId][i].attackCool--;
         for (let j = 0; j < characterPositions[roomId].length; j++) {
           if (monsterAiDatas[roomId][i].id === characterPositions[roomId][j].id) {
-            if (characterPositions[roomId][j]) characterPositions[roomId][j].y += moveSpeed;
+            characterPositions[roomId][j].y += moveSpeed;
             break;
           }
         }

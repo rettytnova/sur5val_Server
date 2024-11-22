@@ -69,8 +69,8 @@ export const monsterAttackPlayer = async (player: User, monster: User, room: Roo
     (monsterPosition.x - playerPosition.x) ** 2 + (monsterPosition.y - playerPosition.y) ** 2 <
     monsterData.attackRange ** 2
   ) {
-    monsterData.attackCool = monsterDatas[monster.character.characterType].attackCool;
-    player.character.hp -= 1;
+    monsterData.attackCool = monsterDatas[monster.character.characterType][monster.character.handCardsCount].attackCool;
+    player.character.hp -= monsterDatas[monster.character.characterType][monster.character.handCardsCount].attackPower;
     if (player.character.hp <= 0) player.character.stateInfo.state = 15;
     userUpdateNotification(room);
     // 애니메이션 효과
