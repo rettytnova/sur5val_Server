@@ -1,9 +1,10 @@
 import net from 'net';
-import { getRedisData, getSocketByUser, getUserBySocket, setRedisData } from '../handlerMethod.js';
+import { getRedisData, getUserBySocket, setRedisData } from '../handlerMethod.js';
 import { CustomSocket, Room, User } from '../../interface/interface.js';
 import { sendPacket } from '../../packet/createPacket.js';
 import { config } from '../../config/config.js';
 import { GlobalFailCode } from '../enumTyps.js';
+import { socketSessions } from '../../session/socketSession.js';
 
 export const leaveRoomHandler = async (socket: net.Socket) => {
   // 해당 소켓으로 전달받는 데이터에 유저가 있는지
@@ -55,7 +56,7 @@ export const leaveRoomHandler = async (socket: net.Socket) => {
           return;
         }
         for (let userIdx = 0; userIdx < roomData[i].users.length; userIdx++) {
-          const roomUserSocket = await getSocketByUser(roomData[i].users[userIdx]);
+          const roomUserSocket = socketSessions[roomData[i].users[userIdx].id];
           if (roomUserSocket)
             sendPacket(roomUserSocket, config.packetType.LEAVE_ROOM_NOTIFICATION, {
               userId: user.id

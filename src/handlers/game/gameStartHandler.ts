@@ -2,10 +2,11 @@ import { CharacterPositionData, CustomSocket, RedisUserData, Room, User } from '
 import { GlobalFailCode, PhaseType } from '../enumTyps.js';
 import { sendPacket } from '../../packet/createPacket.js';
 import { config, spawnPoint } from '../../config/config.js';
-import { getRedisData, getRoomByUserId, getSocketByUser, getUserBySocket, setRedisData } from '../handlerMethod.js';
+import { getRedisData, getRoomByUserId, getUserBySocket, setRedisData } from '../handlerMethod.js';
 import { monsterMoveStart } from '../notification/monsterMove.js';
 import { monsterSpawnStart } from '../notification/monsterSpawn.js';
 import { randomNumber } from '../../utils/utils.js';
+import { socketSessions } from '../../session/socketSession.js';
 
 const roundPlayTime = 60000;
 const totalRound = 4;
@@ -99,7 +100,7 @@ const phaseNotification = async (level: number, roomId: number, sendTime: number
     if (!room) return;
 
     for (let i = 0; i < room.users.length; i++) {
-      const userSocket = await getSocketByUser(room.users[i]);
+      const userSocket = socketSessions[room.users[i].id];
       const gameStateData = { phaseType: PhaseType.DAY, nextPhaseAt: Date.now() + roundPlayTime };
       const notifiData = {
         gameState: gameStateData,
