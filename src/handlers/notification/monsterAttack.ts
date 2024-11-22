@@ -1,7 +1,8 @@
 import { config } from '../../config/config.js';
-import { Room, User } from '../../interface/interface.js';
+import { CharacterPositionData, Room, User } from '../../interface/interface.js';
 import { sendPacket } from '../../packet/createPacket.js';
-import { getRedisData, getSocketByUser } from '../handlerMethod.js';
+import { socketSessions } from '../../session/socketSession.js';
+import { getRedisData } from '../handlerMethod.js';
 import { monsterAiDatas } from './monsterMove.js';
 import { monsterDatas } from './monsterSpawn.js';
 import { userUpdateNotification } from './userUpdate.js';
@@ -9,7 +10,7 @@ import { userUpdateNotification } from './userUpdate.js';
 // 공격가능 상태인지 대상인지 확인
 export const monsterAttackCheck = async (room: Room) => {
   for (let i = 0; i < room.users.length; i++) {
-    if (room.users[i].character.roleType === 0) {
+    if (room.users[i].character.roleType === 0 && room.users[i].character.hp > 0) {
       for (let j = 0; j < room.users.length; j++) {
         if (room.users[j].character.roleType === 2) {
           await monsterAttackPlayer(room.users[i], room.users[j], room);
@@ -22,6 +23,7 @@ export const monsterAttackCheck = async (room: Room) => {
 export const monsterAttackPlayer = async (player: User, monster: User, room: Room) => {
   // 몬스터 정보 skillCool 찾아서 check하기
   let monsterData;
+  // console.log('monsterId:', monster.id);
   for (let i = 0; i < monsterAiDatas[room.id].length; i++) {
     if (monsterAiDatas[room.id][i].id === monster.id) {
       if (monsterAiDatas[room.id][i].attackCool > 0) return;
@@ -36,12 +38,11 @@ export const monsterAttackPlayer = async (player: User, monster: User, room: Roo
   }
 
   // 몬스터 위치 정보 찾기
-  const characterPositionDatas: { [key: number]: { id: number; x: number; y: number }[] } =
-    await getRedisData('characterPositionDatas');
+  const characterPositions = await getRedisData('characterPositionDatas');
   let monsterPosition;
-  for (let i = 0; i < characterPositionDatas[room.id].length; i++) {
-    if (characterPositionDatas[room.id][i].id === monster.id) {
-      monsterPosition = characterPositionDatas[room.id][i];
+  for (let i = 0; i < characterPositions[room.id].length; i++) {
+    if (characterPositions[room.id][i].id === monster.id) {
+      monsterPosition = characterPositions[room.id][i];
       break;
     }
   }
@@ -52,9 +53,9 @@ export const monsterAttackPlayer = async (player: User, monster: User, room: Roo
 
   // 유저 위치 정보 찾기
   let playerPosition;
-  for (let i = 0; i < characterPositionDatas[room.id].length; i++) {
-    if (characterPositionDatas[room.id][i].id === player.id) {
-      playerPosition = characterPositionDatas[room.id][i];
+  for (let i = 0; i < characterPositions[room.id].length; i++) {
+    if (characterPositions[room.id][i].id === player.id) {
+      playerPosition = characterPositions[room.id][i];
       break;
     }
   }
@@ -69,20 +70,25 @@ export const monsterAttackPlayer = async (player: User, monster: User, room: Roo
     monsterData.attackRange ** 2
   ) {
     monsterData.attackCool = monsterDatas[monster.character.characterType].attackCool;
-    // player.character.hp -= 1;
-    monster.character.hp -= 1;
-    if (monster.character.hp <= 0)
-      (monster.character.hp = 5), (monsterPosition.x = -monsterPosition.x), (monsterPosition.y = -monsterPosition.y);
-    if (player.character.hp <= 0) {
-      // 유저 사망 시 발동되야하는 함수 여기로 연결
-    }
+    player.character.hp -= 1;
+    if (player.character.hp <= 0) player.character.stateInfo.state = 15;
     userUpdateNotification(room);
-    // for (let i = 0; i < room.users.length; i++) {
-    //   const roomUserSocket = await getSocketByUser(room.users[i]);
-    //   if (roomUserSocket) {
-    //     sendPacket(roomUserSocket, config.packetType.ANIMATION_NOTIFICATION, { userId: monster.id, animationType: 1 });
-    //     sendPacket(roomUserSocket, config.packetType.ANIMATION_NOTIFICATION, { userId: player.id, animationType: 2 });
-    //   }
-    // }
+    // 애니메이션 효과
+    if (socketSessions[player.id]) {
+      for (let i = 0; i < monsterAiDatas[room.id].length; i++) {
+        if (monsterAiDatas[room.id][i].id === monster.id) {
+          monsterAiDatas[room.id][i].animationDelay = 20;
+          break;
+        }
+      }
+      sendPacket(socketSessions[player.id], config.packetType.ANIMATION_NOTIFICATION, {
+        userId: monster.id,
+        animationType: 1
+      });
+      sendPacket(socketSessions[player.id], config.packetType.ANIMATION_NOTIFICATION, {
+        userId: player.id,
+        animationType: 2
+      });
+    }
   }
 };
