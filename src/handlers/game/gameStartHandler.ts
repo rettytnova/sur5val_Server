@@ -3,8 +3,8 @@ import { GlobalFailCode, PhaseType } from '../enumTyps.js';
 import { sendPacket } from '../../packet/createPacket.js';
 import { config, spawnPoint } from '../../config/config.js';
 import { getRedisData, getRoomByUserId, getUserBySocket, setRedisData } from '../handlerMethod.js';
-import { monsterMoveStart } from '../notification/monsterMove.js';
-import { monsterSpawnStart } from '../notification/monsterSpawn.js';
+import { monsterMoveStart } from '../coreMethod/monsterMove.js';
+import { monsterSpawnStart } from '../coreMethod/monsterSpawn.js';
 import { randomNumber } from '../../utils/utils.js';
 import { socketSessions } from '../../session/socketSession.js';
 
