@@ -73,23 +73,26 @@ export const setCharacterInfoInit = (users: User[]) => {
   const numbers: number[] = [1, 2, 3, 4, 5];
 
   // 배열을 랜덤으로 섞기 (Fisher-Yates Shuffle Algorithm)
-  for (let i = numbers.length - 1; i > 0; i--) {
+  for (let i = users.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [numbers[i], numbers[j]] = [numbers[j], numbers[i]];
   }
 
   // 보스가 선택되지 않는 예외처리 추가
-  const selectedNumbers = numbers.slice(0, users.length - 1);
-  selectedNumbers.push(5);
+  const selectedNumbers = numbers.slice(0, users.length);
+  if (!selectedNumbers.includes(5)) {
+    const bossUserIndex = Math.floor(Math.random() * (users.length - 1));
+    selectedNumbers[bossUserIndex] = 5;
+  }
 
   // 직업 부여 랜덤 로직
   for (let i = 0; i < users.length; i++) {
-    switch (numbers[i]) {
+    switch (selectedNumbers[i]) {
       case 1:
         {
           // 탱커 - 물안경군
           users[i].character.characterType = UserCharacterType.SWIM_GLASSES;
-          users[i].character.roleType = 2;
+          users[i].character.roleType = 0;
           users[i].character.hp = 5;
           users[i].character.weapon = 1; // 무기 아닙니다 기획 따라 바뀌어서 스킬입니다
           users[i].character.equips = 14;
@@ -105,7 +108,7 @@ export const setCharacterInfoInit = (users: User[]) => {
         {
           // 로그 - 개굴군(근딜)
           users[i].character.characterType = UserCharacterType.FROGGY;
-          users[i].character.roleType = 2;
+          users[i].character.roleType = 0;
           users[i].character.hp = 3;
           users[i].character.weapon = 4; // 무기 아닙니다 기획 따라 바뀌어서 스킬입니다
           users[i].character.equips = 13;
@@ -121,7 +124,7 @@ export const setCharacterInfoInit = (users: User[]) => {
         {
           // 가면군 - 마법사(원딜)
           users[i].character.characterType = UserCharacterType.MASK;
-          users[i].character.roleType = 2;
+          users[i].character.roleType = 0;
           users[i].character.hp = 2;
           users[i].character.weapon = 7; // 무기 아닙니다 기획 따라 바뀌어서 스킬입니다
           users[i].character.equips = 16;
@@ -137,7 +140,7 @@ export const setCharacterInfoInit = (users: User[]) => {
         {
           // 빨강이 - 서포터
           users[i].character.characterType = UserCharacterType.RED;
-          users[i].character.roleType = 2;
+          users[i].character.roleType = 0;
           users[i].character.hp = 1;
           users[i].character.weapon = 10; // 무기 아닙니다 기획 따라 바뀌어서 스킬입니다
           users[i].character.equips = 15;
@@ -153,29 +156,18 @@ export const setCharacterInfoInit = (users: User[]) => {
         {
           // 핑크슬라임 - 보스
           users[i].character.characterType = UserCharacterType.PINK_SLIME;
-          users[i].character.roleType = 3;
+          users[i].character.roleType = 1;
           users[i].character.hp = 5;
           users[i].character.weapon = 1; // 무기 아닙니다 기획 따라 바뀌어서 스킬입니다
           users[i].character.equips = 20;
           users[i].character.handCards = [
-            { type: 2, count: 1 },
-            { type: 3, count: 1 },
             { type: 4, count: 1 },
-            { type: 5, count: 1 },
-            { type: 6, count: 1 },
             { type: 7, count: 1 },
-            { type: 8, count: 1 },
-            { type: 9, count: 1 },
             { type: 10, count: 1 },
-            { type: 11, count: 1 },
-            { type: 12, count: 1 },
             { type: 13, count: 1 },
             { type: 14, count: 1 },
-            { type: 15, count: 1 },
-            { type: 16, count: 1 },
-            { type: 23, count: 5 },
-            { type: 21, count: 10 },
-            { type: 22, count: 3 }
+            { type: 23, count: 1 },
+            { type: 22, count: 1 }
           ];
         }
         break;
