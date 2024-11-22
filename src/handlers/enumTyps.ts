@@ -21,14 +21,14 @@ export const GlobalFailCode = Object.freeze({
   NOT_ROOM_OWNER: 13,
   ALREADY_USED_BBANG: 14,
   INVALID_PHASE: 15,
-  CHARACTER_CONTAINED: 16,
+  CHARACTER_CONTAINED: 16
 });
 
 // 방 상태
 export const RoomStateType = Object.freeze({
   WAIT: 0,
   PREPARE: 1,
-  INGAME: 2,
+  INGAME: 2
 });
 export type RoomStateType = (typeof RoomStateType)[keyof typeof RoomStateType];
 
@@ -37,7 +37,7 @@ export const PhaseType = Object.freeze({
   NONE_PHASE: 0,
   DAY: 1,
   EVENING: 2,
-  END: 3,
+  END: 3
 });
 export type PhaseType = (typeof PhaseType)[keyof typeof PhaseType];
 
@@ -58,10 +58,19 @@ export const CharacterStateType = Object.freeze({
   ABSORB_TARGET: 12, // 흡수 대상
   HALLUCINATING: 13, // 신기루 중
   HALLUCINATION_TARGET: 14, // 신기루 대상
-  CONTAINED: 15, // 감금 중
+  CONTAINED: 15 // 감금 중
 });
-export type CharacterStateType =
-  (typeof CharacterStateType)[keyof typeof CharacterStateType];
+export type CharacterStateType = (typeof CharacterStateType)[keyof typeof CharacterStateType];
+
+// 캐릭터 코드
+export const UserCharacterType = Object.freeze({
+  RED: 1, // 빨강이
+  FROGGY: 7, // 개굴군
+  SWIM_GLASSES: 9, // 물안경군
+  MASK: 10, // 가면군
+  PINK_SLIME: 13 // 핑크슬라임
+});
+export type UserCharacterType = (typeof UserCharacterType)[keyof typeof UserCharacterType];
 
 // 캐릭터 코드
 export const CharacterType = Object.freeze({
@@ -73,7 +82,7 @@ export const CharacterType = Object.freeze({
   SWIM_GLASSES: 9, // 물안경군
   MASK: 10, // 가면군
   DINOSAUR: 12, // 공룡이
-  PINK_SLIME: 13, // 핑크슬라임
+  PINK_SLIME: 13 // 핑크슬라임
 });
 export type CharacterType = (typeof CharacterType)[keyof typeof CharacterType];
 
@@ -83,6 +92,6 @@ export const RoleType = Object.freeze({
   TARGET: 1,
   BODYGUARD: 2,
   HITMAN: 3,
-  PSYCHOPATH: 4,
+  PSYCHOPATH: 4
 });
 export type RoleType = (typeof RoleType)[keyof typeof RoleType];

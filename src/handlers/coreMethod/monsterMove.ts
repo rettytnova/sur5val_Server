@@ -1,7 +1,8 @@
 import { config } from '../../config/config.js';
 import { Room } from '../../interface/interface.js';
 import { sendPacket } from '../../packet/createPacket.js';
-import { getRedisData, getSocketByUser, monsterAI, setRedisData } from '../handlerMethod.js';
+import { socketSessions } from '../../session/socketSession.js';
+import { getRedisData, monsterAI, setRedisData } from '../handlerMethod.js';
 import { monsterAttackCheck } from './monsterAttack.js';
 
 export const monsterAiDatas: {
@@ -110,7 +111,7 @@ export const monsterMoveStart = async (roomId: number, totalTime: number) => {
     } // 이동 종료 redis에 데이터 저장 및 notification 뿌리기
     setRedisData('characterPositionDatas', characterPositions);
     for (let i = 0; i < roomData.users.length; i++) {
-      const roomUserSocket = await getSocketByUser(roomData.users[i]);
+      const roomUserSocket = socketSessions[roomData.users[i].id];
       if (roomUserSocket) {
         sendPacket(roomUserSocket, config.packetType.POSITION_UPDATE_NOTIFICATION, {
           characterPositions: characterPositions[roomId]

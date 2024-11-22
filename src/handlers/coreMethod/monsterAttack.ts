@@ -5,7 +5,7 @@ import { socketSessions } from '../../session/socketSession.js';
 import { getRedisData } from '../handlerMethod.js';
 import { monsterAiDatas } from './monsterMove.js';
 import { monsterDatas } from './monsterSpawn.js';
-import { userUpdateNotification } from './userUpdate.js';
+import { userUpdateNotification } from '../notification/userUpdate.js';
 
 // 공격가능 상태인지 대상인지 확인
 export const monsterAttackCheck = async (room: Room) => {
