@@ -79,7 +79,7 @@ export const setCharacterInfoInit = (users: User[]) => {
   for (let i = 0; i < users.length; i++) {
     users[i].character.characterType = characterValues[result[i]];
     users[i].character.roleType = 0;
-    users[i].character.hp = 3;
+    users[i].character.hp = 5;
   }
   return users;
 };
@@ -140,7 +140,8 @@ export const monsterAI = (
       direction: monsterDirection,
       distance: monsterdistance,
       attackCool: attackCool,
-      attackRange: attackRange
+      attackRange: attackRange,
+      animationDelay: 0
     });
   } else {
     monsterAiDatas[roomId][index] = {
@@ -148,7 +149,8 @@ export const monsterAI = (
       direction: monsterDirection,
       distance: monsterdistance,
       attackCool: attackCool,
-      attackRange: attackRange
+      attackRange: attackRange,
+      animationDelay: 0
     };
   }
 };
