@@ -1,13 +1,9 @@
 import { config } from '../../config/config.js';
 import { CustomSocket } from '../../interface/interface.js';
 import { sendPacket } from '../../packet/createPacket.js';
+import { socketSessions } from '../../session/socketSession.js';
 import { GlobalFailCode } from '../enumTyps.js';
-import {
-  getRedisData,
-  getSocketByUser,
-  getUserBySocket,
-  setRedisData,
-} from '../handlerMethod.js';
+import { getRedisData, getUserBySocket, setRedisData } from '../handlerMethod.js';
 
 export const joinRandomRoomHandler = async (socket: CustomSocket) => {
   // 모든 방 정보 가져오기
@@ -25,7 +21,7 @@ export const joinRandomRoomHandler = async (socket: CustomSocket) => {
           const sendData = {
             success: 0,
             room: {},
-            failCode: GlobalFailCode.JOIN_ROOM_FAILED,
+            failCode: GlobalFailCode.JOIN_ROOM_FAILED
           };
           sendPacket(socket, config.packetType.JOIN_ROOM_RESPONSE, sendData);
           return;
@@ -37,21 +33,20 @@ export const joinRandomRoomHandler = async (socket: CustomSocket) => {
         const sendData = {
           success: 1,
           room: redisRoomDatas[i],
-          failCode: GlobalFailCode.NONE,
+          failCode: GlobalFailCode.NONE
         };
         sendPacket(socket, config.packetType.JOIN_ROOM_RESPONSE, sendData);
 
         // 방에 있는 모든 인원에게 새로운 유저가 참가했다는 notification 전달 (본인 포함)
         for (let x = 0; x < redisRoomDatas[i].users.length; x++) {
-          const roomUserSocket = await getSocketByUser(
-            redisRoomDatas[i].users[x],
-          );
+          const roomUserSocket = socketSessions[redisRoomDatas[i].users[x].id];
+
           if (!roomUserSocket) {
             console.error('socket을 찾을 수 없습니다.');
             return;
           }
           sendPacket(roomUserSocket, config.packetType.JOIN_ROOM_NOTIFICATION, {
-            joinUser: userData,
+            joinUser: userData
           });
         }
 
@@ -65,7 +60,7 @@ export const joinRandomRoomHandler = async (socket: CustomSocket) => {
       const sendData = {
         success: 0,
         room: {},
-        failCode: GlobalFailCode.ROOM_NOT_FOUND,
+        failCode: GlobalFailCode.ROOM_NOT_FOUND
       };
       sendPacket(socket, config.packetType.JOIN_ROOM_RESPONSE, sendData);
     }
@@ -74,7 +69,7 @@ export const joinRandomRoomHandler = async (socket: CustomSocket) => {
     const sendData = {
       success: 0,
       room: {},
-      failCode: GlobalFailCode.ROOM_NOT_FOUND,
+      failCode: GlobalFailCode.ROOM_NOT_FOUND
     };
     sendPacket(socket, config.packetType.JOIN_ROOM_RESPONSE, sendData);
     return;
