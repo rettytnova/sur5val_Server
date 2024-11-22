@@ -171,7 +171,13 @@ export const setCharacterInfoInit = (users: User[]) => {
   return users;
 };
 
-// socket으로 유저 데이터 가져오기
+export const saveSocketSession = (userId: number, socket: CustomSocket) => {
+  socketSessions[userId] = socket;
+};
+
+/*
+ // ### 아래의 두 함수는 socketSession[user.id]로 대체하였음.
+ 
 export const getSocketByUser = async (user: User) => {
   const redisUserDatas = await getRedisData('userData');
   for (let i = 0; i < redisUserDatas.length; i++) {
@@ -180,11 +186,6 @@ export const getSocketByUser = async (user: User) => {
     }
   }
 };
-
-export const saveSocketSession = (userId: number, socket: CustomSocket) => {
-  socketSessions[userId] = socket;
-};
-
 export const getSocketByUserId = async (user: User) => {
   const redisUserDatas = await getRedisData('userData');
   for (let i = 0; i < redisUserDatas.length; i++) {
@@ -192,7 +193,7 @@ export const getSocketByUserId = async (user: User) => {
       return socketSessions[redisUserDatas[i].id];
     }
   }
-};
+};*/
 
 // 몬스터 이동 방향 및 거리 설정 / 0:위, 1: 오른쪽, 2: 아래, 3: 왼쪽 (맵의 일정 범위를 벗어날 것으로 예상 되는 경우 반대 방향으로 전환)
 export const monsterAI = (
