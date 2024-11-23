@@ -1,12 +1,13 @@
 import { CustomSocket, User, LoginRequest, LoginResponse } from '../../interface/interface.js';
 import jwt, { SignOptions } from 'jsonwebtoken';
 import { sendPacket } from '../../packet/createPacket.js';
-import { config, inGameTime } from '../../config/config.js';
+import { config, inGameTime, totalRound } from '../../config/config.js';
 import { getRedisData, setRedisData } from '../../handlers/handlerMethod.js';
 import { dbManager } from '../../database/user/user.db.js';
 import { GlobalFailCode, PhaseType } from '../enumTyps.js';
 import { socketSessions } from '../../session/socketSession.js';
 import { inGameTimeSessions } from '../../session/inGameTimeSession.js';
+import { userUpdateNotification } from '../notification/userUpdate.js';
 
 const { jwtToken, packetType } = config;
 
@@ -111,7 +112,7 @@ export const loginHandler = async (socket: CustomSocket, payload: Object): Promi
       for (let i = 0; i < rooms.length; i++) {
         for (let j = 0; j < rooms[i].users.length; j++) {
           if (rooms[i].users[j].id === userByEmailPw.id) {
-            const leftTime = (inGameTime - (Date.now() - inGameTimeSessions[rooms[i].id])) % inGameTime;
+            const leftTime = (inGameTime * totalRound - (Date.now() - inGameTimeSessions[rooms[i].id])) % inGameTime;
             const characterPositionDatas = await getRedisData('characterPositionDatas');
             const gameStateData = { phaseType: PhaseType.DAY, nextPhaseAt: Date.now() + leftTime };
             const notifiData = {
@@ -121,6 +122,10 @@ export const loginHandler = async (socket: CustomSocket, payload: Object): Promi
             };
             setTimeout(() => {
               sendPacket(socket, config.packetType.GAME_START_NOTIFICATION, notifiData);
+            }, 100);
+            setTimeout(() => {
+              console.log(rooms[i].users);
+              userUpdateNotification(rooms[i]);
             }, 100);
           }
         }

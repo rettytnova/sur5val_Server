@@ -2,7 +2,7 @@ import { config } from '../../config/config.js';
 import { Room, User } from '../../interface/interface.js';
 import { sendPacket } from '../../packet/createPacket.js';
 import { socketSessions } from '../../session/socketSession.js';
-import { getRedisData } from '../handlerMethod.js';
+import { getRedisData, setRedisData } from '../handlerMethod.js';
 import { monsterAiDatas } from './monsterMove.js';
 import { monsterDatas } from './monsterSpawn.js';
 import { userUpdateNotification } from '../notification/userUpdate.js';
@@ -70,8 +70,17 @@ export const monsterAttackPlayer = async (player: User, monster: User, room: Roo
   ) {
     monsterData.attackCool = monsterDatas[monster.character.characterType][monster.character.handCardsCount].attackCool;
     player.character.hp -= monsterDatas[monster.character.characterType][monster.character.handCardsCount].attackPower;
-    if (player.character.hp <= 0) player.character.stateInfo.state = 15;
+    if (player.character.hp <= 0) (player.character.stateInfo.state = 15), (player.character.hp = 0);
     userUpdateNotification(room);
+    const rooms = await getRedisData('roomData');
+    for (let i = 0; i < rooms.length; i++) {
+      for (let j = 0; j < rooms[i].users.length; j++) {
+        if (rooms[i].users[j].id === player.id) {
+          rooms[i].users[j].character.hp = player.character.hp;
+          await setRedisData('roomData', rooms);
+        }
+      }
+    }
 
     // 애니메이션 효과 보내기
     if (socketSessions[player.id]) {
