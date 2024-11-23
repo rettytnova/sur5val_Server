@@ -70,7 +70,7 @@ export const monsterAttackPlayer = async (player: User, monster: User, room: Roo
   ) {
     monsterData.attackCool = monsterDatas[monster.character.characterType][monster.character.handCardsCount].attackCool;
     player.character.hp -= monsterDatas[monster.character.characterType][monster.character.handCardsCount].attackPower;
-    if (player.character.hp <= 0) (player.character.stateInfo.state = 15), player.character.hp;
+    if (player.character.hp <= 0) (player.character.stateInfo.state = 15), (player.character.hp = 0);
     userUpdateNotification(room);
     const rooms = await getRedisData('roomData');
     for (let i = 0; i < rooms.length; i++) {
