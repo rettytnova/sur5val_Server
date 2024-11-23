@@ -1,16 +1,8 @@
 import { config } from '../../config/config.js';
-import {
-  CustomSocket,
-  UseCardRequest,
-  UseCardResponse,
-  UseCardNotification,
-  UserUpdateNotification,
-  Room
-} from '../../interface/interface.js';
+import { CustomSocket, UseCardRequest, UseCardResponse, Room } from '../../interface/interface.js';
 import { CardType, GlobalFailCode } from '../enumTyps.js';
 import { sendPacket } from '../../packet/createPacket.js';
 import { getRedisData, getUserBySocket, setRedisData } from '../../handlers/handlerMethod.js';
-import { socketSessions } from '../../session/socketSession.js';
 import { userUpdateNotification } from '../notification/userUpdate.js';
 
 const { packetType } = config;
@@ -53,22 +45,12 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
       console.error('useCardHandler: room not found');
       return;
     }
-    const useCardNotificationData: UseCardNotification = {
-      cardType: cardType,
-      userId: userData.id,
-      targetUserId: targetUserId
-    };
-    //   message S2CUseCardResponse { // 성공 여부만 반환하고 대상 유저 효과는 S2CUserUpdateNotification로 통지
-    //     bool success = 1;
-    //     GlobalFailCode failCode = 2;
-    // }
     sendPacket(socket, config.packetType.USE_CARD_RESPONSE, {
       success: true,
       failCode: GlobalFailCode.NONE
     });
     switch (cardType) {
       case CardType.BBANG:
-        //sendUseCardNotification(useCardNotificationData, room);
         console.log('처리 전 rooms.users: ', room.users[0].character.hp, room.users[1].character.hp);
         const userIndex = room.users.findIndex((user) => user.id === userData.id);
         const targetUserIndex = room.users.findIndex((user) => user.id === targetUserId);
@@ -135,46 +117,12 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
       default:
         break;
     }
-
-    // // 방에있는 유저들에게 notifi 보내기
-    // for (let i = 0; i < room.users.length; i++) {
-    //   if (room.users[i].character.roleType != 2) {
-    //     const userSocket = await getSocketByUser(room.users[i]);
-    //     if (!userSocket) {
-    //       console.error('useCardHandler: socket not found');
-    //       return;
-    //     }
-    //     sendPacket(userSocket, config.packetType.USE_CARD_NOTIFICATION, useCardNotificationData);
-    //   }
-    // }
-    //sendPacket(socket, config.packetType.USE_CARD_NOTIFICATION, useCardNotificationData);
     // 로그 처리 ----------------------------------------------------------------------
-    console.info(responseMessage);
+    //console.info(responseMessage);
   } catch (error) {
     console.error(`useCardHandler ${error as Error}`);
   }
 
   // 클라이언트(자기 자신)에 데이터 보내기
   //sendPacket(socket, packetType.USE_CARD_RESPONSE, responseData);
-};
-
-/** 방에있는 유저들에게 카드 사용 알림 보내기
- * @param {UseCardNotification} useCardNotificationData - 카드 사용 알림 데이터
- * @param {Room} room - 방 데이터
- */
-const sendUseCardNotification = (useCardNotificationData: UseCardNotification, room: Room) => {
-  const sockets = Object.values(socketSessions);
-  for (const socket of sockets) {
-    sendPacket(socket, config.packetType.USE_CARD_NOTIFICATION, useCardNotificationData);
-  }
-};
-
-const sendUserUpdateNotification = (room: Room) => {
-  const userUpdateNotificationData: UserUpdateNotification = {
-    user: room.users
-  };
-  const sockets = Object.values(socketSessions);
-  for (const socket of sockets) {
-    sendPacket(socket, config.packetType.USER_UPDATE_NOTIFICATION, userUpdateNotificationData);
-  }
 };
