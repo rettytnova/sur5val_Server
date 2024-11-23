@@ -4,16 +4,6 @@ import { v4 as uuidv4 } from 'uuid';
 const LOCK_DEFAULT_TTL = 5000; // 밀리초 단위의 기본 락 유지 시간
 
 /*
- * - Redis 클라이언트 가져오기
- *   const redisClient = await getRedis();
- * - 데이터 추가
- *   await redisClient.set('abc', '111'); // key, value
- *   console.log('Data added to Redis');
- * - 데이터 조회
- *   console.log('redis: ', await redisClient.get('abc'));
- * - 단일 데이터 제거
- *   await redisClient.del('myKey');
- *   console.log('Key "myKey" has been removed.');
  * hset: 해시 필드 추가/업데이트.
  * rpush, lpush: 리스트 데이터 추가.
  * sadd: 집합(Set) 데이터 추가.
@@ -27,7 +17,7 @@ interface RedisConfig {
 
 const configs: RedisConfig = {
   REDIS_HOST: process.env.REDIS_HOST || '127.0.0.1',
-  REDIS_PORT: parseInt(process.env.REDIS_PORT || '6379', 10),
+  REDIS_PORT: parseInt(process.env.REDIS_PORT || '6379', 10)
 };
 
 // Redis 클라이언트 변수 선언
@@ -37,13 +27,11 @@ let subscriberRedis: Redis | null = null;
 const createRedisClient = (isSubscriber = false): Redis => {
   const client = new Redis({
     host: configs.REDIS_HOST,
-    port: configs.REDIS_PORT,
+    port: configs.REDIS_PORT
   });
 
   client.on('error', (err: Error) => {
-    console.error(
-      `${isSubscriber ? 'Subscriber ' : ''}Redis connection failed: ${err.message}`,
-    );
+    console.error(`${isSubscriber ? 'Subscriber ' : ''}Redis connection failed: ${err.message}`);
   });
 
   return client;
@@ -84,21 +72,12 @@ export const getSubscriberRedis = async (): Promise<Redis> => {
 };
 
 // Redis 락 생성
-export const acquireLock = async (
-  lockKey: string,
-  ttl: number = LOCK_DEFAULT_TTL,
-): Promise<string | null> => {
+export const acquireLock = async (lockKey: string, ttl: number = LOCK_DEFAULT_TTL): Promise<string | null> => {
   const redisClient = await getRedis();
   const lockValue = uuidv4();
 
   try {
-    const lockAcquired = await redisClient.set(
-      lockKey,
-      lockValue,
-      'PX',
-      ttl.toString(),
-      'NX',
-    );
+    const lockAcquired = await redisClient.set(lockKey, lockValue, 'PX', ttl.toString(), 'NX');
 
     return lockAcquired ? lockValue : null;
   } catch (error: any) {
@@ -108,10 +87,7 @@ export const acquireLock = async (
 };
 
 // Redis 락 해제
-export const releaseLock = async (
-  lockKey: string,
-  lockValue: string,
-): Promise<boolean> => {
+export const releaseLock = async (lockKey: string, lockValue: string): Promise<boolean> => {
   const redisClient = await getRedis();
 
   try {

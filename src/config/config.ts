@@ -17,6 +17,8 @@ const VERSION_LENGTH = 1;
 export const CLIENT_VERSION = '1.0.0';
 const SEQUENCE_LENGTH = 4;
 const PAYLOAD_LENGTH = 4;
+export const inGameTime = 60000;
+export const totalRound = 4;
 
 const USER_DB_NAME = process.env.DB_NAME;
 const USER_DB_USER = process.env.DB_USER;

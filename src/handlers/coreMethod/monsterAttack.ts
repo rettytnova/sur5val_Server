@@ -1,5 +1,5 @@
 import { config } from '../../config/config.js';
-import { CharacterPositionData, Room, User } from '../../interface/interface.js';
+import { Room, User } from '../../interface/interface.js';
 import { sendPacket } from '../../packet/createPacket.js';
 import { socketSessions } from '../../session/socketSession.js';
 import { getRedisData } from '../handlerMethod.js';
@@ -7,7 +7,7 @@ import { monsterAiDatas } from './monsterMove.js';
 import { monsterDatas } from './monsterSpawn.js';
 import { userUpdateNotification } from '../notification/userUpdate.js';
 
-// 공격가능 상태인지 대상인지 확인
+// 서로 적군인지 검사
 export const monsterAttackCheck = async (room: Room) => {
   for (let i = 0; i < room.users.length; i++) {
     if (room.users[i].character.roleType === 0 && room.users[i].character.hp > 0) {
@@ -20,10 +20,10 @@ export const monsterAttackCheck = async (room: Room) => {
   }
 };
 
+// 공격가능한 조건인지 검사 후 공격
 export const monsterAttackPlayer = async (player: User, monster: User, room: Room) => {
-  // 몬스터 정보 skillCool 찾아서 check하기
+  // 몬스터 정보 skillCool 찾아서 검사하기
   let monsterData;
-  // console.log('monsterId:', monster.id);
   for (let i = 0; i < monsterAiDatas[room.id].length; i++) {
     if (monsterAiDatas[room.id][i].id === monster.id) {
       if (monsterAiDatas[room.id][i].attackCool > 0) return;
@@ -31,13 +31,12 @@ export const monsterAttackPlayer = async (player: User, monster: User, room: Roo
       break;
     }
   }
-
   if (!monsterData) {
     console.error('존재하지 않는 monsterAiDatas를 찾고 있습니다.');
     return;
   }
 
-  // 몬스터 위치 정보 찾기
+  // 몬스터 위치 정보 찾아서 검사하기
   const characterPositions = await getRedisData('characterPositionDatas');
   let monsterPosition;
   for (let i = 0; i < characterPositions[room.id].length; i++) {
@@ -51,7 +50,7 @@ export const monsterAttackPlayer = async (player: User, monster: User, room: Roo
     return;
   }
 
-  // 유저 위치 정보 찾기
+  // 유저 위치 정보 찾아서 검사하기
   let playerPosition;
   for (let i = 0; i < characterPositions[room.id].length; i++) {
     if (characterPositions[room.id][i].id === player.id) {
@@ -73,7 +72,8 @@ export const monsterAttackPlayer = async (player: User, monster: User, room: Roo
     player.character.hp -= monsterDatas[monster.character.characterType][monster.character.handCardsCount].attackPower;
     if (player.character.hp <= 0) player.character.stateInfo.state = 15;
     userUpdateNotification(room);
-    // 애니메이션 효과
+
+    // 애니메이션 효과 보내기
     if (socketSessions[player.id]) {
       for (let i = 0; i < monsterAiDatas[room.id].length; i++) {
         if (monsterAiDatas[room.id][i].id === monster.id) {
