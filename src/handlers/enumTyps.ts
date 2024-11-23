@@ -118,9 +118,9 @@ export type CharacterType = (typeof CharacterType)[keyof typeof CharacterType];
 // 역할 코드
 export const RoleType = Object.freeze({
   NONE_ROLE: 0,
-  TARGET: 1, // 타겟 (보스)
-  BODYGUARD: 2, // 보디가드 (몬스터)
-  HITMAN: 3, // 히트맨 (유저)
+  TARGET: 1,
+  BODYGUARD: 2,
+  HITMAN: 3,
   PSYCHOPATH: 4
 });
 export type RoleType = (typeof RoleType)[keyof typeof RoleType];

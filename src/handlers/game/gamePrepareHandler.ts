@@ -40,7 +40,7 @@ export const userCharacterData: {
   },
   // 로그 - 개굴군(근딜)
   [UserCharacterType.FROGGY]: {
-    hp: 3,
+    hp: 5,
     weapon: 4,
     roleType: 0,
     // equips: 12,
@@ -53,7 +53,7 @@ export const userCharacterData: {
   },
   // 가면군 - 마법사(원딜)
   [UserCharacterType.MASK]: {
-    hp: 2,
+    hp: 5,
     weapon: 7,
     roleType: 0,
     // equips: 16,
@@ -66,7 +66,7 @@ export const userCharacterData: {
   },
   // 빨강이 - 서포터
   [UserCharacterType.RED]: {
-    hp: 1,
+    hp: 5,
     weapon: 10,
     roleType: 0,
     // equips: 15,

@@ -9,8 +9,9 @@ import {
 } from '../../interface/interface.js';
 import { CardType, GlobalFailCode } from '../enumTyps.js';
 import { sendPacket } from '../../packet/createPacket.js';
-import { getRoomByUserId, getUserBySocket } from '../../handlers/handlerMethod.js';
+import { getRedisData, getUserBySocket, setRedisData } from '../../handlers/handlerMethod.js';
 import { socketSessions } from '../../session/socketSession.js';
+import { userUpdateNotification } from '../notification/userUpdate.js';
 
 const { packetType } = config;
 /***
@@ -39,7 +40,15 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
     // 카드 사용 성공 처리 ----------------------------------------------------------------------
     responseMessage = `카드 사용 성공 : ${cardType}`;
     const userData = await getUserBySocket(socket);
-    const room = await getRoomByUserId(userData.id);
+    const rooms = await getRedisData('roomData');
+    let room: Room | undefined;
+    for (let i = 0; i < rooms.length; i++) {
+      for (let j = 0; j < rooms[i].users.length; j++) {
+        if (rooms[i].users[j].id === userData.id) {
+          room = rooms[i];
+        }
+      }
+    }
     if (!room) {
       console.error('useCardHandler: room not found');
       return;
@@ -49,10 +58,18 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
       userId: userData.id,
       targetUserId: targetUserId
     };
-
+    //   message S2CUseCardResponse { // 성공 여부만 반환하고 대상 유저 효과는 S2CUserUpdateNotification로 통지
+    //     bool success = 1;
+    //     GlobalFailCode failCode = 2;
+    // }
+    sendPacket(socket, config.packetType.USE_CARD_RESPONSE, {
+      success: true,
+      failCode: GlobalFailCode.NONE
+    });
     switch (cardType) {
       case CardType.BBANG:
-        sendUseCardNotification(useCardNotificationData, room);
+        //sendUseCardNotification(useCardNotificationData, room);
+        console.log('처리 전 rooms.users: ', room.users[0].character.hp, room.users[1].character.hp);
         const userIndex = room.users.findIndex((user) => user.id === userData.id);
         const targetUserIndex = room.users.findIndex((user) => user.id === targetUserId);
         if (userIndex === -1) {
@@ -64,11 +81,12 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
           return;
         }
         // // 빵야 사용자
-        room.users[userIndex].character.hp -= 1;
+
         // // 빵야 타겟
         room.users[targetUserIndex].character.hp -= 1;
-
-        sendUserUpdateNotification(room);
+        console.log('처리 후 rooms: ', room.users[0].character.hp, room.users[1].character.hp);
+        await setRedisData('roomData', rooms);
+        userUpdateNotification(room);
         break;
       case CardType.BIG_BBANG:
         break;
