@@ -41,6 +41,34 @@ export const PhaseType = Object.freeze({
 });
 export type PhaseType = (typeof PhaseType)[keyof typeof PhaseType];
 
+// 카드
+export const CardType = Object.freeze({
+  NONE: 0,
+  BBANG: 1, // 20장
+  BIG_BBANG: 2, // 1장
+  SHIELD: 3, // 10장
+  VACCINE: 4, // 6장
+  CALL_119: 5, // 2장
+  DEATH_MATCH: 6, // 4장
+  GUERRILLA: 7, // 1장
+  ABSORB: 8, // 4장
+  HALLUCINATION: 9, // 4장
+  FLEA_MARKET: 10, // 3장
+  MATURED_SAVINGS: 11, // 2장
+  WIN_LOTTERY: 12, // 1장
+  SNIPER_GUN: 13, // 1장
+  HAND_GUN: 14, // 2장
+  DESERT_EAGLE: 15, // 3장
+  AUTO_RIFLE: 16, // 2장
+  LASER_POINTER: 17, // 1장
+  RADAR: 18, // 1장
+  AUTO_SHIELD: 19, // 2장
+  STEALTH_SUIT: 20, // 2장
+  CONTAINMENT_UNIT: 21, // 3장
+  SATELLITE_TARGET: 22, // 1장
+  BOMB: 23 // 1장
+});
+export type CardType = (typeof CardType)[keyof typeof CardType];
 // 캐릭터 상태
 export const CharacterStateType = Object.freeze({
   NONE_CHARACTER_STATE: 0,
@@ -84,9 +112,9 @@ export type CharacterType = (typeof CharacterType)[keyof typeof CharacterType];
 // 역할 코드
 export const RoleType = Object.freeze({
   NONE_ROLE: 0,
-  TARGET: 1,
-  BODYGUARD: 2,
-  HITMAN: 3,
+  TARGET: 1, // 타겟 (보스)
+  BODYGUARD: 2, // 보디가드 (몬스터)
+  HITMAN: 3, // 히트맨 (유저)
   PSYCHOPATH: 4
 });
 export type RoleType = (typeof RoleType)[keyof typeof RoleType];

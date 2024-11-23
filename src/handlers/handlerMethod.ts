@@ -84,13 +84,13 @@ export const setCharacterInfoInit = (users: User[]) => {
         {
           // 탱커 - 물안경군
           users[i].character.characterType = UserCharacterType.SWIM_GLASSES;
-          users[i].character.roleType = 2;
+          users[i].character.roleType = 3;
           users[i].character.hp = 5;
           users[i].character.weapon = 15;
           users[i].character.equips = 1;
           users[i].character.handCards = [
             // 미장착 스킬 목록(추후 변수명 및 수정)
-            { type: 2, count: 1 },
+            { type: 1, count: 1 },
             { type: 3, count: 1 },
             { type: 15, count: 1 }
           ];
@@ -100,13 +100,13 @@ export const setCharacterInfoInit = (users: User[]) => {
         {
           // 로그 - 개굴군(근딜)
           users[i].character.characterType = UserCharacterType.FROGGY;
-          users[i].character.roleType = 2;
+          users[i].character.roleType = 3;
           users[i].character.hp = 3;
           users[i].character.weapon = 16;
           users[i].character.equips = 1;
           users[i].character.handCards = [
             // 미장착 스킬 목록(추후 변수명 및 수정)
-            { type: 2, count: 1 },
+            { type: 1, count: 1 },
             { type: 3, count: 1 },
             { type: 15, count: 1 }
           ];
@@ -116,13 +116,13 @@ export const setCharacterInfoInit = (users: User[]) => {
         {
           // 가면군 - 마법사(원딜)
           users[i].character.characterType = UserCharacterType.MASK;
-          users[i].character.roleType = 2;
+          users[i].character.roleType = 3;
           users[i].character.hp = 2;
           users[i].character.weapon = 13;
           users[i].character.equips = 1;
           users[i].character.handCards = [
             // 미장착 스킬 목록(추후 변수명 및 수정)
-            { type: 2, count: 1 },
+            { type: 1, count: 1 },
             { type: 3, count: 1 },
             { type: 15, count: 1 }
           ];
@@ -132,13 +132,13 @@ export const setCharacterInfoInit = (users: User[]) => {
         {
           // 빨강이 - 서포터
           users[i].character.characterType = UserCharacterType.RED;
-          users[i].character.roleType = 2;
+          users[i].character.roleType = 3;
           users[i].character.hp = 1;
           users[i].character.weapon = 14;
           users[i].character.equips = 1;
           users[i].character.handCards = [
             // 미장착 스킬 목록(추후 변수명 및 수정)
-            { type: 2, count: 1 },
+            { type: 1, count: 1 },
             { type: 3, count: 1 },
             { type: 15, count: 1 }
           ];
@@ -148,13 +148,13 @@ export const setCharacterInfoInit = (users: User[]) => {
         {
           // 핑크슬라임 - 보스
           users[i].character.characterType = UserCharacterType.PINK_SLIME;
-          users[i].character.roleType = 3;
+          users[i].character.roleType = 1;
           users[i].character.hp = 5;
           users[i].character.weapon = 14;
           users[i].character.equips = 1;
           users[i].character.handCards = [
             // 미장착 스킬 목록(추후 변수명 및 수정)
-            { type: 2, count: 1 },
+            { type: 1, count: 1 },
             { type: 3, count: 1 },
             { type: 15, count: 1 }
           ];

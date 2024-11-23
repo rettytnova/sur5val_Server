@@ -145,6 +145,18 @@ export interface UseCardResponse {
   failCode: number;
 }
 
+/* UseCardNotification 타입 정의 */
+export interface UseCardNotification {
+  cardType: number;
+  userId: number;
+  targetUserId: number;
+}
+
+/* UserUpdateNotification 타입 정의 */
+export interface UserUpdateNotification {
+  user: User[];
+}
+
 /* CardEffectNotification 타입 정의 */
 export interface CardEffectNotification {
   cardType: number;

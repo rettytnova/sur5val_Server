@@ -1,8 +1,17 @@
 import { config } from '../../config/config.js';
-import { CustomSocket, UseCardRequest, UseCardResponse, CardEffectNotification } from '../../interface/interface.js';
-import { GlobalFailCode } from '../enumTyps.js';
+import {
+  CustomSocket,
+  UseCardRequest,
+  UseCardResponse,
+  CardEffectNotification,
+  UseCardNotification,
+  UserUpdateNotification,
+  Room
+} from '../../interface/interface.js';
+import { CardType, CharacterStateType, GlobalFailCode } from '../enumTyps.js';
 import { sendPacket } from '../../packet/createPacket.js';
-import { getUserBySocket } from '../../handlers/handlerMethod.js';
+import { getRoomByUserId, getRooms, getSocketByUser, getUserBySocket } from '../../handlers/handlerMethod.js';
+import { socketSessions } from '../../session/socketSession.js';
 
 const { packetType } = config;
 /***
@@ -16,16 +25,12 @@ const { packetType } = config;
  */
 export const useCardHandler = async (socket: CustomSocket, payload: Object): Promise<void> => {
   // response 데이터 초기화 ----------------------------------------------------------------------
-  const { cardType, targetUserId } = payload as UseCardRequest;
+  const { cardType, targetUserId: targetUserIdRaw } = payload as UseCardRequest;
+  const targetUserId = Number(targetUserIdRaw);
   let responseMessage: string = '';
   let responseData: UseCardResponse = {
     success: true,
     failCode: GlobalFailCode.NONE
-  };
-  let cardEffectNotificationData: CardEffectNotification = {
-    cardType: 0,
-    userId: 0,
-    success: true
   };
 
   try {
@@ -35,12 +40,122 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
     // 카드 사용 성공 처리 ----------------------------------------------------------------------
     responseMessage = `카드 사용 성공 : ${cardType}`;
     const userData = await getUserBySocket(socket);
-    cardEffectNotificationData = {
+    const room = await getRoomByUserId(userData.id);
+    if (!room) {
+      console.error('useCardHandler: room not found');
+      return;
+    }
+    const useCardNotificationData: UseCardNotification = {
       cardType: cardType,
       userId: userData.id,
-      success: true
+      targetUserId: targetUserId
     };
 
+    switch (cardType) {
+      case CardType.BBANG:
+        sendUseCardNotification(useCardNotificationData, room);
+        const userIndex = room.users.findIndex((user) => user.id === userData.id);
+        const targetUserIndex = room.users.findIndex((user) => user.id === targetUserId);
+        if (userIndex === -1) {
+          console.error('useCardHandler: user not found');
+          return;
+        }
+        if (targetUserIndex === -1) {
+          console.error('useCardHandler: user not found');
+          return;
+        }
+        // // 빵야 사용자
+        room.users[userIndex].character.hp -= 1;
+        // room.users[userIndex].character.stateInfo = {
+        //   state: CharacterStateType.BBANG_SHOOTER,
+        //   nextState: CharacterStateType.NONE_CHARACTER_STATE,
+        //   nextStateAt: 5000,
+        //   stateTargetUserId: targetUserId
+        // };
+        // // 빵야 타겟
+        room.users[targetUserIndex].character.hp -= 1;
+        // room.users[targetUserIndex].character.stateInfo = {
+        //   state: CharacterStateType.BBANG_TARGET,
+        //   nextState: CharacterStateType.NONE_CHARACTER_STATE,
+        //   nextStateAt: 5000,
+        //   stateTargetUserId: 0
+        // };
+        // console.log(room.users[userIndex].id, '->', room.users[userIndex].character.stateInfo);
+        // console.log(room.users[targetUserIndex].id, '->', room.users[targetUserIndex].character.stateInfo);
+        const rooms: Room[] | null = await getRooms();
+        if (!rooms) {
+          return;
+        }
+        // // 변경한 정보 덮어쓰기
+        // for (let i = 0; i < rooms.length; i++) {
+        //   if (rooms[i].id === room.id) {
+        //     rooms[i] = room;
+        //     break;
+        //   }
+        // }
+
+        sendUserUpdateNotification(room);
+        break;
+      case CardType.BIG_BBANG:
+        break;
+      case CardType.SHIELD:
+        break;
+      case CardType.VACCINE:
+        break;
+      case CardType.CALL_119:
+        break;
+      case CardType.DEATH_MATCH:
+        break;
+      case CardType.GUERRILLA:
+        break;
+      case CardType.HALLUCINATION:
+        break;
+      case CardType.ABSORB:
+        break;
+      case CardType.FLEA_MARKET:
+        break;
+      case CardType.MATURED_SAVINGS:
+        break;
+      case CardType.WIN_LOTTERY:
+        break;
+      case CardType.SNIPER_GUN:
+        break;
+      case CardType.HAND_GUN:
+        break;
+      case CardType.DESERT_EAGLE:
+        break;
+      case CardType.AUTO_RIFLE:
+        break;
+      case CardType.LASER_POINTER:
+        break;
+      case CardType.RADAR:
+        break;
+      case CardType.AUTO_SHIELD:
+        break;
+      case CardType.STEALTH_SUIT:
+        break;
+      case CardType.CONTAINMENT_UNIT:
+        break;
+      case CardType.SATELLITE_TARGET:
+        break;
+      case CardType.BOMB:
+        break;
+      default:
+        break;
+    }
+
+    // // 방에있는 유저들에게 notifi 보내기
+    // for (let i = 0; i < room.users.length; i++) {
+    //   if (room.users[i].character.roleType != 2) {
+    //     const userSocket = await getSocketByUser(room.users[i]);
+    //     if (!userSocket) {
+    //       console.error('useCardHandler: socket not found');
+    //       return;
+    //     }
+    //     sendPacket(userSocket, config.packetType.USE_CARD_NOTIFICATION, useCardNotificationData);
+    //   }
+    // }
+    //sendPacket(socket, config.packetType.USE_CARD_NOTIFICATION, useCardNotificationData);
     // 로그 처리 ----------------------------------------------------------------------
     console.info(responseMessage);
   } catch (error) {
@@ -48,8 +163,26 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
   }
 
   // 클라이언트(자기 자신)에 데이터 보내기
-  sendPacket(socket, packetType.USE_CARD_RESPONSE, responseData);
+  //sendPacket(socket, packetType.USE_CARD_RESPONSE, responseData);
+};
 
-  // 클라이언트(자신 제외)에 데이터 보내기
-  sendPacket(socket, packetType.CARD_EFFECT_NOTIFICATION, cardEffectNotificationData);
+/** 방에있는 유저들에게 카드 사용 알림 보내기
+ * @param {UseCardNotification} useCardNotificationData - 카드 사용 알림 데이터
+ * @param {Room} room - 방 데이터
+ */
+const sendUseCardNotification = (useCardNotificationData: UseCardNotification, room: Room) => {
+  const sockets = Object.values(socketSessions);
+  for (const socket of sockets) {
+    sendPacket(socket, config.packetType.USE_CARD_NOTIFICATION, useCardNotificationData);
+  }
+};
+
+const sendUserUpdateNotification = (room: Room) => {
+  const userUpdateNotificationData: UserUpdateNotification = {
+    user: room.users
+  };
+  const sockets = Object.values(socketSessions);
+  for (const socket of sockets) {
+    sendPacket(socket, config.packetType.USER_UPDATE_NOTIFICATION, userUpdateNotificationData);
+  }
 };
