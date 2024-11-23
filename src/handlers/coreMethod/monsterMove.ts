@@ -1,7 +1,8 @@
 import { config } from '../../config/config.js';
 import { Room } from '../../interface/interface.js';
 import { sendPacket } from '../../packet/createPacket.js';
-import { getRedisData, getSocketByUser, monsterAI, setRedisData } from '../handlerMethod.js';
+import { socketSessions } from '../../session/socketSession.js';
+import { getRedisData, monsterAI, setRedisData } from '../handlerMethod.js';
 import { monsterAttackCheck } from './monsterAttack.js';
 
 export const monsterAiDatas: {
@@ -16,8 +17,8 @@ export const monsterAiDatas: {
 } = {};
 
 export const moveSpeed = 0.03; // 프레임당 몬스터 이동 속도 (약 30프레임)
-export const directionChangeBasic = 40; // 프레임 당 방향 전환 기본 값
-export const directionChangeRandom = 20; // 프레임 당 방향 전환 랜덤 값
+export const directionChangeBasic = 20; // 프레임 당 방향 전환 기본 값
+export const directionChangeRandom = 10; // 프레임 당 방향 전환 랜덤 값
 
 export const monsterMoveStart = async (roomId: number, totalTime: number) => {
   const roomDatas: Room[] = await getRedisData('roomData');
@@ -72,7 +73,7 @@ export const monsterMoveStart = async (roomId: number, totalTime: number) => {
         monsterAiDatas[roomId][i].attackCool--;
         for (let j = 0; j < characterPositions[roomId].length; j++) {
           if (monsterAiDatas[roomId][i].id === characterPositions[roomId][j].id) {
-            if (characterPositions[roomId][j]) characterPositions[roomId][j].y += moveSpeed;
+            characterPositions[roomId][j].y += moveSpeed;
             break;
           }
         }
@@ -110,7 +111,7 @@ export const monsterMoveStart = async (roomId: number, totalTime: number) => {
     } // 이동 종료 redis에 데이터 저장 및 notification 뿌리기
     setRedisData('characterPositionDatas', characterPositions);
     for (let i = 0; i < roomData.users.length; i++) {
-      const roomUserSocket = await getSocketByUser(roomData.users[i]);
+      const roomUserSocket = socketSessions[roomData.users[i].id];
       if (roomUserSocket) {
         sendPacket(roomUserSocket, config.packetType.POSITION_UPDATE_NOTIFICATION, {
           characterPositions: characterPositions[roomId]

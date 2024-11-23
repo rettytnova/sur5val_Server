@@ -5,7 +5,7 @@ import { socketSessions } from '../../session/socketSession.js';
 import { getRedisData } from '../handlerMethod.js';
 import { monsterAiDatas } from './monsterMove.js';
 import { monsterDatas } from './monsterSpawn.js';
-import { userUpdateNotification } from './userUpdate.js';
+import { userUpdateNotification } from '../notification/userUpdate.js';
 
 // 공격가능 상태인지 대상인지 확인
 export const monsterAttackCheck = async (room: Room) => {
@@ -69,8 +69,8 @@ export const monsterAttackPlayer = async (player: User, monster: User, room: Roo
     (monsterPosition.x - playerPosition.x) ** 2 + (monsterPosition.y - playerPosition.y) ** 2 <
     monsterData.attackRange ** 2
   ) {
-    monsterData.attackCool = monsterDatas[monster.character.characterType].attackCool;
-    player.character.hp -= 1;
+    monsterData.attackCool = monsterDatas[monster.character.characterType][monster.character.handCardsCount].attackCool;
+    player.character.hp -= monsterDatas[monster.character.characterType][monster.character.handCardsCount].attackPower;
     if (player.character.hp <= 0) player.character.stateInfo.state = 15;
     userUpdateNotification(room);
     // 애니메이션 효과
