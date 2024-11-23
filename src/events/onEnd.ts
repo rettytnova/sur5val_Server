@@ -1,10 +1,7 @@
-import {
-  getRedisData,
-  getUserBySocket,
-  setRedisData,
-} from '../handlers/handlerMethod.js';
+import { getRedisData, getUserBySocket, setRedisData } from '../handlers/handlerMethod.js';
 import { leaveRoomHandler } from '../handlers/room/leaveRoomHandler.js';
 import { CustomSocket } from '../interface/interface.js';
+import { socketSessions } from '../session/socketSession.js';
 
 export const onEnd = (socket: CustomSocket) => async () => {
   const endUserData = await getUserBySocket(socket);
@@ -23,4 +20,5 @@ export const onEnd = (socket: CustomSocket) => async () => {
     }
     console.log('종료 처리 후 liveUserData 수: ', liveUserDatas.length);
   }
+  delete socketSessions[endUserData.id];
 };

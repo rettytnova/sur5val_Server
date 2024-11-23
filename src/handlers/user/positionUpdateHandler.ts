@@ -1,16 +1,6 @@
 import net from 'net';
 import { getRedisData, getUserBySocket, setRedisData } from '../handlerMethod.js';
-import {
-  CharacterPositionData,
-  CustomSocket,
-  positionUpdatePayload,
-  Room,
-  User
-} from '../../interface/interface.js';
-import { sendPacket } from '../../packet/createPacket.js';
-import { config } from '../../config/config.js';
-import { GlobalFailCode } from '../enumTyps.js';
-import { socketSessions } from '../../session/socketSession.js';
+import { CharacterPositionData, CustomSocket, positionUpdatePayload, Room, User } from '../../interface/interface.js';
 
 export const positionUpdateHandler = async (socket: net.Socket, payload: Object) => {
   const update = payload as positionUpdatePayload;
@@ -51,7 +41,6 @@ export const positionUpdateHandler = async (socket: net.Socket, payload: Object)
             positionData[idx].y = changedPosition.y;
           }
         }
-
         // 유저 위치 동기화
         // for (let idx = 0; idx < positionData.length; idx++) {
         //   const roomUserSocket = socketSessions[positionData[idx].id];

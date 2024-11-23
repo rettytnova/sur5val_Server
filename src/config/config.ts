@@ -17,6 +17,8 @@ const VERSION_LENGTH = 1;
 export const CLIENT_VERSION = '1.0.0';
 const SEQUENCE_LENGTH = 4;
 const PAYLOAD_LENGTH = 4;
+export const inGameTime = 60000;
+export const totalRound = 4;
 
 const USER_DB_NAME = process.env.DB_NAME;
 const USER_DB_USER = process.env.DB_USER;
@@ -168,47 +170,58 @@ export const packetMaps = {
 
   [config.packetType.ANIMATION_NOTIFICATION]: 'animationNotification'
 };
-
-export const spawnPoint = {
+/**
+ * x: 11 , y : -8
+x: 5 , y : -8
+x: - 8 , y : -8
+x: -11, y : 0
+x: -4 , y : 0
+x: 7 , y : 1
+x: 22, y : 0
+x: 23, y : -8
+x: -22.5 , y : 0
+x: -21, y : - 10.5
+ */
+export const spawnPoint: { [key: number]: { x: number; y: number } } = {
   1: {
-    x: -3.972,
-    y: 3.703
+    x: 11,
+    y: -8
   },
   2: {
-    x: 10.897,
-    y: 4.033
+    x: 5,
+    y: -8
   },
   3: {
-    x: 11.737,
-    y: -5.216
+    x: -8,
+    y: -8
   },
   4: {
-    x: 5.647,
-    y: -5.126
+    x: -11,
+    y: 0
   },
   5: {
-    x: -6.202,
-    y: 5.126
+    x: -4,
+    y: 0
   },
   6: {
-    x: -13.262,
-    y: 4.213
+    x: 7,
+    y: 1
   },
   7: {
-    x: -22.742,
-    y: 3.653
+    x: 22,
+    y: 0
   },
   8: {
-    x: -21.622,
-    y: 6.936
+    x: 23,
+    y: -8
   },
   9: {
-    x: -24.732,
-    y: -6.886
+    x: -22.5,
+    y: 0
   },
   10: {
-    x: -15.702,
-    y: 6.863
+    x: -21,
+    y: -10.5
   },
   11: {
     x: -1.562,
