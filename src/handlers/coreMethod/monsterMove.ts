@@ -20,6 +20,7 @@ export const moveSpeed = 0.03; // 프레임당 몬스터 이동 속도 (약 30�
 export const directionChangeBasic = 20; // 프레임 당 방향 전환 기본 값
 export const directionChangeRandom = 10; // 프레임 당 방향 전환 랜덤 값
 
+// 몬스터 이동 및 공격 시작
 export const monsterMoveStart = async (roomId: number, totalTime: number) => {
   const roomDatas: Room[] = await getRedisData('roomData');
   let roomData: Room | null = null;
@@ -39,7 +40,6 @@ export const monsterMoveStart = async (roomId: number, totalTime: number) => {
   let callme = 0;
   totalTime -= 1000;
   const monsterMove = setInterval(async () => {
-    // 공격 가능한지 확인하여 공격 실행
     const characterPositions = await getRedisData('characterPositionDatas');
     await monsterAttackCheck(roomData);
     callme++;
@@ -108,8 +108,10 @@ export const monsterMoveStart = async (roomId: number, totalTime: number) => {
           }
         }
       }
-    } // 이동 종료 redis에 데이터 저장 및 notification 뿌리기
-    setRedisData('characterPositionDatas', characterPositions);
+    }
+
+    // 이동 종료 redis에 데이터 저장 및 notification 뿌리기
+    await setRedisData('characterPositionDatas', characterPositions);
     for (let i = 0; i < roomData.users.length; i++) {
       const roomUserSocket = socketSessions[roomData.users[i].id];
       if (roomUserSocket) {
@@ -119,9 +121,8 @@ export const monsterMoveStart = async (roomId: number, totalTime: number) => {
       }
     }
 
+    // 시간 다되면 함수 종료
     if (Date.now() - time >= totalTime)
-      console.log('함수 실행 횟수:', callme, '함수 실행 시간:', Date.now() - time),
-        clearInterval(monsterMove),
-        await setRedisData('characterPositionDatas', characterPositions);
+      console.log('함수 실행 횟수:', callme, '함수 실행 시간:', Date.now() - time), clearInterval(monsterMove);
   }, 30);
 };
