@@ -9,14 +9,14 @@ export const onData = (socket: CustomSocket) => async (data: Buffer) => {
   const initialHeaderLength = VERSION_START;
 
   while (socket.buffer.length > initialHeaderLength) {
-    console.log(socket.buffer);
+    //console.log(socket.buffer);
 
     let offset: number = 0;
 
     const packetType = socket.buffer.readUInt16BE(offset);
     offset += config.packet.typeLength;
 
-    console.log(`packetType: ${packetType}`);
+    //console.log(`packetType: ${packetType}`);
 
     const versionLength = socket.buffer.readUInt8(offset);
     offset += config.packet.versionLength;
@@ -24,20 +24,16 @@ export const onData = (socket: CustomSocket) => async (data: Buffer) => {
     const totalHeaderLength = TOTAL_LENGTH + versionLength;
 
     while (socket.buffer.length >= totalHeaderLength) {
-      const version = socket.buffer.toString(
-        'utf8',
-        offset,
-        offset + versionLength,
-      );
+      const version = socket.buffer.toString('utf8', offset, offset + versionLength);
       offset += versionLength;
-      console.log(`version: ${version}`);
+      //console.log(`version: ${version}`);
       // version 검증하는 코드 만들어야함!!!!!!!!!!!!!!
 
       // sequence: 4바이트 읽기
       const sequence = socket.buffer.readUInt32BE(offset);
       offset += config.packet.sequenceLength;
 
-      console.log(`sequence: ${sequence}`);
+      //console.log(`sequence: ${sequence}`);
 
       // payloadLength: 4바이트 읽기
       const payloadLength = socket.buffer.readUInt32BE(offset);

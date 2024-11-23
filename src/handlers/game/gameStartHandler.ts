@@ -1,5 +1,5 @@
 import { CharacterPositionData, CustomSocket, RedisUserData, Room, User } from '../../interface/interface.js';
-import { GlobalFailCode, PhaseType } from '../enumTyps.js';
+import { GlobalFailCode, PhaseType, RoomStateType } from '../enumTyps.js';
 import { sendPacket } from '../../packet/createPacket.js';
 import { config, spawnPoint } from '../../config/config.js';
 import { getRedisData, getRoomByUserId, getUserBySocket, setRedisData } from '../handlerMethod.js';
@@ -18,7 +18,13 @@ export const gameStartHandler = async (socket: CustomSocket, payload: Object) =>
   try {
     // requset 보낸 유저
     const user: RedisUserData = await getUserBySocket(socket);
-    const room = await getRoomByUserId(user.id);
+    const rooms: Room[] = await getRedisData('roomData');
+    const room = rooms.find((room) => room.users.some((roomUser) => roomUser.id === user.id));
+    if (!room) {
+      console.error('getRoomByUserId: Room not found');
+      return null;
+    }
+
     if (!room) return;
     const realUserNumber = room.users.length;
     // await monsterSpawnStart(socket, 1);
@@ -36,6 +42,47 @@ export const gameStartHandler = async (socket: CustomSocket, payload: Object) =>
 
       if (realUserNumber <= 1) {
         console.error('게임을 시작 할 수 없습니다.(인원 부족)');
+        // room.state = RoomStateType.WAIT;
+        // 기존room을 없애기, newRoom을 기존 room데이터로 만들어서 push해주기, 방참가response 보내기
+        for (let i = 0; i < rooms.length; i++) {
+          if (rooms[i].id === room.id) {
+            rooms.splice(i, 1);
+            break;
+          }
+        }
+
+        const responseData = {
+          success: false,
+          failCode: GlobalFailCode.INVALID_REQUEST
+        };
+        sendPacket(socket, config.packetType.GAME_START_RESPONSE, responseData);
+        // const newRoom = {
+        //   id: room.id + 1,
+        //   ownerId: room.ownerId,
+        //   name: room.name,
+        //   maxUserNum: room.maxUserNum,
+        //   state: RoomStateType.WAIT,
+        //   users: room.users
+        // };
+        // sendPacket(socket, config.packetType.CREATE_ROOM_RESPONSE, {
+        //   success: 1,
+        //   room: newRoom,
+        //   failCode: 0
+        // });
+
+        // for (let i = 0; i < newRoom.users.length; i++) {
+        //   const roomUserSocket = socketSessions[newRoom.users[i].id];
+        //   const sendData = {
+        //     success: 1,
+        //     room: newRoom,
+        //     failCode: GlobalFailCode.NONE
+        //   };
+        //   if (roomUserSocket)
+        //     sendPacket(roomUserSocket, config.packetType.JOIN_ROOM_RESPONSE, sendData), console.log('방 참가');
+        // }
+
+        await setRedisData('roomData', rooms);
+        return;
       }
 
       const responseData = {
@@ -64,12 +111,11 @@ export const gameStartHandler = async (socket: CustomSocket, payload: Object) =>
         userPositionDatas.push(characterPositionData);
       }
       characterPositionDatas[room.id].unshift(...userPositionDatas);
-
       await setRedisData('characterPositionDatas', characterPositionDatas);
 
       // 방에있는 유저들에게 notifi 보내기
-      const roomData = await getRoomByUserId(user.id);
-      if (!roomData) return;
+      room.state = RoomStateType.INGAME;
+      await setRedisData('roomData', rooms);
       for (let i = 0; i < totalRound; i++) {
         await phaseNotification(i + 1, room.id, roundPlayTime * i);
       }

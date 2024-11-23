@@ -21,25 +21,24 @@ export const directionChangeBasic = 20; // 프레임 당 방향 전환 기본 �
 export const directionChangeRandom = 10; // 프레임 당 방향 전환 랜덤 값
 
 export const monsterMoveStart = async (roomId: number, totalTime: number) => {
-  const roomDatas: Room[] = await getRedisData('roomData');
-  let roomData: Room | null = null;
-  for (let i = 0; i < roomDatas.length; i++) {
-    if (roomDatas[i].id === roomId) {
-      roomData = roomDatas[i];
-    }
-    break;
-  }
-  if (!roomData) {
-    console.error('roomData가 존재하지 않습니다.');
-    return;
-  }
-
   // 몬스터 이동을 n초마다 반복
   const time = Date.now();
   let callme = 0;
   totalTime -= 1000;
   const monsterMove = setInterval(async () => {
     // 공격 가능한지 확인하여 공격 실행
+    const roomDatas: Room[] = await getRedisData('roomData');
+    let roomData: Room | null = null;
+    for (let i = 0; i < roomDatas.length; i++) {
+      if (roomDatas[i].id === roomId) {
+        roomData = roomDatas[i];
+      }
+      break;
+    }
+    if (!roomData) {
+      console.error('roomData가 존재하지 않습니다.');
+      return;
+    }
     const characterPositions = await getRedisData('characterPositionDatas');
     await monsterAttackCheck(roomData);
     callme++;

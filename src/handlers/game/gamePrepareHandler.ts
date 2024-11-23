@@ -1,4 +1,4 @@
-import { GlobalFailCode, UserCharacterType } from '../enumTyps.js';
+import { GlobalFailCode, RoomStateType, UserCharacterType } from '../enumTyps.js';
 import { Card, CustomSocket, RedisUserData, Room, User } from '../../interface/interface.js';
 import { config } from '../../config/config.js';
 import { sendPacket } from '../../packet/createPacket.js';
@@ -99,6 +99,7 @@ export const gamePrepareHandler = async (socket: CustomSocket, payload: Object) 
         sendPacket(socket, config.packetType.GAME_PREPARE_RESPONSE, responseData);
 
         // 방에있는 유저들 캐릭터 랜덤 배정하기
+        room.state = RoomStateType.PREPARE;
         room.users = setCharacterInfoInit(room.users);
         const rooms: Room[] | null = await getRedisData('roomData');
         if (!rooms) {
