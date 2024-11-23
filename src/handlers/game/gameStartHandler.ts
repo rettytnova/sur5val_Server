@@ -100,8 +100,7 @@ export const gameStartHandler = async (socket: CustomSocket, payload: Object) =>
       const userPositionDatas = [];
       for (let i = 0; i < realUserNumber; i++) {
         // 랜덤 스폰포인트
-        const spawnPointArray = Object.values(spawnPoint);
-        const randomSpawnPoint = spawnPointArray[randomNumber(1, 10)];
+        const randomSpawnPoint = spawnPoint[randomNumber(1, 10)];
         const characterPositionData: CharacterPositionData = {
           id: room.users[i].id,
           x: randomSpawnPoint.x,
@@ -109,6 +108,7 @@ export const gameStartHandler = async (socket: CustomSocket, payload: Object) =>
         };
         userPositionDatas.push(characterPositionData);
       }
+
       characterPositionDatas[room.id].unshift(...userPositionDatas);
       await setRedisData('characterPositionDatas', characterPositionDatas);
 
