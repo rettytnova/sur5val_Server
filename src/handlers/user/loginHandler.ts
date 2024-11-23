@@ -86,7 +86,7 @@ export const loginHandler = async (socket: CustomSocket, payload: Object): Promi
           nextStateAt: 0,
           stateTargetUserId: 0
         },
-        equips: 0,
+        equips: [],
         debuffs: [],
         handCards: [],
         bbangCount: 0,

@@ -13,7 +13,7 @@ const userCharacterData: { [types: number]: { hp: number; weapon: number; handCa
     weapon: 1,
     // equips: 20,
     handCards: [
-      { type: 4, count: 1 },
+      { type: 1, count: 1 },
       { type: 7, count: 1 },
       { type: 10, count: 1 },
       { type: 13, count: 1 },
@@ -28,7 +28,7 @@ const userCharacterData: { [types: number]: { hp: number; weapon: number; handCa
     weapon: 1,
     // equips: 14,
     handCards: [
-      { type: 2, count: 1 },
+      { type: 1, count: 1 }, //2
       { type: 17, count: 1 },
       { type: 21, count: 3 },
       { type: 22, count: 1 }
@@ -40,7 +40,7 @@ const userCharacterData: { [types: number]: { hp: number; weapon: number; handCa
     weapon: 4,
     // equips: 12,
     handCards: [
-      { type: 5, count: 1 },
+      { type: 1, count: 1 }, //5
       { type: 18, count: 1 },
       { type: 21, count: 3 },
       { type: 22, count: 1 }
@@ -52,7 +52,7 @@ const userCharacterData: { [types: number]: { hp: number; weapon: number; handCa
     weapon: 7,
     // equips: 16,
     handCards: [
-      { type: 8, count: 1 },
+      { type: 1, count: 1 }, //8
       { type: 19, count: 1 },
       { type: 21, count: 3 },
       { type: 22, count: 1 }
@@ -64,7 +64,7 @@ const userCharacterData: { [types: number]: { hp: number; weapon: number; handCa
     weapon: 10,
     // equips: 15,
     handCards: [
-      { type: 11, count: 1 },
+      { type: 1, count: 1 }, //11
       { type: 19, count: 1 },
       { type: 21, count: 3 },
       { type: 22, count: 1 }

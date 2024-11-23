@@ -39,7 +39,7 @@ export interface Character {
   hp: number;
   weapon: number;
   stateInfo: CharacterStateInfo;
-  equips: number;
+  equips: number[];
   debuffs: number[];
   handCards: Card[];
   bbangCount: number;

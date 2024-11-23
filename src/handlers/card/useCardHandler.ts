@@ -3,14 +3,13 @@ import {
   CustomSocket,
   UseCardRequest,
   UseCardResponse,
-  CardEffectNotification,
   UseCardNotification,
   UserUpdateNotification,
   Room
 } from '../../interface/interface.js';
-import { CardType, CharacterStateType, GlobalFailCode } from '../enumTyps.js';
+import { CardType, GlobalFailCode } from '../enumTyps.js';
 import { sendPacket } from '../../packet/createPacket.js';
-import { getRoomByUserId, getRooms, getSocketByUser, getUserBySocket } from '../../handlers/handlerMethod.js';
+import { getRoomByUserId, getUserBySocket } from '../../handlers/handlerMethod.js';
 import { socketSessions } from '../../session/socketSession.js';
 
 const { packetType } = config;
@@ -66,33 +65,8 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
         }
         // // 빵야 사용자
         room.users[userIndex].character.hp -= 1;
-        // room.users[userIndex].character.stateInfo = {
-        //   state: CharacterStateType.BBANG_SHOOTER,
-        //   nextState: CharacterStateType.NONE_CHARACTER_STATE,
-        //   nextStateAt: 5000,
-        //   stateTargetUserId: targetUserId
-        // };
         // // 빵야 타겟
         room.users[targetUserIndex].character.hp -= 1;
-        // room.users[targetUserIndex].character.stateInfo = {
-        //   state: CharacterStateType.BBANG_TARGET,
-        //   nextState: CharacterStateType.NONE_CHARACTER_STATE,
-        //   nextStateAt: 5000,
-        //   stateTargetUserId: 0
-        // };
-        // console.log(room.users[userIndex].id, '->', room.users[userIndex].character.stateInfo);
-        // console.log(room.users[targetUserIndex].id, '->', room.users[targetUserIndex].character.stateInfo);
-        const rooms: Room[] | null = await getRooms();
-        if (!rooms) {
-          return;
-        }
-        // // 변경한 정보 덮어쓰기
-        // for (let i = 0; i < rooms.length; i++) {
-        //   if (rooms[i].id === room.id) {
-        //     rooms[i] = room;
-        //     break;
-        //   }
-        // }
 
         sendUserUpdateNotification(room);
         break;
