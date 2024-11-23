@@ -17,6 +17,8 @@ const VERSION_LENGTH = 1;
 export const CLIENT_VERSION = '1.0.0';
 const SEQUENCE_LENGTH = 4;
 const PAYLOAD_LENGTH = 4;
+export const inGameTime = 60000;
+export const totalRound = 4;
 
 const USER_DB_NAME = process.env.DB_NAME;
 const USER_DB_USER = process.env.DB_USER;
@@ -27,7 +29,7 @@ const USER_DB_PORT = process.env.DB_PORT;
 export const config = {
   server: {
     port: PORT,
-    host: HOST,
+    host: HOST
   },
   databases: {
     userDB: {
@@ -35,21 +37,21 @@ export const config = {
       user: USER_DB_USER,
       password: USER_DB_PASSWORD,
       host: USER_DB_HOST,
-      port: USER_DB_PORT,
-    },
+      port: USER_DB_PORT
+    }
   },
   jwtToken: {
     secretKey: process.env.JWT_SECRET,
     expiresIn: process.env.JWT_EXPIRES_IN,
     refreshSecret: process.env.JWT_REFRESH_SECRET,
     refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN,
-    algorithm: process.env.JWT_ALGORITHM,
+    algorithm: process.env.JWT_ALGORITHM
   },
   packet: {
     typeLength: TYPE_LENGTH,
     versionLength: VERSION_LENGTH,
     sequenceLength: SEQUENCE_LENGTH,
-    payloadLength: PAYLOAD_LENGTH,
+    payloadLength: PAYLOAD_LENGTH
   },
   packetType: {
     REGISTER_REQUEST: 1,
@@ -96,8 +98,8 @@ export const config = {
     PASS_DEBUFF_REQUEST: 42,
     PASS_DEBUFF_RESPONSE: 43,
     WARNING_NOTIFICATION: 44,
-    ANIMATION_NOTIFICATION: 45,
-  },
+    ANIMATION_NOTIFICATION: 45
+  }
 };
 
 export const packetMaps = {
@@ -132,8 +134,7 @@ export const packetMaps = {
   [config.packetType.GAME_START_NOTIFICATION]: 'gameStartNotification',
 
   [config.packetType.POSITION_UPDATE_REQUEST]: 'positionUpdateRequest',
-  [config.packetType.POSITION_UPDATE_NOTIFICATION]:
-    'positionUpdateNotification',
+  [config.packetType.POSITION_UPDATE_NOTIFICATION]: 'positionUpdateNotification',
 
   [config.packetType.USE_CARD_REQUEST]: 'useCardRequest',
   [config.packetType.USE_CARD_RESPONSE]: 'useCardResponse',
@@ -167,5 +168,99 @@ export const packetMaps = {
 
   [config.packetType.WARNING_NOTIFICATION]: 'warningNotification',
 
-  [config.packetType.ANIMATION_NOTIFICATION]: 'animationNotification',
+  [config.packetType.ANIMATION_NOTIFICATION]: 'animationNotification'
+};
+/**
+ * x: 11 , y : -8
+x: 5 , y : -8
+x: - 8 , y : -8
+x: -11, y : 0
+x: -4 , y : 0
+x: 7 , y : 1
+x: 22, y : 0
+x: 23, y : -8
+x: -22.5 , y : 0
+x: -21, y : - 10.5
+ */
+export const spawnPoint: { [key: number]: { x: number; y: number } } = {
+  1: {
+    x: 11,
+    y: -8
+  },
+  2: {
+    x: 5,
+    y: -8
+  },
+  3: {
+    x: -8,
+    y: -8
+  },
+  4: {
+    x: -11,
+    y: 0
+  },
+  5: {
+    x: -4,
+    y: 0
+  },
+  6: {
+    x: 7,
+    y: 1
+  },
+  7: {
+    x: 22,
+    y: 0
+  },
+  8: {
+    x: 23,
+    y: -8
+  },
+  9: {
+    x: -22.5,
+    y: 0
+  },
+  10: {
+    x: -21,
+    y: -10.5
+  },
+  11: {
+    x: -1.562,
+    y: 6.173
+  },
+  12: {
+    x: -13.857,
+    y: 6.073
+  },
+  13: {
+    x: 5.507,
+    y: 11.963
+  },
+  14: {
+    x: -18.252,
+    y: 12.453
+  },
+  15: {
+    x: -1.752,
+    y: -7.376
+  },
+  16: {
+    x: 21.517,
+    y: -4.826
+  },
+  17: {
+    x: 21.717,
+    y: 3.223
+  },
+  18: {
+    x: 23.877,
+    y: 10.683
+  },
+  19: {
+    x: 15.337,
+    y: -12.296
+  },
+  20: {
+    x: -15.202,
+    y: -4.736
+  }
 };

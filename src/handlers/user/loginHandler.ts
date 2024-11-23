@@ -1,10 +1,12 @@
 import { CustomSocket, User, LoginRequest, LoginResponse } from '../../interface/interface.js';
 import jwt, { SignOptions } from 'jsonwebtoken';
 import { sendPacket } from '../../packet/createPacket.js';
-import { config } from '../../config/config.js';
-import { getRedisData, saveSocketSession, setRedisData } from '../../handlers/handlerMethod.js';
+import { config, inGameTime } from '../../config/config.js';
+import { getRedisData, setRedisData } from '../../handlers/handlerMethod.js';
 import { dbManager } from '../../database/user/user.db.js';
-import { GlobalFailCode } from '../enumTyps.js';
+import { GlobalFailCode, PhaseType } from '../enumTyps.js';
+import { socketSessions } from '../../session/socketSession.js';
+import { inGameTimeSessions } from '../../session/inGameTimeSession.js';
 
 const { jwtToken, packetType } = config;
 
@@ -101,7 +103,29 @@ export const loginHandler = async (socket: CustomSocket, payload: Object): Promi
     }
 
     // socketSession에 socket 저장하기
-    saveSocketSession(userByEmailPw.id, socket);
+    socketSessions[userByEmailPw.id] = socket;
+
+    // 이미 게임 중인 상태일 경우 해당 게임으로 이동
+    const rooms = await getRedisData('roomData');
+    if (rooms) {
+      for (let i = 0; i < rooms.length; i++) {
+        for (let j = 0; j < rooms[i].users.length; j++) {
+          if (rooms[i].users[j].id === userByEmailPw.id) {
+            const leftTime = (inGameTime - (Date.now() - inGameTimeSessions[rooms[i].id])) % inGameTime;
+            const characterPositionDatas = await getRedisData('characterPositionDatas');
+            const gameStateData = { phaseType: PhaseType.DAY, nextPhaseAt: Date.now() + leftTime };
+            const notifiData = {
+              gameState: gameStateData,
+              users: rooms[i].users,
+              characterPositions: characterPositionDatas[rooms[i].id]
+            };
+            setTimeout(() => {
+              sendPacket(socket, config.packetType.GAME_START_NOTIFICATION, notifiData);
+            }, 100);
+          }
+        }
+      }
+    }
 
     // 로그 처리 ----------------------------------------------------------------------
     console.info(`로그인 성공 : ${userByEmailPw.id}`);
