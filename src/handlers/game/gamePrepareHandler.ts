@@ -6,11 +6,14 @@ import { getRedisData, getRoomByUserId, getUserBySocket, setRedisData } from '..
 import { socketSessions } from '../../session/socketSession.js';
 
 // DB에 넣을 데이터
-const userCharacterData: { [types: number]: { hp: number; weapon: number; handCards: Card[] } } = {
+export const userCharacterData: {
+  [types: number]: { hp: number; weapon: number; roleType: number; handCards: Card[] };
+} = {
   // 핑크슬라임 - 보스
   [UserCharacterType.PINK_SLIME]: {
     hp: 5,
     weapon: 1,
+    roleType: 1,
     // equips: 20,
     handCards: [
       { type: 4, count: 1 },
@@ -26,6 +29,7 @@ const userCharacterData: { [types: number]: { hp: number; weapon: number; handCa
   [UserCharacterType.SWIM_GLASSES]: {
     hp: 5,
     weapon: 1,
+    roleType: 0,
     // equips: 14,
     handCards: [
       { type: 2, count: 1 },
@@ -38,6 +42,7 @@ const userCharacterData: { [types: number]: { hp: number; weapon: number; handCa
   [UserCharacterType.FROGGY]: {
     hp: 3,
     weapon: 4,
+    roleType: 0,
     // equips: 12,
     handCards: [
       { type: 5, count: 1 },
@@ -50,6 +55,7 @@ const userCharacterData: { [types: number]: { hp: number; weapon: number; handCa
   [UserCharacterType.MASK]: {
     hp: 2,
     weapon: 7,
+    roleType: 0,
     // equips: 16,
     handCards: [
       { type: 8, count: 1 },
@@ -62,6 +68,7 @@ const userCharacterData: { [types: number]: { hp: number; weapon: number; handCa
   [UserCharacterType.RED]: {
     hp: 1,
     weapon: 10,
+    roleType: 0,
     // equips: 15,
     handCards: [
       { type: 11, count: 1 },
@@ -72,6 +79,7 @@ const userCharacterData: { [types: number]: { hp: number; weapon: number; handCa
   }
 };
 
+// 게임 준비
 export const gamePrepareHandler = async (socket: CustomSocket, payload: Object) => {
   try {
     // requset 보낸 유저
@@ -167,7 +175,7 @@ export const setCharacterInfoInit = (users: User[]) => {
   // 직업 부여 랜덤 로직
   for (let i = 0; i < users.length; i++) {
     users[i].character.characterType = selectedTypes[i];
-    users[i].character.roleType = 0;
+    users[i].character.roleType = userCharacterData[selectedTypes[i]].roleType;
     users[i].character.hp = userCharacterData[selectedTypes[i]].hp;
     users[i].character.weapon = userCharacterData[selectedTypes[i]].weapon; // 무기 아닙니다 기획 따라 바뀌어서 스킬입니다
     //users[i].character.equips = userCharacterData[selectedTypes[i]].equips;
