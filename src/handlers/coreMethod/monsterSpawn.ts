@@ -1,4 +1,5 @@
 import { Room, User } from '../../interface/interface.js';
+import { userCharacterData } from '../game/gamePrepareHandler.js';
 import { getRedisData, monsterAI, setRedisData } from '../handlerMethod.js';
 import { monsterAiDatas } from './monsterMove.js';
 
@@ -61,6 +62,13 @@ export const monsterSpawnStart = async (roomId: number, level: number) => {
     }
   }
   if (roomData === null) return;
+
+  // 유저 체력 회복시키기
+  for (let i = 0; i < roomData.users.length; i++) {
+    if (roomData.users[i].character.roleType === 0) {
+      roomData.users[i].character.hp = userCharacterData[roomData.users[i].character.characterType].hp;
+    }
+  }
 
   // 이전 몬스터 모두 삭제 (roomData 삭제)
   for (let i = 0; i < roomData.users.length; i++) {

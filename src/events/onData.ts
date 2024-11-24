@@ -1,4 +1,4 @@
-import { VERSION_START, TOTAL_LENGTH, config } from '../config/config.js';
+import { VERSION_START, TOTAL_LENGTH, config, CLIENT_VERSION } from '../config/config.js';
 import { CustomSocket } from '../interface/interface.js';
 import { packetParser } from '../packet/packetParser.js';
 import { getHandlerByPacketType } from '../handlers/handlerIndex.js';
@@ -9,14 +9,10 @@ export const onData = (socket: CustomSocket) => async (data: Buffer) => {
   const initialHeaderLength = VERSION_START;
 
   while (socket.buffer.length > initialHeaderLength) {
-    console.log(socket.buffer);
-
     let offset: number = 0;
 
     const packetType = socket.buffer.readUInt16BE(offset);
     offset += config.packet.typeLength;
-
-    console.log(`packetType: ${packetType}`);
 
     const versionLength = socket.buffer.readUInt8(offset);
     offset += config.packet.versionLength;
@@ -24,20 +20,15 @@ export const onData = (socket: CustomSocket) => async (data: Buffer) => {
     const totalHeaderLength = TOTAL_LENGTH + versionLength;
 
     while (socket.buffer.length >= totalHeaderLength) {
-      const version = socket.buffer.toString(
-        'utf8',
-        offset,
-        offset + versionLength,
-      );
+      const version = socket.buffer.toString('utf8', offset, offset + versionLength);
       offset += versionLength;
-      console.log(`version: ${version}`);
-      // version 검증하는 코드 만들어야함!!!!!!!!!!!!!!
+      if (version !== CLIENT_VERSION) {
+        console.error('버전이 다릅니다.');
+      }
 
       // sequence: 4바이트 읽기
       const sequence = socket.buffer.readUInt32BE(offset);
       offset += config.packet.sequenceLength;
-
-      console.log(`sequence: ${sequence}`);
 
       // payloadLength: 4바이트 읽기
       const payloadLength = socket.buffer.readUInt32BE(offset);
@@ -48,7 +39,6 @@ export const onData = (socket: CustomSocket) => async (data: Buffer) => {
       if (socket.buffer.length >= length) {
         // 헤더부터 끝까지
         let payload = socket.buffer.subarray(offset, offset + payloadLength);
-        //console.log (`payload: ${payload}`)
 
         const parsedData = packetParser(packetType, payload);
 

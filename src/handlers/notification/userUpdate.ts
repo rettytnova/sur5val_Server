@@ -9,7 +9,7 @@ export const userUpdateNotification = (room: Room | null) => {
     return;
   }
 
-  room.users.forEach(async (user) => {
+  room.users.forEach((user) => {
     const userSocket = socketSessions[user.id];
 
     if (userSocket) {
