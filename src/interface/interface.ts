@@ -21,6 +21,11 @@ export interface positionUpdatePayload {
   x: number;
   y: number;
 }
+
+export interface FleaMarketCardPickPayload {
+  pickIndex: number;
+}
+
 export interface Card {
   type: number;
   count: number;

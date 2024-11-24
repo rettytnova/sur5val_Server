@@ -1,20 +1,5 @@
 syntax = "proto3";
 
-import "./request.proto";
-import "./response.proto";
-import "./notification.proto";
-
-package packet;
-
-message CommonPacket{
-    uint32 packetType = 1;
-    uint32 versionLength = 2;
-    string version = 3;
-    uint32 sequence = 4;    
-    uint32 payloadLength = 5;
-    bytes payload = 6;
-}
-
 /*
     게임 데이터 명세
 */
@@ -76,6 +61,239 @@ message CharacterStateInfoData {
 /* 
     패킷 명세
 */
+message C2SRegisterRequest {
+    string email = 1;
+    string nickname = 2;
+    string password = 3;
+}
+
+message S2CRegisterResponse {
+    bool success = 1;
+    string message = 2;
+    GlobalFailCode failCode = 3;
+}
+
+message C2SLoginRequest {
+    string email = 1;
+    string password = 2;
+}
+
+message S2CLoginResponse {
+    bool success = 1;
+    string message = 2;
+    string token = 3;
+    UserData myInfo = 4;
+    GlobalFailCode failCode = 5;
+}
+
+message C2SCreateRoomRequest {
+    string name = 1;
+    int32 maxUserNum = 2;
+}
+
+message S2CCreateRoomResponse {
+    bool success = 1;
+    RoomData room = 2;
+    GlobalFailCode failCode = 3;
+}
+
+message C2SGetRoomListRequest {
+    
+}
+
+message S2CGetRoomListResponse{
+    repeated RoomData rooms = 1;
+}
+
+message C2SJoinRoomRequest {
+    int32 roomId = 1;
+}
+
+message S2CJoinRoomResponse {
+    bool success = 1;
+    RoomData room = 2;
+    GlobalFailCode failCode = 3;
+}
+
+message C2SJoinRandomRoomRequest {
+    int32 roomId = 1;
+}
+
+message S2CJoinRandomRoomResponse {
+    bool success = 1;
+    RoomData room = 2;
+    GlobalFailCode failCode = 3;
+}
+
+message S2CJoinRoomNotification {
+    UserData joinUser = 1;
+}
+
+message C2SLeaveRoomRequest {
+
+}
+
+message S2CLeaveRoomResponse {
+    bool success = 1;
+    GlobalFailCode failCode = 2;
+}
+
+message S2CLeaveRoomNotification {
+    int64 userId = 1;
+}
+
+// 게임 시작 전 역할 및 캐릭터 셔플 요청
+message C2SGamePrepareRequest {
+
+}
+
+message S2CGamePrepareResponse {
+    bool success = 1;
+    GlobalFailCode failCode = 2;
+}
+
+message S2CGamePrepareNotification {
+    RoomData room = 1;
+}
+
+message C2SGameStartRequest {
+
+}
+
+message S2CGameStartResponse {
+    bool success = 1;
+    GlobalFailCode failCode = 2;
+}
+
+message S2CGameStartNotification {
+    GameStateData gameState = 1;
+    repeated UserData users = 2;
+    repeated CharacterPositionData characterPositions = 3;
+}
+
+message C2SPositionUpdateRequest {
+    double x = 1;
+    double y = 2;
+}
+
+message S2CPositionUpdateResponse {
+    bool success = 1;
+    GlobalFailCode failCode = 2;
+}
+
+message S2CPositionUpdateNotification {
+    repeated CharacterPositionData characterPositions = 1;
+}
+
+message C2SUseCardRequest {
+    CardType cardType = 1;
+    int64 targetUserId = 2; // 타겟 없으면 빈 값
+}
+
+message S2CUseCardResponse { // 성공 여부만 반환하고 대상 유저 효과는 S2CUserUpdateNotification로 통지
+    bool success = 1;
+    GlobalFailCode failCode = 2;
+}
+
+message S2CUseCardNotification {
+    CardType cardType = 1;
+    int64 userId = 2;
+    int64 targetUserId = 3; // 타겟 없으면 빈 값
+}
+
+message S2CEquipCardNotification {
+    CardType cardType = 1;
+    int64 userId = 2;
+}
+
+message S2CCardEffectNotification {
+    CardType cardType = 1;
+    int64 userId = 2;
+    bool success = 3;
+}
+
+message S2CFleaMarketNotification {
+    repeated CardType cardTypes = 1;
+    repeated int32 pickIndex = 2;
+}
+
+message C2SFleaMarketPickRequest {
+}
+
+message C2SFleaMarketCardPickRequest {
+    int32 pickIndex = 1;
+}
+
+message S2CFleaMarketPickResponse {
+    repeated CardType fleaMarketCardTypes = 1;
+}
+
+message S2CFleaMarketCardPickResponse {
+    int64 userId = 1;
+    repeated CardData handCards = 2;
+}
+
+message S2CUserUpdateNotification {
+    repeated UserData user = 1;
+}
+
+message S2CPhaseUpdateNotification {
+    PhaseType phaseType = 1; // DAY 1, EVENING 2, END 3
+    int64 nextPhaseAt = 2; // 다음 페이즈 시작 시점(밀리초 타임스탬프)
+    repeated CharacterPositionData characterPositions = 3; // 변경된 캐릭터 위치
+}
+
+message C2SReactionRequest {
+    ReactionType reactionType = 1; // NOT_USE_CARD = 1
+}
+
+message S2CReactionResponse {
+    bool success = 1;
+    GlobalFailCode failCode = 2;
+}
+
+message C2SDestroyCardRequest {
+    repeated CardData destroyCards = 1;
+}
+
+message S2CDestroyCardResponse {
+    repeated CardData handCards = 1;
+}
+
+message S2CGameEndNotification {
+    repeated string winners = 1;
+    WinType winType = 2;
+}
+
+message C2SCardSelectRequest {
+    SelectCardType selectType = 1; // 0: 핸드, 1: 장비, 2: 무기, 3: 디버프
+    CardType selectCardType = 2; // selectType이  0일 경우 0, / 1, 2, 3일 경우 원하는 장비의 cardType
+}
+
+message S2CCardSelectResponse {
+    bool success = 1;
+    GlobalFailCode failCode = 2;
+}
+
+message C2SPassDebuffRequest {
+    int64 targetUserId = 1;
+    CardType debuffCardType = 2;
+}
+
+message S2CPassDebuffResponse {
+    bool success = 1;
+    GlobalFailCode failCode = 2;
+}
+
+message S2CWarningNotification {
+    WarningType warningType = 1;
+    int64 expectedAt = 2; // 밀리초 타임스탬프
+}
+
+message S2CAnimationNotification {
+    int64 userId = 1;
+    AnimationType animationType = 2;
+}
 
 // 최상위 GamePacket 메시지
 message GamePacket {

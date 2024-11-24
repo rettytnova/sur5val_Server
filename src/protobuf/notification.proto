@@ -28,7 +28,7 @@ message S2CPositionUpdateNotification {
 message S2CUseCardNotification {
     CardType cardType = 1;
     int64 userId = 2;
-    string targetUserId = 3; // 타겟 없으면 빈 값
+    int64 targetUserId = 3; // 타겟 없으면 빈 값
 }
 // 카드 장착 알림
 message S2CEquipCardNotification {

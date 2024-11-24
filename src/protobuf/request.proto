@@ -63,7 +63,10 @@ message C2SUseCardRequest {
 }
 
 // 상점 아이템 선택 요청
-message C2SFleaMarketPickRequest {
+message C2SFleaMarketPickRequest {    
+}
+
+message C2SFleaMarketCardPickRequest{
     int32 pickIndex = 1;
 }
 
@@ -85,6 +88,6 @@ message C2SCardSelectRequest {
 
 // 디버프 넘기기 요청
 message C2SPassDebuffRequest {
-    string targetUserId = 1;
+    int64 targetUserId = 1;
     CardType debuffCardType = 2;
 }
