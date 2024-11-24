@@ -13,7 +13,7 @@ export const userCharacterData: {
   [UserCharacterType.PINK_SLIME]: {
     hp: 5,
     weapon: 1,
-    roleType: 1,
+    roleType: 4,
     // equips: 20,
     handCards: [
       { type: 4, count: 1 },
@@ -29,7 +29,7 @@ export const userCharacterData: {
   [UserCharacterType.SWIM_GLASSES]: {
     hp: 5,
     weapon: 1,
-    roleType: 0,
+    roleType: 2,
     // equips: 14,
     handCards: [
       { type: 2, count: 1 },
@@ -42,7 +42,7 @@ export const userCharacterData: {
   [UserCharacterType.FROGGY]: {
     hp: 3,
     weapon: 4,
-    roleType: 0,
+    roleType: 2,
     // equips: 12,
     handCards: [
       { type: 5, count: 1 },
@@ -55,7 +55,7 @@ export const userCharacterData: {
   [UserCharacterType.MASK]: {
     hp: 2,
     weapon: 7,
-    roleType: 0,
+    roleType: 2,
     // equips: 16,
     handCards: [
       { type: 8, count: 1 },
@@ -68,7 +68,7 @@ export const userCharacterData: {
   [UserCharacterType.RED]: {
     hp: 1,
     weapon: 10,
-    roleType: 0,
+    roleType: 2,
     // equips: 15,
     handCards: [
       { type: 11, count: 1 },

@@ -106,19 +106,6 @@ export interface RedisUserData extends User {
   refreshToken: string;
 }
 
-/* CharacterData 타입 정의 */
-export interface CharacterData {
-  roleType: number;
-  hp: number;
-  weapon: number;
-  stateInfo: number;
-  equips: Object | null;
-  debuffs: Object | null;
-  handCards: Object | null;
-  bbangCount: number;
-  handCardsCount: number;
-}
-
 /* CharacterPositionData 타입 정의 */
 export interface CharacterPositionData {
   id: number;

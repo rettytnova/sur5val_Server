@@ -82,7 +82,7 @@ export const leaveRoomHandler = async (socket: net.Socket) => {
     let isClosedRoom: boolean = true;
     for (let i = 0; i < rooms[roomIndex].users.length; i++) {
       const userRoleType = rooms[roomIndex].users[i].character.roleType;
-      if (userRoleType === 0 || userRoleType === 1) {
+      if (userRoleType === 2 || userRoleType === 4) {
         isClosedRoom = false;
         break;
       }
