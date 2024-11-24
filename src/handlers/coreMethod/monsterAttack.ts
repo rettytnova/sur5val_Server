@@ -3,16 +3,16 @@ import { Room, User } from '../../interface/interface.js';
 import { sendPacket } from '../../packet/createPacket.js';
 import { socketSessions } from '../../session/socketSession.js';
 import { getRedisData, setRedisData } from '../handlerMethod.js';
-import { monsterAiDatas } from './monsterMove.js';
+import { animationDelay, monsterAiDatas } from './monsterMove.js';
 import { monsterDatas } from './monsterSpawn.js';
 import { userUpdateNotification } from '../notification/userUpdate.js';
 
 // 서로 적군인지 검사
 export const monsterAttackCheck = async (room: Room) => {
   for (let i = 0; i < room.users.length; i++) {
-    if (room.users[i].character.roleType === 0 && room.users[i].character.hp > 0) {
+    if (room.users[i].character.roleType === 2 && room.users[i].character.hp > 0) {
       for (let j = 0; j < room.users.length; j++) {
-        if (room.users[j].character.roleType === 2) {
+        if (room.users[j].character.roleType === 1) {
           await monsterAttackPlayer(room.users[i], room.users[j], room);
         }
       }
@@ -86,7 +86,7 @@ export const monsterAttackPlayer = async (player: User, monster: User, room: Roo
     if (socketSessions[player.id]) {
       for (let i = 0; i < monsterAiDatas[room.id].length; i++) {
         if (monsterAiDatas[room.id][i].id === monster.id) {
-          monsterAiDatas[room.id][i].animationDelay = 20;
+          monsterAiDatas[room.id][i].animationDelay = animationDelay;
           break;
         }
       }

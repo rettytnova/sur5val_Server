@@ -108,3 +108,17 @@ export const monsterAI = (
     };
   }
 };
+
+// a ~ b 중 m개를 안겹치게 랜덤하게 뽑기
+export const nonSameRandom = (a: number, b: number, m: number) => {
+  const numbers: number[] = [];
+  for (let i = a; i < b + 1; i++) numbers.push(i);
+  const answer: number[] = [];
+  for (let i = 0; i < m; i++) {
+    const index = Math.floor(Math.random() * numbers.length);
+    const number = numbers[index];
+    answer.push(number);
+    numbers.splice(index, 1);
+  }
+  return answer;
+};
