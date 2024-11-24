@@ -51,7 +51,6 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
     });
     switch (cardType) {
       case CardType.BBANG:
-        console.log('처리 전 rooms.users: ', room.users[0].character.hp, room.users[1].character.hp);
         const userIndex = room.users.findIndex((user) => user.id === userData.id);
         const targetUserIndex = room.users.findIndex((user) => user.id === targetUserId);
         if (userIndex === -1) {
@@ -62,11 +61,11 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
           console.error('useCardHandler: user not found');
           return;
         }
-        // // 빵야 사용자
+        //사용자
 
-        // // 빵야 타겟
+        //타겟
         room.users[targetUserIndex].character.hp -= 1;
-        console.log('처리 후 rooms: ', room.users[0].character.hp, room.users[1].character.hp);
+
         await setRedisData('roomData', rooms);
         userUpdateNotification(room);
         break;
@@ -75,18 +74,69 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
       case CardType.SHIELD:
         break;
       case CardType.VACCINE:
+        const userIndex4 = room.users.findIndex((user) => user.id === userData.id);
+        const targetUserIndex4 = room.users.findIndex((user) => user.id === targetUserId);
+        if (userIndex4 === -1) {
+          console.error('useCardHandler: user not found');
+          return;
+        }
+        if (targetUserIndex4 === -1) {
+          console.error('useCardHandler: user not found');
+          return;
+        }
+        //사용자
+
+        //타겟
+        room.users[targetUserIndex4].character.hp -= 1;
+
+        await setRedisData('roomData', rooms);
+        userUpdateNotification(room);
         break;
       case CardType.CALL_119:
         break;
       case CardType.DEATH_MATCH:
         break;
       case CardType.GUERRILLA:
+        const userIndex7 = room.users.findIndex((user) => user.id === userData.id);
+        const targetUserIndex7 = room.users.findIndex((user) => user.id === targetUserId);
+        if (userIndex7 === -1) {
+          console.error('useCardHandler: user not found');
+          return;
+        }
+        if (targetUserIndex7 === -1) {
+          console.error('useCardHandler: user not found');
+          return;
+        }
+        //사용자
+
+        //타겟
+        room.users[targetUserIndex7].character.hp -= 1;
+
+        await setRedisData('roomData', rooms);
+        userUpdateNotification(room);
         break;
       case CardType.HALLUCINATION:
         break;
       case CardType.ABSORB:
         break;
       case CardType.FLEA_MARKET:
+        const userIndex10 = room.users.findIndex((user) => user.id === userData.id);
+        const targetUserIndex10 = room.users.findIndex((user) => user.id === targetUserId);
+        if (userIndex10 === -1) {
+          console.error('useCardHandler: user not found');
+          return;
+        }
+        if (targetUserIndex10 === -1) {
+          console.error('useCardHandler: user not found');
+          return;
+        }
+        //사용자
+
+        //타겟
+        room.users[targetUserIndex10].character.hp -= 1;
+
+        await setRedisData('roomData', rooms);
+        userUpdateNotification(room);
         break;
       case CardType.MATURED_SAVINGS:
         break;
