@@ -41,12 +41,13 @@ message CharacterData {
     RoleType roleType = 2;
     int32 hp = 3;
     int32 weapon = 4;
-    CharacterStateInfoData stateInfo = 5;
-    repeated int32 equips = 6;
-    repeated int32 debuffs = 7;
-    repeated CardData handCards = 8;
-    int32 bbangCount = 9;
-    int32 handCardsCount = 10;
+    int32 potion = 5;
+    CharacterStateInfoData stateInfo = 6;
+    repeated int32 equips = 7;
+    repeated int32 debuffs = 8;
+    repeated CardData handCards = 9;
+    int32 bbangCount = 10;
+    int32 handCardsCount = 11;
 }
 
 message CharacterPositionData {
@@ -138,35 +139,37 @@ message GamePacket {
         S2CFleaMarketNotification fleaMarketNotification = 30;
         C2SFleaMarketPickRequest fleaMarketPickRequest = 31;
         S2CFleaMarketPickResponse fleaMarketPickResponse = 32;
+        C2SFleaMarketCardPickRequest fleMarketCardPickRequest = 33;
+        S2CFleaMarketCardPickResponse fleMarketCardPickResponse = 34;
 
         // 카드 사용 등으로 인한 유저 정보 업데이트
-        S2CUserUpdateNotification userUpdateNotification = 33;
+        S2CUserUpdateNotification userUpdateNotification = 35;
         
         // 페이즈 업데이트
-        S2CPhaseUpdateNotification phaseUpdateNotification = 34;
+        S2CPhaseUpdateNotification phaseUpdateNotification = 36;
 
         // 리액션
-        C2SReactionRequest reactionRequest = 35;
-        S2CReactionResponse reactionResponse = 36;
+        C2SReactionRequest reactionRequest = 37;
+        S2CReactionResponse reactionResponse = 38;
 
         // 턴 종료시 (phaseType 3) 카드 버리기
-        C2SDestroyCardRequest destroyCardRequest = 37;
-        S2CDestroyCardResponse destroyCardResponse = 38;
+        C2SDestroyCardRequest destroyCardRequest = 39;
+        S2CDestroyCardResponse destroyCardResponse = 40;
 
         // 게임 종료
-        S2CGameEndNotification gameEndNotification = 39;
+        S2CGameEndNotification gameEndNotification = 41;
 
         // 카드 선택
-        C2SCardSelectRequest cardSelectRequest = 40;
-        S2CCardSelectResponse cardSelectResponse = 41;
+        C2SCardSelectRequest cardSelectRequest = 42;
+        S2CCardSelectResponse cardSelectResponse = 43;
 
         // 디버프 넘기기
-        C2SPassDebuffRequest passDebuffRequest = 42;
-        S2CPassDebuffResponse passDebuffResponse = 43;
-        S2CWarningNotification warningNotification = 44;
+        C2SPassDebuffRequest passDebuffRequest = 44;
+        S2CPassDebuffResponse passDebuffResponse = 45;
+        S2CWarningNotification warningNotification = 46;
 
         // 효과 알림
-        S2CAnimationNotification animationNotification = 45;
+        S2CAnimationNotification animationNotification = 47;
     }
 }
 
