@@ -19,6 +19,6 @@ export const onEnd = (socket: CustomSocket) => async () => {
       }
     }
     console.log('종료 처리 후 liveUserData 수: ', liveUserDatas.length);
+    delete socketSessions[endUserData.id];
   }
-  delete socketSessions[endUserData.id];
 };

@@ -3,11 +3,10 @@ import { Room } from '../../interface/interface.js';
 import { sendPacket } from '../../packet/createPacket.js';
 import { socketSessions } from '../../session/socketSession.js';
 import { getRedisData, monsterAI, setRedisData } from '../handlerMethod.js';
-import { userUpdateNotification } from '../notification/userUpdate.js';
 import { monsterAttackCheck } from './monsterAttack.js';
 
 export const monsterAiDatas: {
-  [key: number]: {
+  [roomId: number]: {
     id: number;
     direction: number;
     distance: number;

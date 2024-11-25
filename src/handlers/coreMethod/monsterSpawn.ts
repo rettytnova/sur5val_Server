@@ -10,25 +10,25 @@ export const monsterDatas: {
   };
 } = {
   5: {
-    1: { nickname: `Lv1 말랑이`, attackCool: 105, attackRange: 2, attackPower: 1, hp: 1 },
-    2: { nickname: `Lv2 말랑이`, attackCool: 105, attackRange: 2, attackPower: 1, hp: 2 },
-    3: { nickname: `Lv3 말랑이`, attackCool: 105, attackRange: 2, attackPower: 2, hp: 3 },
-    4: { nickname: `Lv4 말랑이`, attackCool: 105, attackRange: 2, attackPower: 2, hp: 4 },
-    5: { nickname: `Lv5 말랑이`, attackCool: 105, attackRange: 2, attackPower: 3, hp: 5 }
+    1: { nickname: `Lv1 말랑이`, attackCool: 40, attackRange: 2, attackPower: 1, hp: 1 },
+    2: { nickname: `Lv2 말랑이`, attackCool: 40, attackRange: 2, attackPower: 1, hp: 2 },
+    3: { nickname: `Lv3 말랑이`, attackCool: 40, attackRange: 2, attackPower: 2, hp: 3 },
+    4: { nickname: `Lv4 말랑이`, attackCool: 40, attackRange: 2, attackPower: 2, hp: 4 },
+    5: { nickname: `Lv5 말랑이`, attackCool: 40, attackRange: 2, attackPower: 3, hp: 5 }
   },
   8: {
-    1: { nickname: `Lv1 핑크군`, attackCool: 120, attackRange: 2, attackPower: 1, hp: 1 },
-    2: { nickname: `Lv2 핑크군`, attackCool: 120, attackRange: 2, attackPower: 1, hp: 2 },
-    3: { nickname: `Lv3 핑크군`, attackCool: 120, attackRange: 2, attackPower: 2, hp: 3 },
-    4: { nickname: `Lv4 핑크군`, attackCool: 120, attackRange: 2, attackPower: 2, hp: 4 },
-    5: { nickname: `Lv5 핑크군`, attackCool: 120, attackRange: 2, attackPower: 3, hp: 5 }
+    1: { nickname: `Lv1 핑크군`, attackCool: 50, attackRange: 2, attackPower: 1, hp: 1 },
+    2: { nickname: `Lv2 핑크군`, attackCool: 50, attackRange: 2, attackPower: 1, hp: 2 },
+    3: { nickname: `Lv3 핑크군`, attackCool: 50, attackRange: 2, attackPower: 2, hp: 3 },
+    4: { nickname: `Lv4 핑크군`, attackCool: 50, attackRange: 2, attackPower: 2, hp: 4 },
+    5: { nickname: `Lv5 핑크군`, attackCool: 50, attackRange: 2, attackPower: 3, hp: 5 }
   },
   12: {
-    1: { nickname: 'Lv1 공룡군', attackCool: 135, attackRange: 2.5, attackPower: 1, hp: 1 },
-    2: { nickname: 'Lv2 공룡군', attackCool: 135, attackRange: 2.5, attackPower: 1, hp: 2 },
-    3: { nickname: 'Lv3 공룡군', attackCool: 135, attackRange: 2.5, attackPower: 2, hp: 3 },
-    4: { nickname: 'Lv4 공룡군', attackCool: 135, attackRange: 2.5, attackPower: 2, hp: 4 },
-    5: { nickname: 'Lv5 공룡군', attackCool: 135, attackRange: 2.5, attackPower: 3, hp: 5 }
+    1: { nickname: 'Lv1 공룡군', attackCool: 60, attackRange: 2.5, attackPower: 1, hp: 1 },
+    2: { nickname: 'Lv2 공룡군', attackCool: 60, attackRange: 2.5, attackPower: 1, hp: 2 },
+    3: { nickname: 'Lv3 공룡군', attackCool: 60, attackRange: 2.5, attackPower: 2, hp: 3 },
+    4: { nickname: 'Lv4 공룡군', attackCool: 60, attackRange: 2.5, attackPower: 2, hp: 4 },
+    5: { nickname: 'Lv5 공룡군', attackCool: 60, attackRange: 2.5, attackPower: 3, hp: 5 }
   }
 };
 
@@ -116,6 +116,7 @@ export const monsterSpawn = async (roomId: number, level: number) => {
       roleType: 1,
       hp: monsterData[level].hp,
       weapon: monsterData[level].attackPower,
+      potion: 0,
       stateInfo: {
         state: 0,
         nextState: 0,
@@ -157,7 +158,7 @@ export const monsterSpawn = async (roomId: number, level: number) => {
     monsterNumber,
     position[positionIndex][0],
     position[positionIndex][1],
-    monsterData[level].attackCool,
+    0,
     monsterData[level].attackRange
   );
 };
