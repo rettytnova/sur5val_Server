@@ -43,6 +43,7 @@ export interface Character {
   roleType: number;
   hp: number;
   weapon: number;
+  potion: number;
   stateInfo: CharacterStateInfo;
   equips: number[];
   debuffs: number[];
