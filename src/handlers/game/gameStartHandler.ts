@@ -7,6 +7,7 @@ import { monsterMoveStart } from '../coreMethod/monsterMove.js';
 import { monsterSpawnStart } from '../coreMethod/monsterSpawn.js';
 import { socketSessions } from '../../session/socketSession.js';
 import { inGameTimeSessions } from '../../session/inGameTimeSession.js';
+import { gameEndNotification } from '../notification/gameEnd.js';
 
 export const gameStartHandler = async (socket: CustomSocket, payload: Object) => {
   // 핸들러가 호출되면 success. response 만들어서 보냄
@@ -96,20 +97,8 @@ export const gameStartHandler = async (socket: CustomSocket, payload: Object) =>
         characterPositionDatas[room.id] = [];
       }
 
-      // const userPositionDatas = [];
-      // for (let i = 0; i < realUserNumber; i++) {
-      //   // 랜덤 스폰포인트
-      //   const randomSpawnPoint = spawnPoint[randomNumber(1, 10)];
-      //   const characterPositionData: CharacterPositionData = {
-      //     id: room.users[i].id,
-      //     x: randomSpawnPoint.x,
-      //     y: randomSpawnPoint.y
-      //   };
-      //   userPositionDatas.push(characterPositionData);
-      // }
       const randomIndex = nonSameRandom(1, 10, realUserNumber);
       const userPositionDatas = [];
-      console.log(randomIndex);
       for (let i = 0; i < realUserNumber; i++) {
         // 랜덤 스폰포인트
         const randomSpawnPoint = spawnPoint[randomIndex[i]];
@@ -123,13 +112,18 @@ export const gameStartHandler = async (socket: CustomSocket, payload: Object) =>
       characterPositionDatas[room.id].unshift(...userPositionDatas);
       await setRedisData('characterPositionDatas', characterPositionDatas);
 
-      // 방에있는 유저들에게 notifi 보내기
+      // 방에있는 유저들에게 게임 시작 notificationn 보내기, 게임 시작 시간 저장
       room.state = RoomStateType.INGAME;
       await setRedisData('roomData', rooms);
-      for (let i = 0; i < totalRound; i++) {
+      for (let i = 0; i < 1; i++) {
         await phaseNotification(i + 1, room.id, inGameTime * i);
       }
       inGameTimeSessions[room.id] = Date.now();
+
+      // 게임 종료 notification 보내기
+      setTimeout(async () => {
+        await gameEndNotification(room.id);
+      }, 20500);
     }
   } catch (err) {
     const responseData = {
@@ -141,6 +135,7 @@ export const gameStartHandler = async (socket: CustomSocket, payload: Object) =>
   }
 };
 
+// 게임 라운드 시작
 export const phaseNotification = async (level: number, roomId: number, sendTime: number) => {
   setTimeout(async () => {
     await monsterSpawnStart(roomId, level);

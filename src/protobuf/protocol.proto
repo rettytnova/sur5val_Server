@@ -261,7 +261,7 @@ message S2CDestroyCardResponse {
 }
 
 message S2CGameEndNotification {
-    repeated string winners = 1;
+    repeated int64 winners = 1;
     WinType winType = 2;
 }
 

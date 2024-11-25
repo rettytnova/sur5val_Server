@@ -1,26 +1,13 @@
 import net from 'net';
 import { sendPacket } from '../../packet/createPacket.js';
 import { config } from '../../config/config.js';
-import {
-  getRedisData,
-  getUserBySocket,
-  setRedisData,
-} from '../handlerMethod.js';
-import {
-  CreateRoomPayload,
-  CustomSocket,
-  RedisUserData,
-  Room,
-  User,
-} from '../../interface/interface.js';
+import { getRedisData, getUserBySocket, setRedisData } from '../handlerMethod.js';
+import { CreateRoomPayload, CustomSocket, RedisUserData, Room, User } from '../../interface/interface.js';
 import { GlobalFailCode, RoomStateType } from '../enumTyps.js';
 
 let gRoomId = 1;
 
-export const createRoomHandler = async (
-  socket: net.Socket,
-  payload: Object,
-) => {
+export const createRoomHandler = async (socket: net.Socket, payload: Object) => {
   let failCode: Number = GlobalFailCode.NONE;
   let success: boolean = true;
   let roomDatas: Room[] = [];
@@ -28,13 +15,30 @@ export const createRoomHandler = async (
 
   const createRoomPayload = payload as CreateRoomPayload;
 
-  const redisUserData: RedisUserData | null = await getUserBySocket(
-    socket as CustomSocket,
-  );
+  const redisUserData: RedisUserData | null = await getUserBySocket(socket as CustomSocket);
   if (!redisUserData) {
     success = false;
     failCode = GlobalFailCode.CREATE_ROOM_FAILED;
   } else {
+    // 이미 참여중인 방이 있는지 검사
+    const rooms = await getRedisData('roomData');
+    if (rooms) {
+      for (let i = 0; i < rooms.length; i++) {
+        for (let j = 0; j < rooms[i].users.length; j++) {
+          if (rooms[i].users[j].id === redisUserData.id) {
+            console.error('이미 참여중인 방이 존재합니다.');
+            const sendData = {
+              success: 0,
+              room: {},
+              failCode: GlobalFailCode.JOIN_ROOM_FAILED
+            };
+            sendPacket(socket, config.packetType.JOIN_ROOM_RESPONSE, sendData);
+            return;
+          }
+        }
+      }
+    }
+
     // 클라로부터 받은 roomName과 maxUserNum이 undefine과 null이 아닐 경우
     if (!createRoomPayload.name || !createRoomPayload.maxUserNum) {
       success = false;
@@ -51,7 +55,7 @@ export const createRoomHandler = async (
           name: createRoomPayload.name,
           maxUserNum: createRoomPayload.maxUserNum,
           state: RoomStateType.WAIT,
-          users: users,
+          users: users
         };
 
         roomDatas = [newRoom];
@@ -77,7 +81,7 @@ export const createRoomHandler = async (
             name: createRoomPayload.name,
             maxUserNum: createRoomPayload.maxUserNum,
             state: RoomStateType.WAIT,
-            users: users,
+            users: users
           };
 
           roomDatas.push(newRoom);
@@ -95,7 +99,7 @@ export const createRoomHandler = async (
     sendPacket(socket, config.packetType.CREATE_ROOM_RESPONSE, {
       success,
       room: newRoom,
-      failCode,
+      failCode
     });
   }
 };

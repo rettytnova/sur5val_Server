@@ -1,6 +1,6 @@
 import net from 'net';
 import { getRedisData, getRoomByUserId, getUserBySocket, setRedisData } from '../handlerMethod.js';
-import { CustomSocket, User } from '../../interface/interface.js';
+import { CustomSocket, Room, User } from '../../interface/interface.js';
 import { sendPacket } from '../../packet/createPacket.js';
 import { config } from '../../config/config.js';
 import { GlobalFailCode, RoomStateType } from '../enumTyps.js';
@@ -18,7 +18,8 @@ export const leaveRoomHandler = async (socket: net.Socket) => {
     return;
   } // 모든 방 데이터
 
-  const rooms = await getRedisData('roomData');
+  const rooms: Room[] = await getRedisData('roomData');
+  if (!rooms) return;
   const room = await getRoomByUserId(user.id);
   if (!room) {
     sendPacket(socket, config.packetType.LEAVE_ROOM_RESPONSE, {
@@ -50,8 +51,8 @@ export const leaveRoomHandler = async (socket: net.Socket) => {
   // 방에서 해당 유저 삭제
   rooms[roomIndex].users.splice(userIndex, 1);
 
-  // 나가는 유저가 방장일 경우
-  if (user.id === rooms[roomIndex].ownerId) {
+  // 나가는 유저가 방장일 경우 방장 변경
+  if (user.id === rooms[roomIndex].ownerId && rooms[roomIndex].users.length > 0) {
     rooms[roomIndex].ownerId = rooms[roomIndex].users[0].id;
   }
 
@@ -64,12 +65,11 @@ export const leaveRoomHandler = async (socket: net.Socket) => {
   // 모든 유저에게 해당 데이터 기반으로 업데이트
   for (let userIdx = 0; userIdx < rooms[roomIndex].users.length; userIdx++) {
     const roomUserSocket = socketSessions[rooms[roomIndex].users[userIdx].id];
-    if (roomUserSocket)
+    if (roomUserSocket) {
       sendPacket(roomUserSocket, config.packetType.LEAVE_ROOM_NOTIFICATION, {
         userId: user.id
       });
 
-    if (roomUserSocket) {
       const sendData = {
         success: 1,
         room: rooms[roomIndex],
@@ -77,19 +77,19 @@ export const leaveRoomHandler = async (socket: net.Socket) => {
       };
       sendPacket(roomUserSocket, config.packetType.JOIN_ROOM_RESPONSE, sendData);
     }
+  }
 
-    // 방에 roleType이 0과 1(player, boss)인 user가 0명일때 방을 없애기
-    let isClosedRoom: boolean = true;
-    for (let i = 0; i < rooms[roomIndex].users.length; i++) {
-      const userRoleType = rooms[roomIndex].users[i].character.roleType;
-      if (userRoleType === 2 || userRoleType === 4) {
-        isClosedRoom = false;
-        break;
-      }
+  // 방에 roleType이 2와 4(player, boss)인 user가 0명일때 방을 없애기
+  let isClosedRoom: boolean = true;
+  for (let i = 0; i < rooms[roomIndex].users.length; i++) {
+    const userRoleType = rooms[roomIndex].users[i].character.roleType;
+    if (userRoleType === 2 || userRoleType === 4) {
+      isClosedRoom = false;
+      break;
     }
-    if (isClosedRoom) {
-      rooms.splice(roomIndex, 1);
-    }
+  }
+  if (isClosedRoom) {
+    rooms.splice(roomIndex, 1);
   }
 
   await setRedisData('roomData', rooms);

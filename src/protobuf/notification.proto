@@ -59,7 +59,7 @@ message S2CPhaseUpdateNotification {
 
 // 게임 종료 알림
 message S2CGameEndNotification {
-    repeated string winners = 1;
+    repeated int64 winners = 1;
     WinType winType = 2;
 }
 // (폭탄 발동)경고 알림
