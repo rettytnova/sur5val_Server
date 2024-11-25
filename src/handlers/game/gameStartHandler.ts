@@ -8,6 +8,7 @@ import { monsterSpawnStart } from '../coreMethod/monsterSpawn.js';
 import { socketSessions } from '../../session/socketSession.js';
 import { inGameTimeSessions } from '../../session/inGameTimeSession.js';
 import { gameEndNotification } from '../notification/gameEnd.js';
+import { fleaMarketCardCreate } from '../coreMethod/fleaMarketCardCreate.js';
 
 export const gameStartHandler = async (socket: CustomSocket, payload: Object) => {
   // 핸들러가 호출되면 success. response 만들어서 보냄
@@ -47,38 +48,6 @@ export const gameStartHandler = async (socket: CustomSocket, payload: Object) =>
         };
         sendPacket(socket, config.packetType.GAME_START_RESPONSE, responseData);
         room.state = RoomStateType.WAIT;
-
-        // 기존room을 없애기, newRoom을 기존 room데이터로 만들어서 push해주기, 방참가response 보내기
-        // for (let i = 0; i < rooms.length; i++) {
-        //   if (rooms[i].id === room.id) {
-        //     rooms.splice(i, 1);
-        //     break;
-        //   }
-        // }
-        // const newRoom = {
-        //   id: room.id + 1,
-        //   ownerId: room.ownerId,
-        //   name: room.name,
-        //   maxUserNum: room.maxUserNum,
-        //   state: RoomStateType.WAIT,
-        //   users: room.users
-        // };
-        // sendPacket(socket, config.packetType.CREATE_ROOM_RESPONSE, {
-        //   success: 1,
-        //   room: newRoom,
-        //   failCode: 0
-        // });
-
-        // for (let i = 0; i < newRoom.users.length; i++) {
-        //   const roomUserSocket = socketSessions[newRoom.users[i].id];
-        //   const sendData = {
-        //     success: 1,
-        //     room: newRoom,
-        //     failCode: GlobalFailCode.NONE
-        //   };
-        //   if (roomUserSocket)
-        //     sendPacket(roomUserSocket, config.packetType.JOIN_ROOM_RESPONSE, sendData), console.log('방 참가');
-        // }
 
         await setRedisData('roomData', rooms);
         return;
@@ -138,6 +107,7 @@ export const gameStartHandler = async (socket: CustomSocket, payload: Object) =>
 // 게임 라운드 시작
 export const phaseNotification = async (level: number, roomId: number, sendTime: number) => {
   setTimeout(async () => {
+    await fleaMarketCardCreate(level, roomId, 8);
     await monsterSpawnStart(roomId, level);
     const characterPositionDatas = await getRedisData('characterPositionDatas');
     const roomData: Room[] = await getRedisData('roomData');
