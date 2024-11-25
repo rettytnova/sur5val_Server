@@ -21,6 +21,11 @@ export interface positionUpdatePayload {
   x: number;
   y: number;
 }
+
+export interface FleaMarketCardPickPayload {
+  pickIndex: number;
+}
+
 export interface Card {
   type: number;
   count: number;
@@ -38,6 +43,7 @@ export interface Character {
   roleType: number;
   hp: number;
   weapon: number;
+  potion: number;
   stateInfo: CharacterStateInfo;
   equips: number[];
   debuffs: number[];
@@ -101,22 +107,52 @@ export interface RedisUserData extends User {
   refreshToken: string;
 }
 
-/* CharacterData 타입 정의 */
-export interface CharacterData {
-  roleType: number;
-  hp: number;
-  weapon: number;
-  stateInfo: number;
-  equips: Object | null;
-  debuffs: Object | null;
-  handCards: Object | null;
-  bbangCount: number;
-  handCardsCount: number;
-}
-
 /* CharacterPositionData 타입 정의 */
 export interface CharacterPositionData {
   id: number;
   x: number;
   y: number;
+}
+
+/* CardSelectRequest 타입 정의 */
+export interface CardSelectRequest {
+  selectType: number;
+  selectCardType: number;
+}
+
+/* CardSelectResponse 타입 정의 */
+export interface CardSelectResponse {
+  success: boolean;
+  failCode: number;
+}
+
+/* UseCardRequest 타입 정의 */
+export interface UseCardRequest {
+  cardType: number;
+  targetUserId: number;
+}
+
+/* UseCardResponse 타입 정의 */
+export interface UseCardResponse {
+  success: boolean;
+  failCode: number;
+}
+
+/* UseCardNotification 타입 정의 */
+export interface UseCardNotification {
+  cardType: number;
+  userId: number;
+  targetUserId: number;
+}
+
+/* UserUpdateNotification 타입 정의 */
+export interface UserUpdateNotification {
+  user: User[];
+}
+
+/* CardEffectNotification 타입 정의 */
+export interface CardEffectNotification {
+  cardType: number;
+  userId: number;
+  success: boolean;
 }

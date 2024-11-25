@@ -15,6 +15,7 @@ import { reactionHandler } from "./user/reactionHandler.js";
 import { destoryCardHandler } from "./card/destoryCardHandler.js";
 import { cardSelectHandler } from "./card/cardSelectHandler.js";
 import { passDebuffHandler } from "./user/passDebuffHandler.js";
+import { fleaMarketCardPickHandler } from "./market/fleaMarketCardPickHandler.js";
 
 const handlers = {
     [config.packetType.REGISTER_REQUEST]: {
@@ -64,6 +65,10 @@ const handlers = {
     [config.packetType.FLEA_MARKET_PICK_REQUEST]: {
         handler: fleaMarketPickHandler,
         protoType: 'request.C2SFleaMarketPickRequest'
+    },
+    [config.packetType.FLEA_MARKET_CARD_PICK_REQUEST]: {
+        handler: fleaMarketCardPickHandler,
+        protoType: 'request.C2SFleaMarketCardPickRequest',
     },
     [config.packetType.REACTION_REQUEST]: {
         handler: reactionHandler,

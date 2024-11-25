@@ -3,6 +3,7 @@ import { Room } from '../../interface/interface.js';
 import { sendPacket } from '../../packet/createPacket.js';
 import { socketSessions } from '../../session/socketSession.js';
 import { getRedisData, monsterAI, setRedisData } from '../handlerMethod.js';
+import { userUpdateNotification } from '../notification/userUpdate.js';
 import { monsterAttackCheck } from './monsterAttack.js';
 
 export const monsterAiDatas: {
@@ -16,9 +17,10 @@ export const monsterAiDatas: {
   }[];
 } = {};
 
-export const moveSpeed = 0.03; // 프레임당 몬스터 이동 속도 (약 30프레임)
-export const directionChangeBasic = 20; // 프레임 당 방향 전환 기본 값
-export const directionChangeRandom = 10; // 프레임 당 방향 전환 랜덤 값
+export const moveSpeed = 0.11;
+export const directionChangeBasic = 8;
+export const directionChangeRandom = 3;
+export const animationDelay = 10;
 
 // 몬스터 이동 및 공격 시작
 export const monsterMoveStart = async (roomId: number, totalTime: number) => {
@@ -67,7 +69,9 @@ export const monsterMoveStart = async (roomId: number, totalTime: number) => {
       // 애니메이션 재생 지연시간 계산
       if (monsterAiDatas[roomId][i].animationDelay > 0) {
         monsterAiDatas[roomId][i].animationDelay--;
-      } // 위로 이동
+      }
+
+      // 위로 이동
       else if (monsterAiDatas[roomId][i].direction === 0) {
         monsterAiDatas[roomId][i].distance--;
         monsterAiDatas[roomId][i].attackCool--;
@@ -124,5 +128,5 @@ export const monsterMoveStart = async (roomId: number, totalTime: number) => {
     // 시간 다되면 함수 종료
     if (Date.now() - time >= totalTime)
       console.log('함수 실행 횟수:', callme, '함수 실행 시간:', Date.now() - time), clearInterval(monsterMove);
-  }, 30);
+  }, 100);
 };

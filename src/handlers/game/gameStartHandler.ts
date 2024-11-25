@@ -2,10 +2,9 @@ import { CharacterPositionData, CustomSocket, RedisUserData, Room, User } from '
 import { GlobalFailCode, PhaseType, RoomStateType } from '../enumTyps.js';
 import { sendPacket } from '../../packet/createPacket.js';
 import { config, spawnPoint, inGameTime, totalRound } from '../../config/config.js';
-import { getRedisData, getUserBySocket, setRedisData } from '../handlerMethod.js';
+import { getRedisData, getUserBySocket, nonSameRandom, setRedisData } from '../handlerMethod.js';
 import { monsterMoveStart } from '../coreMethod/monsterMove.js';
 import { monsterSpawnStart } from '../coreMethod/monsterSpawn.js';
-import { randomNumber } from '../../utils/utils.js';
 import { socketSessions } from '../../session/socketSession.js';
 import { inGameTimeSessions } from '../../session/inGameTimeSession.js';
 
@@ -97,10 +96,23 @@ export const gameStartHandler = async (socket: CustomSocket, payload: Object) =>
         characterPositionDatas[room.id] = [];
       }
 
+      // const userPositionDatas = [];
+      // for (let i = 0; i < realUserNumber; i++) {
+      //   // 랜덤 스폰포인트
+      //   const randomSpawnPoint = spawnPoint[randomNumber(1, 10)];
+      //   const characterPositionData: CharacterPositionData = {
+      //     id: room.users[i].id,
+      //     x: randomSpawnPoint.x,
+      //     y: randomSpawnPoint.y
+      //   };
+      //   userPositionDatas.push(characterPositionData);
+      // }
+      const randomIndex = nonSameRandom(1, 10, realUserNumber);
       const userPositionDatas = [];
+      console.log(randomIndex);
       for (let i = 0; i < realUserNumber; i++) {
         // 랜덤 스폰포인트
-        const randomSpawnPoint = spawnPoint[randomNumber(1, 10)];
+        const randomSpawnPoint = spawnPoint[randomIndex[i]];
         const characterPositionData: CharacterPositionData = {
           id: room.users[i].id,
           x: randomSpawnPoint.x,
@@ -108,7 +120,6 @@ export const gameStartHandler = async (socket: CustomSocket, payload: Object) =>
         };
         userPositionDatas.push(characterPositionData);
       }
-
       characterPositionDatas[room.id].unshift(...userPositionDatas);
       await setRedisData('characterPositionDatas', characterPositionDatas);
 

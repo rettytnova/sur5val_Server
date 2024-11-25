@@ -1,5 +1,3 @@
-import net from "net"
+import { CustomSocket } from '../../interface/interface.js';
 
-export const destoryCardHandler = (socket: net.Socket, payload: Object) => {
-
-}
+export const destoryCardHandler = async (socket: CustomSocket, payload: Object): Promise<void> => {};

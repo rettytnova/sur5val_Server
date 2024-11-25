@@ -81,6 +81,7 @@ export const loginHandler = async (socket: CustomSocket, payload: Object): Promi
         roleType: 0,
         hp: 0,
         weapon: 0,
+        potion: 0,
         stateInfo: {
           state: 0,
           nextState: 0,
@@ -124,7 +125,6 @@ export const loginHandler = async (socket: CustomSocket, payload: Object): Promi
               sendPacket(socket, config.packetType.GAME_START_NOTIFICATION, notifiData);
             }, 100);
             setTimeout(() => {
-              console.log(rooms[i].users);
               userUpdateNotification(rooms[i]);
             }, 100);
           }

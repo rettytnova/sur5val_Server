@@ -41,6 +41,34 @@ export const PhaseType = Object.freeze({
 });
 export type PhaseType = (typeof PhaseType)[keyof typeof PhaseType];
 
+// 카드
+export const CardType = Object.freeze({
+  NONE: 0,
+  BBANG: 1, // 20장
+  BIG_BBANG: 2, // 1장
+  SHIELD: 3, // 10장
+  VACCINE: 4, // 6장
+  CALL_119: 5, // 2장
+  DEATH_MATCH: 6, // 4장
+  GUERRILLA: 7, // 1장
+  ABSORB: 8, // 4장
+  HALLUCINATION: 9, // 4장
+  FLEA_MARKET: 10, // 3장
+  MATURED_SAVINGS: 11, // 2장
+  WIN_LOTTERY: 12, // 1장
+  SNIPER_GUN: 13, // 1장
+  HAND_GUN: 14, // 2장
+  DESERT_EAGLE: 15, // 3장
+  AUTO_RIFLE: 16, // 2장
+  LASER_POINTER: 17, // 1장
+  RADAR: 18, // 1장
+  AUTO_SHIELD: 19, // 2장
+  STEALTH_SUIT: 20, // 2장
+  CONTAINMENT_UNIT: 21, // 3장
+  SATELLITE_TARGET: 22, // 1장
+  BOMB: 23 // 1장
+});
+export type CardType = (typeof CardType)[keyof typeof CardType];
 // 캐릭터 상태
 export const CharacterStateType = Object.freeze({
   NONE_CHARACTER_STATE: 0,
@@ -62,12 +90,13 @@ export const CharacterStateType = Object.freeze({
 });
 export type CharacterStateType = (typeof CharacterStateType)[keyof typeof CharacterStateType];
 
-// 캐릭터 코드
+// 유저 캐릭터 코드
 export const UserCharacterType = Object.freeze({
   RED: 1, // 빨강이
   FROGGY: 7, // 개굴군
   SWIM_GLASSES: 9, // 물안경군
   MASK: 10, // 가면군
+  DINOSAUR: 12, // 공룡이
   PINK_SLIME: 13 // 핑크슬라임
 });
 export type UserCharacterType = (typeof UserCharacterType)[keyof typeof UserCharacterType];
