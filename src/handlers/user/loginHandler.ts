@@ -81,6 +81,7 @@ export const loginHandler = async (socket: CustomSocket, payload: Object): Promi
         roleType: 0,
         hp: 0,
         weapon: 0,
+        potion: 0,
         stateInfo: {
           state: 0,
           nextState: 0,
