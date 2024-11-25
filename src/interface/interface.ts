@@ -156,3 +156,12 @@ export interface CardEffectNotification {
   userId: number;
   success: boolean;
 }
+
+export interface userStatusData {
+  level: number;
+  experience: number;
+  attack: number;
+  armor: number;
+  mana: number;
+  gold: number;
+}

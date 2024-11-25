@@ -1,5 +1,5 @@
 import { GlobalFailCode, RoomStateType, UserCharacterType } from '../enumTyps.js';
-import { Card, CustomSocket, RedisUserData, Room, User } from '../../interface/interface.js';
+import { Card, CustomSocket, RedisUserData, Room, User, userStatusData } from '../../interface/interface.js';
 import { config } from '../../config/config.js';
 import { sendPacket } from '../../packet/createPacket.js';
 import { getRedisData, getRoomByUserId, getUserBySocket, setRedisData } from '../handlerMethod.js';
@@ -109,6 +109,20 @@ export const gamePrepareHandler = async (socket: CustomSocket, payload: Object) 
         // 방에있는 유저들 캐릭터 랜덤 배정하기
         room.state = RoomStateType.PREPARE;
         room.users = setCharacterInfoInit(room.users);
+
+        // 방에있는 유저들 캐릭터 초기 능력치 세팅하기
+        let userStatusDatas: { [roomId: number]: { [userId: number]: userStatusData } } | undefined =
+          await getRedisData('userStatusData');
+        if (userStatusDatas === undefined) {
+          userStatusDatas = { [room.id]: {} };
+        }
+        const userStatusData = userStatusDatas[room.id];
+
+        for (let i = 0; i < room.users.length; i++) {
+          userStatusData[room.users[i].id] = { level: 1, experience: 0, attack: 1, armor: 0, mana: 10, gold: 0 };
+        }
+        await setRedisData('userStatusData', userStatusDatas);
+
         const rooms: Room[] | null = await getRedisData('roomData');
         if (!rooms) {
           return;

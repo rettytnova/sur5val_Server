@@ -1,5 +1,12 @@
 import { config } from '../../config/config.js';
-import { CustomSocket, UseCardRequest, UseCardResponse, Room } from '../../interface/interface.js';
+import {
+  CustomSocket,
+  UseCardRequest,
+  UseCardResponse,
+  Room,
+  User,
+  userStatusData
+} from '../../interface/interface.js';
 import { CardType, GlobalFailCode } from '../enumTyps.js';
 import { sendPacket } from '../../packet/createPacket.js';
 import { getRedisData, getUserBySocket, setRedisData } from '../../handlers/handlerMethod.js';
@@ -45,98 +52,40 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
       console.error('useCardHandler: room not found');
       return;
     }
+
+    let target: User | null = null;
+    for (let i = 0; i < room.users.length; i++) {
+      if (room.users[i].id === targetUserId) {
+        target = room.users[i];
+      }
+    }
+
     sendPacket(socket, config.packetType.USE_CARD_RESPONSE, {
       success: true,
       failCode: GlobalFailCode.NONE
     });
     switch (cardType) {
       case CardType.BBANG:
-        const userIndex = room.users.findIndex((user) => user.id === userData.id);
-        const targetUserIndex = room.users.findIndex((user) => user.id === targetUserId);
-        if (userIndex === -1) {
-          console.error('useCardHandler: user not found');
-          return;
-        }
-        if (targetUserIndex === -1) {
-          console.error('useCardHandler: user not found');
-          return;
-        }
-        //사용자
-
-        //타겟
-        room.users[targetUserIndex].character.hp -= 1;
-
-        await setRedisData('roomData', rooms);
-        userUpdateNotification(room);
+        if (!target) return;
+        await changeStatus(target, rooms, room, -1, 0, 0);
         break;
       case CardType.BIG_BBANG:
         break;
       case CardType.SHIELD:
         break;
       case CardType.VACCINE:
-        const userIndex4 = room.users.findIndex((user) => user.id === userData.id);
-        const targetUserIndex4 = room.users.findIndex((user) => user.id === targetUserId);
-        if (userIndex4 === -1) {
-          console.error('useCardHandler: user not found');
-          return;
-        }
-        if (targetUserIndex4 === -1) {
-          console.error('useCardHandler: user not found');
-          return;
-        }
-        //사용자
-
-        //타겟
-        room.users[targetUserIndex4].character.hp -= 1;
-
-        await setRedisData('roomData', rooms);
-        userUpdateNotification(room);
         break;
       case CardType.CALL_119:
         break;
       case CardType.DEATH_MATCH:
         break;
       case CardType.GUERRILLA:
-        const userIndex7 = room.users.findIndex((user) => user.id === userData.id);
-        const targetUserIndex7 = room.users.findIndex((user) => user.id === targetUserId);
-        if (userIndex7 === -1) {
-          console.error('useCardHandler: user not found');
-          return;
-        }
-        if (targetUserIndex7 === -1) {
-          console.error('useCardHandler: user not found');
-          return;
-        }
-        //사용자
-
-        //타겟
-        room.users[targetUserIndex7].character.hp -= 1;
-
-        await setRedisData('roomData', rooms);
-        userUpdateNotification(room);
         break;
       case CardType.HALLUCINATION:
         break;
       case CardType.ABSORB:
         break;
       case CardType.FLEA_MARKET:
-        const userIndex10 = room.users.findIndex((user) => user.id === userData.id);
-        const targetUserIndex10 = room.users.findIndex((user) => user.id === targetUserId);
-        if (userIndex10 === -1) {
-          console.error('useCardHandler: user not found');
-          return;
-        }
-        if (targetUserIndex10 === -1) {
-          console.error('useCardHandler: user not found');
-          return;
-        }
-        //사용자
-
-        //타겟
-        room.users[targetUserIndex10].character.hp -= 1;
-
-        await setRedisData('roomData', rooms);
-        userUpdateNotification(room);
         break;
       case CardType.MATURED_SAVINGS:
         break;
@@ -175,4 +124,48 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
 
   // 클라이언트(자기 자신)에 데이터 보내기
   //sendPacket(socket, packetType.USE_CARD_RESPONSE, responseData);
+};
+
+// 해당 캐릭터 능력치 변동
+const changeStatus = async (user: User, rooms: Room[], room: Room, hp: number, armor: number, attack: number) => {
+  const characterStats: { [roomId: number]: { [userId: number]: userStatusData } } =
+    await getRedisData('userStatusData');
+  const characterStat = characterStats[room.id];
+  user.character.hp += hp;
+  characterStat[user.id].armor += armor;
+  characterStat[user.id].attack += attack;
+
+  await setRedisData('userStatusData', characterStats);
+  await setRedisData('roomData', rooms);
+  userUpdateNotification(room);
+};
+
+const attackTarget = async (attacker: User, rooms: Room[], room: Room, skillCoeffcient: number, targets: User[]) => {
+  const characterStats: { [roomId: number]: { [userId: number]: userStatusData } } =
+    await getRedisData('userStatusData');
+  const damage = Math.round(characterStats[room.id][attacker.id].attack * skillCoeffcient);
+
+  for (let i = 0; i < targets.length; i++) {
+    for (let j = 0; j < room.users.length; j++) {
+      if (targets[i].id === room.users[j].id) {
+        targets[i].character.hp -= damage;
+      }
+    }
+  }
+  await setRedisData('roomData', rooms);
+  userUpdateNotification(room);
+};
+
+// 파티 버프 (모든 캐릭터 능력치 변동)
+const partyBuff = async (rooms: Room[], room: Room, hp: number, armor: number, attack: number) => {
+  const characterStats: { [roomId: number]: { [userId: number]: userStatusData } } =
+    await getRedisData('userStatusData');
+  for (let i = 0; i < room.users.length; i++) {
+    room.users[i].character.hp += hp;
+    characterStats[room.id][room.users[i].id].armor += armor;
+    characterStats[room.id][room.users[i].id].attack += attack;
+  }
+  await setRedisData('userStatusData', characterStats);
+  await setRedisData('roomData', rooms);
+  userUpdateNotification(room);
 };
