@@ -22,7 +22,7 @@ export interface positionUpdatePayload {
   y: number;
 }
 
-export interface FleaMarketCardPickPayload {
+export interface FleaMarketItemSelectPayload {
   pickIndex: number;
 }
 
