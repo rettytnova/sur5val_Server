@@ -241,29 +241,29 @@ enum CharacterStateType {
 
 enum CardType {
     NONE = 0;
-    BBANG = 1; // 20장
-    BIG_BBANG = 2; // 1장
-    SHIELD = 3; // 10장
-    VACCINE = 4; // 6장
-    CALL_119 = 5; // 2장
-    DEATH_MATCH = 6; // 4장
-    GUERRILLA = 7; // 1장
-    ABSORB = 8; // 4장
-    HALLUCINATION = 9; // 4장
-    FLEA_MARKET = 10; // 3장
-    MATURED_SAVINGS = 11; // 2장
-    WIN_LOTTERY = 12; // 1장
-    SNIPER_GUN = 13; // 1장
-    HAND_GUN = 14; // 2장
-    DESERT_EAGLE = 15; // 3장
-    AUTO_RIFLE = 16; // 2장
-    LASER_POINTER = 17; // 1장
-    RADAR = 18; // 1장
-    AUTO_SHIELD = 19; // 2장
-    STEALTH_SUIT = 20; // 2장
-    CONTAINMENT_UNIT = 21; // 3장
-    SATELLITE_TARGET = 22; // 1장
-    BOMB = 23; // 1장
+    BBANG = 1; // 전사스킬1
+    BIG_BBANG = 2; // 전사스킬2
+    SHIELD = 3; // 전사스킬3
+    VACCINE = 4; // 로그스킬1
+    CALL_119 = 5; // 로그스킬2
+    DEATH_MATCH = 6; // 로그스킬3
+    GUERRILLA = 7; // 법사스킬1
+    ABSORB = 8; // 법사스킬2
+    HALLUCINATION = 9; // 법사스킬3
+    FLEA_MARKET = 10; // 서폿스킬1
+    MATURED_SAVINGS = 11; // 서폿스킬2
+    WIN_LOTTERY = 12; // 서폿스킬3
+    SNIPER_GUN = 13; // 검
+    HAND_GUN = 14; // 방패
+    DESERT_EAGLE = 15; // 활
+    AUTO_RIFLE = 16; // 지팡이
+    LASER_POINTER = 17; // 판금갑옷
+    RADAR = 18; // 가죽갑옷
+    AUTO_SHIELD = 19; // 로브
+    STEALTH_SUIT = 20; // 전설갑옷
+    CONTAINMENT_UNIT = 21; // 치유포션
+    SATELLITE_TARGET = 22; // 마나포션
+    BOMB = 23; // 최상급 치유포션
 }
 
 enum RoleType {

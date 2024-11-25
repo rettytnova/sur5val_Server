@@ -16,7 +16,7 @@ export const userCharacterData: {
     roleType: 4,
     // equips: 20,
     handCards: [
-      { type: 4, count: 1 },
+      { type: 1, count: 1 },
       { type: 7, count: 1 },
       { type: 10, count: 1 },
       { type: 13, count: 1 },
@@ -32,7 +32,7 @@ export const userCharacterData: {
     roleType: 2,
     // equips: 14,
     handCards: [
-      { type: 2, count: 1 },
+      { type: 1, count: 1 }, //2
       { type: 17, count: 1 },
       { type: 21, count: 3 },
       { type: 22, count: 1 }
@@ -40,12 +40,12 @@ export const userCharacterData: {
   },
   // 로그 - 개굴군(근딜)
   [UserCharacterType.FROGGY]: {
-    hp: 3,
+    hp: 5,
     weapon: 4,
     roleType: 2,
     // equips: 12,
     handCards: [
-      { type: 5, count: 1 },
+      { type: 1, count: 1 }, //5
       { type: 18, count: 1 },
       { type: 21, count: 3 },
       { type: 22, count: 1 }
@@ -53,12 +53,12 @@ export const userCharacterData: {
   },
   // 가면군 - 마법사(원딜)
   [UserCharacterType.MASK]: {
-    hp: 2,
+    hp: 5,
     weapon: 7,
     roleType: 2,
     // equips: 16,
     handCards: [
-      { type: 8, count: 1 },
+      { type: 1, count: 1 }, //8
       { type: 19, count: 1 },
       { type: 21, count: 3 },
       { type: 22, count: 1 }
@@ -66,12 +66,12 @@ export const userCharacterData: {
   },
   // 빨강이 - 서포터
   [UserCharacterType.RED]: {
-    hp: 1,
+    hp: 5,
     weapon: 10,
     roleType: 2,
     // equips: 15,
     handCards: [
-      { type: 11, count: 1 },
+      { type: 1, count: 1 }, //11
       { type: 19, count: 1 },
       { type: 21, count: 3 },
       { type: 22, count: 1 }

@@ -112,3 +112,46 @@ export interface CharacterPositionData {
   x: number;
   y: number;
 }
+
+/* CardSelectRequest 타입 정의 */
+export interface CardSelectRequest {
+  selectType: number;
+  selectCardType: number;
+}
+
+/* CardSelectResponse 타입 정의 */
+export interface CardSelectResponse {
+  success: boolean;
+  failCode: number;
+}
+
+/* UseCardRequest 타입 정의 */
+export interface UseCardRequest {
+  cardType: number;
+  targetUserId: number;
+}
+
+/* UseCardResponse 타입 정의 */
+export interface UseCardResponse {
+  success: boolean;
+  failCode: number;
+}
+
+/* UseCardNotification 타입 정의 */
+export interface UseCardNotification {
+  cardType: number;
+  userId: number;
+  targetUserId: number;
+}
+
+/* UserUpdateNotification 타입 정의 */
+export interface UserUpdateNotification {
+  user: User[];
+}
+
+/* CardEffectNotification 타입 정의 */
+export interface CardEffectNotification {
+  cardType: number;
+  userId: number;
+  success: boolean;
+}
