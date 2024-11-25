@@ -45,8 +45,6 @@ export const getRoomByUserId = async (userId: number) => {
   const rooms: Room[] = await getRedisData('roomData');
   const room = rooms.find((room) => room.users.some((user) => user.id === userId));
   if (!room) {
-    //throw new Error('getRoomByUserId: Room not found');
-    console.error('getRoomByUserId: Room not found');
     return null;
   }
   return room;

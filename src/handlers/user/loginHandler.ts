@@ -78,9 +78,10 @@ export const loginHandler = async (socket: CustomSocket, payload: Object): Promi
       nickname: userByEmailPw.nickname as string,
       character: {
         characterType: 0,
-        roleType: 0,
+        roleType: 2,
         hp: 0,
         weapon: 0,
+        potion: 0,
         stateInfo: {
           state: 0,
           nextState: 0,

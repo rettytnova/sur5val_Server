@@ -1,13 +1,27 @@
-import net from 'net';
 import { sendPacket } from '../../packet/createPacket.js';
 import { config } from '../../config/config.js';
-import { getRedisData } from '../handlerMethod.js';
-import { Room } from '../../interface/interface.js';
-import { RoomStateType } from '../enumTyps.js';
+import { getRedisData, getUserBySocket } from '../handlerMethod.js';
+import { CustomSocket, Room, User } from '../../interface/interface.js';
+import { GlobalFailCode, RoomStateType } from '../enumTyps.js';
 
-export const getRoomListHandler = async (socket: net.Socket) => {
+export const getRoomListHandler = async (socket: CustomSocket) => {
   const rooms: Room[] | undefined = await getRedisData('roomData');
+  const user: User = await getUserBySocket(socket);
   if (rooms === undefined) return;
+  for (let i = 0; i < rooms.length; i++) {
+    for (let j = 0; j < rooms[i].users.length; j++) {
+      if (rooms[i].users[j].id === user.id) {
+        const sendData = {
+          success: 1,
+          room: rooms[i],
+          failCode: GlobalFailCode.NONE
+        };
+        sendPacket(socket, config.packetType.JOIN_ROOM_RESPONSE, sendData);
+        console.log('rooms: ', rooms[0].users);
+      }
+    }
+  }
+
   const waitRooms = [];
   for (let i = 0; i < rooms.length; i++) {
     if (rooms[i].state === RoomStateType.WAIT) waitRooms.push(rooms[i]);
