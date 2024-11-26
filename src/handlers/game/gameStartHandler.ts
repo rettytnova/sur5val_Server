@@ -1,7 +1,7 @@
-import { CharacterPositionData, CustomSocket, RedisUserData, Room, User } from '../../interface/interface.js';
+import { CharacterPositionData, CustomSocket, RedisUserData, Room } from '../../interface/interface.js';
 import { GlobalFailCode, PhaseType, RoomStateType } from '../enumTyps.js';
 import { sendPacket } from '../../packet/createPacket.js';
-import { config, spawnPoint, inGameTime, totalRound } from '../../config/config.js';
+import { config, spawnPoint, inGameTime, normalRound, bossGameTime } from '../../config/config.js';
 import { getRedisData, getUserBySocket, nonSameRandom, setRedisData } from '../handlerMethod.js';
 import { monsterMoveStart } from '../coreMethod/monsterMove.js';
 import { monsterSpawnStart } from '../coreMethod/monsterSpawn.js';
@@ -84,16 +84,19 @@ export const gameStartHandler = async (socket: CustomSocket, payload: Object) =>
       // 방에있는 유저들에게 게임 시작 notificationn 보내기, 게임 시작 시간 저장
       room.state = RoomStateType.INGAME;
       await setRedisData('roomData', rooms);
-      // for (let i = 0; i < 1; i++) {
-      //   await normalPhaseNotification(i + 1, room.id, inGameTime * i);
-      // }
-      bossPhaseNotification(10, room.id, 0);
+      for (let i = 0; i < normalRound; i++) {
+        await normalPhaseNotification(i + 1, room.id, inGameTime * i);
+      }
+      bossPhaseNotification(5, room.id, inGameTime * normalRound);
       inGameTimeSessions[room.id] = Date.now();
 
       // 게임 종료 notification 보내기
-      setTimeout(async () => {
-        await gameEndNotification(room.id);
-      }, 60500);
+      setTimeout(
+        async () => {
+          await gameEndNotification(room.id);
+        },
+        inGameTime * normalRound + bossGameTime
+      );
     }
   } catch (err) {
     const responseData = {
@@ -157,7 +160,7 @@ export const bossPhaseNotification = async (level: number, roomId: number, sendT
 
     for (let i = 0; i < room.users.length; i++) {
       const userSocket = socketSessions[room.users[i].id];
-      const gameStateData = { phaseType: PhaseType.DAY, nextPhaseAt: Date.now() + inGameTime };
+      const gameStateData = { phaseType: PhaseType.DAY, nextPhaseAt: Date.now() + bossGameTime };
       const notifiData = {
         gameState: gameStateData,
         users: room.users,

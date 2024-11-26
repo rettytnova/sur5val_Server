@@ -24,12 +24,7 @@ export const userCharacterData: {
       { type: 6, count: 1 },
       { type: 7, count: 1 },
       { type: 8, count: 1 },
-      { type: 9, count: 1 },
-      { type: 10, count: 1 },
-      { type: 11, count: 1 },
-      { type: 12, count: 1 },
-      { type: 13, count: 1 },
-      { type: 14, count: 1 }
+      { type: 101, count: 10 }
     ]
   },
   // 탱커 - 물안경군
@@ -47,12 +42,7 @@ export const userCharacterData: {
       { type: 6, count: 1 },
       { type: 7, count: 1 },
       { type: 8, count: 1 },
-      { type: 9, count: 1 },
-      { type: 10, count: 1 },
-      { type: 11, count: 1 },
-      { type: 12, count: 1 },
-      { type: 13, count: 1 },
-      { type: 14, count: 1 }
+      { type: 101, count: 10 }
     ]
   },
   // 로그 - 개굴군(근딜)
