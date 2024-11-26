@@ -1,7 +1,7 @@
-import { CharacterPositionData, CustomSocket, RedisUserData, Room, User } from '../../interface/interface.js';
+import { CharacterPositionData, CustomSocket, RedisUserData, Room } from '../../interface/interface.js';
 import { GlobalFailCode, PhaseType, RoomStateType } from '../enumTyps.js';
 import { sendPacket } from '../../packet/createPacket.js';
-import { config, spawnPoint, inGameTime, totalRound } from '../../config/config.js';
+import { config, spawnPoint, inGameTime, normalRound, bossGameTime } from '../../config/config.js';
 import { getRedisData, getUserBySocket, nonSameRandom, setRedisData } from '../handlerMethod.js';
 import { monsterMoveStart } from '../coreMethod/monsterMove.js';
 import { monsterSpawnStart } from '../coreMethod/monsterSpawn.js';
@@ -84,15 +84,19 @@ export const gameStartHandler = async (socket: CustomSocket, payload: Object) =>
       // 방에있는 유저들에게 게임 시작 notificationn 보내기, 게임 시작 시간 저장
       room.state = RoomStateType.INGAME;
       await setRedisData('roomData', rooms);
-      for (let i = 0; i < 1; i++) {
-        await phaseNotification(i + 1, room.id, inGameTime * i);
+      for (let i = 0; i < normalRound; i++) {
+        await normalPhaseNotification(i + 1, room.id, inGameTime * i);
       }
+      bossPhaseNotification(5, room.id, inGameTime * normalRound);
       inGameTimeSessions[room.id] = Date.now();
 
       // 게임 종료 notification 보내기
-      setTimeout(async () => {
-        await gameEndNotification(room.id);
-      }, 20500);
+      setTimeout(
+        async () => {
+          await gameEndNotification(room.id);
+        },
+        inGameTime * normalRound + bossGameTime
+      );
     }
   } catch (err) {
     const responseData = {
@@ -104,8 +108,8 @@ export const gameStartHandler = async (socket: CustomSocket, payload: Object) =>
   }
 };
 
-// 게임 라운드 시작
-export const phaseNotification = async (level: number, roomId: number, sendTime: number) => {
+// 일반 라운드 시작
+export const normalPhaseNotification = async (level: number, roomId: number, sendTime: number) => {
   setTimeout(async () => {
     await fleaMarketCardCreate(level, roomId, 8);
     await monsterSpawnStart(roomId, level);
@@ -131,6 +135,40 @@ export const phaseNotification = async (level: number, roomId: number, sendTime:
       };
       if (userSocket) {
         sendPacket(userSocket, config.packetType.GAME_START_NOTIFICATION, notifiData);
+      }
+    }
+    await monsterMoveStart(roomId, inGameTime);
+  }, sendTime);
+};
+
+// 보스 라운드 시작
+export const bossPhaseNotification = async (level: number, roomId: number, sendTime: number) => {
+  setTimeout(async () => {
+    await fleaMarketCardCreate(level, roomId, 8);
+    await monsterSpawnStart(roomId, level);
+    const characterPositionDatas = await getRedisData('characterPositionDatas');
+    const roomData: Room[] = await getRedisData('roomData');
+
+    let room: Room | null = null;
+    for (let i = 0; i < roomData.length; i++) {
+      if (roomData[i].id === roomId) {
+        room = roomData[i];
+        break;
+      }
+    }
+    if (!room) return;
+
+    for (let i = 0; i < room.users.length; i++) {
+      const userSocket = socketSessions[room.users[i].id];
+      const gameStateData = { phaseType: PhaseType.DAY, nextPhaseAt: Date.now() + bossGameTime };
+      const notifiData = {
+        gameState: gameStateData,
+        users: room.users,
+        characterPositions: characterPositionDatas[roomId]
+      };
+      if (userSocket) {
+        sendPacket(userSocket, config.packetType.GAME_START_NOTIFICATION, notifiData);
+        sendPacket(userSocket, config.packetType.REACTION_RESPONSE, { success: 1, failCode: 0 });
       }
     }
     await monsterMoveStart(roomId, inGameTime);

@@ -1,5 +1,5 @@
 import { GlobalFailCode, RoomStateType, UserCharacterType } from '../enumTyps.js';
-import { Card, CustomSocket, RedisUserData, Room, User } from '../../interface/interface.js';
+import { Card, CustomSocket, RedisUserData, Room, User, userStatusData } from '../../interface/interface.js';
 import { config } from '../../config/config.js';
 import { sendPacket } from '../../packet/createPacket.js';
 import { getRedisData, getRoomByUserId, getUserBySocket, setRedisData } from '../handlerMethod.js';
@@ -12,30 +12,37 @@ export const userCharacterData: {
   // 핑크슬라임 - 보스
   [UserCharacterType.PINK_SLIME]: {
     hp: 5,
-    weapon: 1,
+    weapon: 0,
     roleType: 4,
     // equips: 20,
     handCards: [
       { type: 1, count: 1 },
+      { type: 2, count: 1 },
+      { type: 3, count: 1 },
+      { type: 4, count: 1 },
+      { type: 5, count: 1 },
+      { type: 6, count: 1 },
       { type: 7, count: 1 },
-      { type: 10, count: 1 },
-      { type: 13, count: 1 },
-      { type: 14, count: 1 },
-      { type: 22, count: 1 },
-      { type: 23, count: 1 }
+      { type: 8, count: 1 },
+      { type: 101, count: 10 }
     ]
   },
   // 탱커 - 물안경군
   [UserCharacterType.SWIM_GLASSES]: {
     hp: 5,
-    weapon: 1,
+    weapon: 0,
     roleType: 2,
     // equips: 14,
     handCards: [
-      { type: 1, count: 1 }, //2
-      { type: 17, count: 1 },
-      { type: 21, count: 3 },
-      { type: 22, count: 1 }
+      { type: 1, count: 1 },
+      { type: 2, count: 1 },
+      { type: 3, count: 1 },
+      { type: 4, count: 1 },
+      { type: 5, count: 1 },
+      { type: 6, count: 1 },
+      { type: 7, count: 1 },
+      { type: 8, count: 1 },
+      { type: 101, count: 10 }
     ]
   },
   // 로그 - 개굴군(근딜)
@@ -109,6 +116,20 @@ export const gamePrepareHandler = async (socket: CustomSocket, payload: Object) 
         // 방에있는 유저들 캐릭터 랜덤 배정하기
         room.state = RoomStateType.PREPARE;
         room.users = setCharacterInfoInit(room.users);
+
+        // 방에있는 유저들 캐릭터 초기 능력치 세팅하기
+        let userStatusDatas: { [roomId: number]: { [userId: number]: userStatusData } } | undefined =
+          await getRedisData('userStatusData');
+        if (userStatusDatas === undefined) {
+          userStatusDatas = { [room.id]: {} };
+        }
+        const userStatusData = userStatusDatas[room.id];
+
+        for (let i = 0; i < room.users.length; i++) {
+          userStatusData[room.users[i].id] = { level: 1, experience: 0, attack: 1, armor: 0, mp: 10, gold: 0 };
+        }
+        await setRedisData('userStatusData', userStatusDatas);
+
         const rooms: Room[] | null = await getRedisData('roomData');
         if (!rooms) {
           return;

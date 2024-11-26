@@ -19,7 +19,7 @@ export const monsterAiDatas: {
 export const moveSpeed = 0.11;
 export const directionChangeBasic = 8;
 export const directionChangeRandom = 3;
-export const animationDelay = 10;
+export const animationDelay = 5;
 
 // 몬스터 이동 및 공격 시작
 export const monsterMoveStart = async (roomId: number, totalTime: number) => {
@@ -39,7 +39,7 @@ export const monsterMoveStart = async (roomId: number, totalTime: number) => {
   // 몬스터 이동을 n초마다 반복
   const time = Date.now();
   let callme = 0;
-  totalTime -= 1000;
+  totalTime -= 500;
   const monsterMove = setInterval(async () => {
     const characterPositions = await getRedisData('characterPositionDatas');
     await monsterAttackCheck(roomData);

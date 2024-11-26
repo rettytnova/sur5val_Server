@@ -44,29 +44,15 @@ export type PhaseType = (typeof PhaseType)[keyof typeof PhaseType];
 // 카드
 export const CardType = Object.freeze({
   NONE: 0,
-  BBANG: 1, // 20장
-  BIG_BBANG: 2, // 1장
-  SHIELD: 3, // 10장
-  VACCINE: 4, // 6장
-  CALL_119: 5, // 2장
-  DEATH_MATCH: 6, // 4장
-  GUERRILLA: 7, // 1장
-  ABSORB: 8, // 4장
-  HALLUCINATION: 9, // 4장
-  FLEA_MARKET: 10, // 3장
-  MATURED_SAVINGS: 11, // 2장
-  WIN_LOTTERY: 12, // 1장
-  SNIPER_GUN: 13, // 1장
-  HAND_GUN: 14, // 2장
-  DESERT_EAGLE: 15, // 3장
-  AUTO_RIFLE: 16, // 2장
-  LASER_POINTER: 17, // 1장
-  RADAR: 18, // 1장
-  AUTO_SHIELD: 19, // 2장
-  STEALTH_SUIT: 20, // 2장
-  CONTAINMENT_UNIT: 21, // 3장
-  SATELLITE_TARGET: 22, // 1장
-  BOMB: 23 // 1장
+  MAGICIAN_BASIC_SKILL: 1,
+  WARRIOR_BASIC_SKILL: 2,
+  ARCHER_BASIC_SKILL: 3,
+  PALADIN_BASIC_SKILL: 4,
+  MAGICIAN_EXTENDED_SKILL: 5,
+  WARRIOR_EXTENDED_SKILL: 6,
+  ARCHER_EXTENDED_SKILL: 7,
+  PALADIN_EXTENDED_SKILL: 8,
+  BASIC_HP_POTION: 101
 });
 export type CardType = (typeof CardType)[keyof typeof CardType];
 // 캐릭터 상태
