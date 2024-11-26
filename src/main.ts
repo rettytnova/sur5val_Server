@@ -8,3 +8,4 @@ main();
 deleteRedisData('roomData');
 deleteRedisData('userData');
 deleteRedisData('characterPositionDatas');
+deleteRedisData('fleaMarketCards');

@@ -39,7 +39,7 @@ export const monsterMoveStart = async (roomId: number, totalTime: number) => {
   // 몬스터 이동을 n초마다 반복
   const time = Date.now();
   let callme = 0;
-  totalTime -= 1000;
+  totalTime -= 500;
   const monsterMove = setInterval(async () => {
     const characterPositions = await getRedisData('characterPositionDatas');
     await monsterAttackCheck(roomData);
