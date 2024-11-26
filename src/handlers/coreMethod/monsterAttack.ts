@@ -22,6 +22,27 @@ export const monsterAttackCheck = async (room: Room) => {
 
 // 공격가능한 조건인지 검사 후 공격
 export const monsterAttackPlayer = async (player: User, monster: User, room: Room) => {
+  // 죽은 몬스터일 경우 skip
+  const rooms: Room[] = await getRedisData('roomData');
+  for (let i = 0; i < rooms.length; i++) {
+    for (let j = 0; j < rooms[i].users.length; j++) {
+      if (rooms[i].users[j].id === monster.id) {
+        if (rooms[i].users[j].character.hp <= 0) return;
+        break;
+      }
+    }
+  }
+
+  // 죽은 유저일 경우 skip
+  for (let i = 0; i < rooms.length; i++) {
+    for (let j = 0; j < rooms[i].users.length; j++) {
+      if (rooms[i].users[j].id === player.id) {
+        if (rooms[i].users[j].character.hp <= 0) return;
+        break;
+      }
+    }
+  }
+
   // 몬스터 정보 skillCool 찾아서 검사하기
   let monsterData;
   for (let i = 0; i < monsterAiDatas[room.id].length; i++) {
@@ -36,7 +57,7 @@ export const monsterAttackPlayer = async (player: User, monster: User, room: Roo
     return;
   }
 
-  // 몬스터 위치 정보 찾아서 검사하기
+  // 몬스터 위치 정보 찾기
   const characterPositions = await getRedisData('characterPositionDatas');
   let monsterPosition;
   for (let i = 0; i < characterPositions[room.id].length; i++) {
@@ -50,7 +71,7 @@ export const monsterAttackPlayer = async (player: User, monster: User, room: Roo
     return;
   }
 
-  // 유저 위치 정보 찾아서 검사하기
+  // 유저 위치 정보 찾기
   let playerPosition;
   for (let i = 0; i < characterPositions[room.id].length; i++) {
     if (characterPositions[room.id][i].id === player.id) {
@@ -69,7 +90,6 @@ export const monsterAttackPlayer = async (player: User, monster: User, room: Roo
     monsterData.attackRange ** 2
   ) {
     monsterData.attackCool = monsterDatas[monster.character.characterType][monster.character.handCardsCount].attackCool;
-    const rooms = await getRedisData('roomData');
     for (let i = 0; i < rooms.length; i++) {
       for (let j = 0; j < rooms[i].users.length; j++) {
         if (rooms[i].users[j].id === player.id) {
