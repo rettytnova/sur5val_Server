@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+/*
+    요청 패킷 명세
+*/
+
+//------------------------------------
+// email : 로그인 대상 email
+//------------------------------------
+message C2SChattingServerLoginRequest{    
+    string email = 1;
+}
+
+/*
+    응답 패킷 명세
+*/
+
+//------------------------------------
+// success : 로그인 성공 여부
+// message : 성공 여부에 따른 메세지
+//------------------------------------
+message S2CChattingServerLoginResponse{
+    bool success = 1;
+    string message = 2;
+}
+
+/*
+    최상위 ChattingPacket 메세지
+*/
+
+message ChattingPacket{
+    oneof payload{
+        // 로그인
+        C2SChattingServerLoginRequest loginRequest = 1;
+        S2CChattingServerLoginRequest loginResponse = 2;       
+    }
+}
+
