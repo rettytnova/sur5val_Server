@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+import "./chattingRequest.proto";
+import "./chattingResponse.proto";
+
+package packet;
+
+message CommonPacket{
+    uint32 packetType = 1;
+    uint32 versionLength = 2;
+    string version = 3;
+    uint32 sequence = 4;    
+    uint32 payloadLength = 5;
+    bytes payload = 6;
+}
+
+message ChattingPacket{
+    oneof payload{
+        C2SChattingServerLoginRequest loginRequest = 1;
+        S2CChattingServerLoginRequest loginResponse = 2;       
+    }
+}
