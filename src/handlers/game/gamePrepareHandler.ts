@@ -200,6 +200,7 @@ export const setCharacterInfoInit = (users: User[]) => {
   for (let i = 0; i < users.length; i++) {
     users[i].character.characterType = selectedTypes[i];
     users[i].character.roleType = userCharacterData[selectedTypes[i]].roleType;
+    users[i].character.maxHp = userCharacterData[selectedTypes[i]].hp;
     users[i].character.hp = userCharacterData[selectedTypes[i]].hp;
     users[i].character.weapon = userCharacterData[selectedTypes[i]].weapon; // 무기 아닙니다 기획 따라 바뀌어서 스킬입니다
     //users[i].character.equips = userCharacterData[selectedTypes[i]].equips;

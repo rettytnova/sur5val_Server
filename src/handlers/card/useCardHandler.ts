@@ -351,7 +351,11 @@ const changeStatus = async (
 
   // 버프 스킬 실행
   characterStat.mp -= manaCost;
-  user.character.hp += hp;
+  if (user.character.hp + hp <= user.character.maxHp) {
+    user.character.hp += hp;
+  } else {
+    user.character.hp = user.character.maxHp;
+  }
   characterStat.armor += armor;
   characterStat.attack += attack;
 
@@ -390,7 +394,11 @@ const partyBuff = async (
   characterStat.mp -= manaCost;
   for (let i = 0; i < room.users.length; i++) {
     if (room.users[i].character.roleType === 2) {
-      room.users[i].character.hp += hp;
+      if (user.character.hp + hp <= user.character.maxHp) {
+        user.character.hp += hp;
+      } else {
+        user.character.hp = user.character.maxHp;
+      }
       characterStats[room.id][room.users[i].id].armor += armor;
       characterStats[room.id][room.users[i].id].attack += attack;
     }
@@ -454,7 +462,11 @@ const usePotion = async (
   if (isOwned === false) return;
 
   // 회복 실행
-  user.character.hp += restoreHp;
+  if (user.character.hp + restoreHp <= user.character.maxHp) {
+    user.character.hp += restoreHp;
+  } else {
+    user.character.hp = user.character.maxHp;
+  }
   characterStat.mp += restoreMp;
   await setRedisData('userStatusData', characterStats);
   await setRedisData('roomData', rooms);

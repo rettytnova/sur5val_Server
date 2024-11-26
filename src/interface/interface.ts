@@ -41,6 +41,7 @@ export interface CharacterStateInfo {
 export interface Character {
   characterType: number;
   roleType: number;
+  maxHp: number;
   hp: number;
   weapon: number;
   potion: number;
