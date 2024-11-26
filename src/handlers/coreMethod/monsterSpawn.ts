@@ -67,6 +67,7 @@ export const monsterSpawnStart = async (roomId: number, level: number) => {
   for (let i = 0; i < roomData.users.length; i++) {
     if (roomData.users[i].character.roleType === 2) {
       roomData.users[i].character.hp = userCharacterData[roomData.users[i].character.characterType].hp;
+      roomData.users[i].character.stateInfo.state = 0;
     }
   }
 
