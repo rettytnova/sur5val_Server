@@ -37,22 +37,43 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
     // 유효성 구현은 추후 생각해볼 문제
 
     // 카드 사용 성공 처리 ----------------------------------------------------------------------
-    responseMessage = `카드 사용 성공 : ${cardType}`;
-    const userData = await getUserBySocket(socket);
-    const rooms = await getRedisData('roomData');
+    // responseMessage = `카드 사용 성공 : ${cardType}`;
+    // redisUser 정보 찾기
+    const redisUser: User | null = await getUserBySocket(socket);
+    if (redisUser === null) {
+      console.error('카드 사용자의 정보를 찾을 수 없습니다.');
+      return;
+    }
+
+    // room 정보 찾기
+    const rooms: Room[] | undefined = await getRedisData('roomData');
+    if (rooms === undefined) {
+      console.error('서버에 Rooms정보가 존재하지 않습니다.');
+      return;
+    }
     let room: Room | undefined;
     for (let i = 0; i < rooms.length; i++) {
       for (let j = 0; j < rooms[i].users.length; j++) {
-        if (rooms[i].users[j].id === userData.id) {
+        if (rooms[i].users[j].id === redisUser.id) {
           room = rooms[i];
         }
       }
     }
     if (!room) {
-      console.error('useCardHandler: room not found');
+      console.error('카드 사용자가 속한 room 정보를 찾을 수 없습니다.');
       return;
     }
 
+    // room 의 user정보 찾기
+    let user: User | null = null;
+    for (let i = 0; i < room.users.length; i++) {
+      if (room.users[i].id === redisUser.id) {
+        user = room.users[i];
+      }
+    }
+    if (user === null) return;
+
+    // target 정보 찾기
     let target: User | null = null;
     for (let i = 0; i < room.users.length; i++) {
       if (room.users[i].id === targetUserId) {
@@ -60,16 +81,21 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
       }
     }
 
-    sendPacket(socket, config.packetType.USE_CARD_RESPONSE, {
-      success: true,
-      failCode: GlobalFailCode.NONE
-    });
+    // sendPacket(socket, config.packetType.USE_CARD_RESPONSE, {
+    //   success: true,
+    //   failCode: GlobalFailCode.NONE
+    // });
+
+    // 카드타입 별로 사용 효과 정의
     switch (cardType) {
       case CardType.BBANG:
         if (!target) return;
-        await changeStatus(target, rooms, room, -1, 0, 0);
+        // await changeStatus(1, target, rooms, room, -1, 0, 0);
+        // await partyBuff(1, user, rooms, room, -1, 0, 0);
+        await attackTarget(1, user, rooms, room, 1, target);
         break;
       case CardType.BIG_BBANG:
+        usePotion(user, 1, 1, rooms, room);
         break;
       case CardType.SHIELD:
         break;
@@ -126,45 +152,135 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
   //sendPacket(socket, packetType.USE_CARD_RESPONSE, responseData);
 };
 
-// 해당 캐릭터 능력치 변동
-const changeStatus = async (user: User, rooms: Room[], room: Room, hp: number, armor: number, attack: number) => {
-  const characterStats: { [roomId: number]: { [userId: number]: userStatusData } } =
+/////////////////////////////////////////////////////////////////////////////////////////////////
+// 해당 캐릭터(아군) 능력치 변동
+const changeStatus = async (
+  manaCost: number,
+  user: User,
+  rooms: Room[],
+  room: Room,
+  hp: number,
+  armor: number,
+  attack: number
+) => {
+  // 제대로된 대상이 지정되었는지 검사
+  if (user.character.roleType !== 2) {
+    console.error('아군에게만 사용할 수 있는 스킬입니다.');
+    return;
+  }
+
+  // 마나가 충분한지 검사
+  const characterStats: { [roomId: number]: { [userId: number]: userStatusData } } | undefined =
     await getRedisData('userStatusData');
-  const characterStat = characterStats[room.id];
+  if (characterStats === undefined) {
+    console.error('userStatusData 정보가 존재하지 않습니다.');
+    return;
+  }
+  const characterStat = characterStats[room.id][user.id];
+  if (characterStat.mp < manaCost) {
+    console.log('마나가 부족합니다.');
+    return;
+  }
+
+  // 버프 스킬 실행
   user.character.hp += hp;
-  characterStat[user.id].armor += armor;
-  characterStat[user.id].attack += attack;
+  characterStat.armor += armor;
+  characterStat.attack += attack;
 
   await setRedisData('userStatusData', characterStats);
   await setRedisData('roomData', rooms);
   userUpdateNotification(room);
 };
 
-const attackTarget = async (attacker: User, rooms: Room[], room: Room, skillCoeffcient: number, targets: User[]) => {
-  const characterStats: { [roomId: number]: { [userId: number]: userStatusData } } =
+/////////////////////////////////////////////////////////////////////////////////////////////////
+// 파티 버프 (모든 아군 캐릭터 능력치 변동)
+const partyBuff = async (
+  manaCost: number,
+  user: User,
+  rooms: Room[],
+  room: Room,
+  hp: number,
+  armor: number,
+  attack: number
+) => {
+  const characterStats: { [roomId: number]: { [userId: number]: userStatusData } } | undefined =
     await getRedisData('userStatusData');
-  const damage = Math.round(characterStats[room.id][attacker.id].attack * skillCoeffcient);
-
-  for (let i = 0; i < targets.length; i++) {
-    for (let j = 0; j < room.users.length; j++) {
-      if (targets[i].id === room.users[j].id) {
-        targets[i].character.hp -= damage;
-      }
+  if (characterStats === undefined) {
+    console.error('userStatusData 정보가 존재하지 않습니다.');
+    return;
+  }
+  for (let i = 0; i < room.users.length; i++) {
+    if (room.users[i].character.roleType === 2) {
+      room.users[i].character.hp += hp;
+      characterStats[room.id][room.users[i].id].armor += armor;
+      characterStats[room.id][room.users[i].id].attack += attack;
     }
   }
+
+  // 마나가 충분한지 검사
+  const characterStat = characterStats[room.id][user.id];
+  if (characterStat.mp < manaCost) {
+    console.log('마나가 부족합니다.');
+    return;
+  }
+
+  // 버프 스킬 실행
+  await setRedisData('userStatusData', characterStats);
   await setRedisData('roomData', rooms);
   userUpdateNotification(room);
 };
 
-// 파티 버프 (모든 캐릭터 능력치 변동)
-const partyBuff = async (rooms: Room[], room: Room, hp: number, armor: number, attack: number) => {
-  const characterStats: { [roomId: number]: { [userId: number]: userStatusData } } =
+/////////////////////////////////////////////////////////////////////////////////////////////////
+// 타겟이 된 적 공격 (적군 체력 감소) - 팀킬 가능하게 할지 회의
+const attackTarget = async (
+  manaCost: number,
+  attacker: User,
+  rooms: Room[],
+  room: Room,
+  skillCoeffcient: number,
+  target: User
+) => {
+  // 적군이 선택되었는지 검사
+  // if (target.character.roleType === 2) {
+  //   console.error('적군에게만 사용할 수 있는 스킬입니다.');
+  //   return;
+  // }
+
+  // 마나가 충분한지 검사
+  const characterStats: { [roomId: number]: { [userId: number]: userStatusData } } | undefined =
     await getRedisData('userStatusData');
-  for (let i = 0; i < room.users.length; i++) {
-    room.users[i].character.hp += hp;
-    characterStats[room.id][room.users[i].id].armor += armor;
-    characterStats[room.id][room.users[i].id].attack += attack;
+  if (characterStats === undefined) {
+    console.error('userStatusData 정보가 존재하지 않습니다.');
+    return;
   }
+  const characterStat = characterStats[room.id][attacker.id];
+  if (characterStat.mp < manaCost) {
+    console.log('마나가 부족합니다.');
+    return;
+  }
+
+  // 공격 스킬 실행
+  const damage = Math.round(characterStats[room.id][attacker.id].attack * skillCoeffcient);
+  target.character.hp -= damage;
+  await setRedisData('roomData', rooms);
+  userUpdateNotification(room);
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+// 본인의 Hp / Mp 회복 - MaxHp, MaxMp 만들지 회의
+const usePotion = async (user: User, restoreHp: number, restoreMp: number, rooms: Room[], room: Room) => {
+  // 스탯 데이터가 존재하는지 검사
+  const characterStats: { [roomId: number]: { [userId: number]: userStatusData } } | undefined =
+    await getRedisData('userStatusData');
+  if (characterStats === undefined) {
+    console.error('userStatusData 정보가 존재하지 않습니다.');
+    return;
+  }
+  const characterStat = characterStats[room.id][user.id];
+
+  // 회복 실행
+  user.character.hp += restoreHp;
+  characterStat.mp += restoreMp;
   await setRedisData('userStatusData', characterStats);
   await setRedisData('roomData', rooms);
   userUpdateNotification(room);

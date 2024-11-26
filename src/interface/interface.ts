@@ -162,6 +162,6 @@ export interface userStatusData {
   experience: number;
   attack: number;
   armor: number;
-  mana: number;
+  mp: number;
   gold: number;
 }

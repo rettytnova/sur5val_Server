@@ -69,14 +69,15 @@ export const monsterAttackPlayer = async (player: User, monster: User, room: Roo
     monsterData.attackRange ** 2
   ) {
     monsterData.attackCool = monsterDatas[monster.character.characterType][monster.character.handCardsCount].attackCool;
-    player.character.hp -= monsterDatas[monster.character.characterType][monster.character.handCardsCount].attackPower;
-    if (player.character.hp <= 0) (player.character.stateInfo.state = 15), (player.character.hp = 0);
-    userUpdateNotification(room);
     const rooms = await getRedisData('roomData');
     for (let i = 0; i < rooms.length; i++) {
       for (let j = 0; j < rooms[i].users.length; j++) {
         if (rooms[i].users[j].id === player.id) {
-          rooms[i].users[j].character.hp = player.character.hp;
+          rooms[i].users[j].character.hp -=
+            monsterDatas[monster.character.characterType][monster.character.handCardsCount].attackPower;
+          if (rooms[i].users[j].character.hp <= 0)
+            (rooms[i].users[j].character.stateInfo.state = 15), (rooms[i].users[j].character.hp = 0);
+          userUpdateNotification(rooms[i]);
           await setRedisData('roomData', rooms);
         }
       }

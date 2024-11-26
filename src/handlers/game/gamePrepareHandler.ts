@@ -12,30 +12,47 @@ export const userCharacterData: {
   // 핑크슬라임 - 보스
   [UserCharacterType.PINK_SLIME]: {
     hp: 5,
-    weapon: 1,
+    weapon: 0,
     roleType: 4,
     // equips: 20,
     handCards: [
       { type: 1, count: 1 },
+      { type: 2, count: 1 },
+      { type: 3, count: 1 },
+      { type: 4, count: 1 },
+      { type: 5, count: 1 },
+      { type: 6, count: 1 },
       { type: 7, count: 1 },
+      { type: 8, count: 1 },
+      { type: 9, count: 1 },
       { type: 10, count: 1 },
+      { type: 11, count: 1 },
+      { type: 12, count: 1 },
       { type: 13, count: 1 },
-      { type: 14, count: 1 },
-      { type: 22, count: 1 },
-      { type: 23, count: 1 }
+      { type: 14, count: 1 }
     ]
   },
   // 탱커 - 물안경군
   [UserCharacterType.SWIM_GLASSES]: {
     hp: 5,
-    weapon: 1,
+    weapon: 0,
     roleType: 2,
     // equips: 14,
     handCards: [
-      { type: 1, count: 1 }, //2
-      { type: 17, count: 1 },
-      { type: 21, count: 3 },
-      { type: 22, count: 1 }
+      { type: 1, count: 1 },
+      { type: 2, count: 1 },
+      { type: 3, count: 1 },
+      { type: 4, count: 1 },
+      { type: 5, count: 1 },
+      { type: 6, count: 1 },
+      { type: 7, count: 1 },
+      { type: 8, count: 1 },
+      { type: 9, count: 1 },
+      { type: 10, count: 1 },
+      { type: 11, count: 1 },
+      { type: 12, count: 1 },
+      { type: 13, count: 1 },
+      { type: 14, count: 1 }
     ]
   },
   // 로그 - 개굴군(근딜)
@@ -119,7 +136,7 @@ export const gamePrepareHandler = async (socket: CustomSocket, payload: Object) 
         const userStatusData = userStatusDatas[room.id];
 
         for (let i = 0; i < room.users.length; i++) {
-          userStatusData[room.users[i].id] = { level: 1, experience: 0, attack: 1, armor: 0, mana: 10, gold: 0 };
+          userStatusData[room.users[i].id] = { level: 1, experience: 0, attack: 1, armor: 0, mp: 10, gold: 0 };
         }
         await setRedisData('userStatusData', userStatusDatas);
 
