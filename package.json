@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "server": "tsc && node ./dist/main.js",
+    "chattingServer": "tsc && node ./dist/chattingServer/chattingMain.js",
     "client": "tsc && node ./dist/dummyClient.js",
     "build": "tsc --build",
     "postbuild": "copyfiles -u 1 src/database/schema.sql dist",

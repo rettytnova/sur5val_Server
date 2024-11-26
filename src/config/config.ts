@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const PORT: number = 5555;
+const CHATTING_SERVER_PORT: number = 5556;
 const HOST: string = '127.0.0.1';
 
 export const REDIS_PORT = process.env.REDIS_PORT;
@@ -30,6 +31,9 @@ export const config = {
   server: {
     port: PORT,
     host: HOST
+  },
+  chattingServer: {
+    chattingServerPort: CHATTING_SERVER_PORT
   },
   databases: {
     userDB: {
@@ -101,6 +105,10 @@ export const config = {
     PASS_DEBUFF_RESPONSE: 45,
     WARNING_NOTIFICATION: 46,
     ANIMATION_NOTIFICATION: 47
+  },
+  chattingPacketType: {
+    CHATTING_LOGIN_REQUEST: 1,
+    CHATTING_LOGIN_RESPONSE: 2
   }
 };
 
@@ -172,7 +180,10 @@ export const packetMaps = {
 
   [config.packetType.WARNING_NOTIFICATION]: 'warningNotification',
 
-  [config.packetType.ANIMATION_NOTIFICATION]: 'animationNotification'
+  [config.packetType.ANIMATION_NOTIFICATION]: 'animationNotification',
+
+  [config.chattingPacketType.CHATTING_LOGIN_REQUEST]: 'chattingServerLoginRequest',
+  [config.chattingPacketType.CHATTING_LOGIN_RESPONSE]: 'chattingServerLoginResponse'
 };
 /**
  * x: 11 , y : -8
