@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const PORT: number = 5555;
+const CHATTING_SERVER_PORT: number = 5556;
 const HOST: string = '127.0.0.1';
 
 export const REDIS_PORT = process.env.REDIS_PORT;
@@ -29,7 +30,8 @@ const USER_DB_PORT = process.env.DB_PORT;
 export const config = {
   server: {
     port: PORT,
-    host: HOST
+    host: HOST,
+    chattingServerPort: CHATTING_SERVER_PORT
   },
   databases: {
     userDB: {
