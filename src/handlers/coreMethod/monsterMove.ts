@@ -28,8 +28,8 @@ export const monsterMoveStart = async (roomId: number, totalTime: number) => {
   for (let i = 0; i < roomDatas.length; i++) {
     if (roomDatas[i].id === roomId) {
       roomData = roomDatas[i];
+      break;
     }
-    break;
   }
   if (!roomData) {
     console.error('roomData가 존재하지 않습니다.');
