@@ -123,6 +123,9 @@ export const gamePrepareHandler = async (socket: CustomSocket, payload: Object) 
         if (userStatusDatas === undefined) {
           userStatusDatas = { [room.id]: {} };
         }
+        if (userStatusDatas[room.id] === undefined) {
+          userStatusDatas[room.id] = {};
+        }
         const userStatusData = userStatusDatas[room.id];
 
         for (let i = 0; i < room.users.length; i++) {
