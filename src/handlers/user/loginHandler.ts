@@ -79,6 +79,7 @@ export const loginHandler = async (socket: CustomSocket, payload: Object): Promi
       character: {
         characterType: 0,
         roleType: 2,
+        maxHp: 0,
         hp: 0,
         weapon: 0,
         potion: 0,
