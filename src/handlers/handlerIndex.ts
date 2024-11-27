@@ -15,7 +15,7 @@ import { destoryCardHandler } from './card/destoryCardHandler.js';
 import { cardSelectHandler } from './card/cardSelectHandler.js';
 import { passDebuffHandler } from './user/passDebuffHandler.js';
 import { fleaMarketItemSelectHandler } from './market/fleaMarketItemSelectHandler.js';
-import { gameEndHandler } from './game/reactionHandler.js';
+import { gameEndHandler } from './game/gameEndHandler.js';
 
 const handlers = {
   [config.packetType.REGISTER_REQUEST]: {
