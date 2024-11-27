@@ -10,25 +10,25 @@ export const monsterDatas: {
   };
 } = {
   5: {
-    1: { nickname: `Lv1 말랑이`, attackCool: 40, attackRange: 2, attackPower: 1, hp: 1 },
-    2: { nickname: `Lv2 말랑이`, attackCool: 40, attackRange: 2, attackPower: 1, hp: 2 },
-    3: { nickname: `Lv3 말랑이`, attackCool: 40, attackRange: 2, attackPower: 2, hp: 3 },
-    4: { nickname: `Lv4 말랑이`, attackCool: 40, attackRange: 2, attackPower: 2, hp: 4 },
-    5: { nickname: `Lv5 말랑이`, attackCool: 40, attackRange: 2, attackPower: 3, hp: 5 }
+    1: { nickname: `Lv1 말랑이`, attackCool: 40, attackRange: 2, attackPower: 1, hp: 3 },
+    2: { nickname: `Lv2 말랑이`, attackCool: 40, attackRange: 2, attackPower: 2, hp: 5 },
+    3: { nickname: `Lv3 말랑이`, attackCool: 40, attackRange: 2, attackPower: 3, hp: 8 },
+    4: { nickname: `Lv4 말랑이`, attackCool: 40, attackRange: 2, attackPower: 4, hp: 12 },
+    5: { nickname: `Lv5 말랑이`, attackCool: 40, attackRange: 2, attackPower: 5, hp: 18 }
   },
   8: {
-    1: { nickname: `Lv1 핑크군`, attackCool: 50, attackRange: 2, attackPower: 1, hp: 1 },
-    2: { nickname: `Lv2 핑크군`, attackCool: 50, attackRange: 2, attackPower: 1, hp: 2 },
-    3: { nickname: `Lv3 핑크군`, attackCool: 50, attackRange: 2, attackPower: 2, hp: 3 },
-    4: { nickname: `Lv4 핑크군`, attackCool: 50, attackRange: 2, attackPower: 2, hp: 4 },
-    5: { nickname: `Lv5 핑크군`, attackCool: 50, attackRange: 2, attackPower: 3, hp: 5 }
+    1: { nickname: `Lv1 핑크군`, attackCool: 50, attackRange: 2, attackPower: 1, hp: 3 },
+    2: { nickname: `Lv2 핑크군`, attackCool: 50, attackRange: 2, attackPower: 2, hp: 5 },
+    3: { nickname: `Lv3 핑크군`, attackCool: 50, attackRange: 2, attackPower: 3, hp: 8 },
+    4: { nickname: `Lv4 핑크군`, attackCool: 50, attackRange: 2, attackPower: 5, hp: 11 },
+    5: { nickname: `Lv5 핑크군`, attackCool: 50, attackRange: 2, attackPower: 8, hp: 15 }
   },
   12: {
-    1: { nickname: 'Lv1 공룡군', attackCool: 60, attackRange: 2.5, attackPower: 1, hp: 1 },
-    2: { nickname: 'Lv2 공룡군', attackCool: 60, attackRange: 2.5, attackPower: 1, hp: 2 },
-    3: { nickname: 'Lv3 공룡군', attackCool: 60, attackRange: 2.5, attackPower: 2, hp: 3 },
-    4: { nickname: 'Lv4 공룡군', attackCool: 60, attackRange: 2.5, attackPower: 2, hp: 4 },
-    5: { nickname: 'Lv5 공룡군', attackCool: 60, attackRange: 2.5, attackPower: 3, hp: 5 }
+    1: { nickname: 'Lv1 공룡군', attackCool: 60, attackRange: 2.5, attackPower: 1, hp: 3 },
+    2: { nickname: 'Lv2 공룡군', attackCool: 60, attackRange: 2.5, attackPower: 2, hp: 6 },
+    3: { nickname: 'Lv3 공룡군', attackCool: 60, attackRange: 2.5, attackPower: 3, hp: 10 },
+    4: { nickname: 'Lv4 공룡군', attackCool: 60, attackRange: 2.5, attackPower: 4, hp: 15 },
+    5: { nickname: 'Lv5 공룡군', attackCool: 60, attackRange: 2.5, attackPower: 5, hp: 20 }
   }
 };
 

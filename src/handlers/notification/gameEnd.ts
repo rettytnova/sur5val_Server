@@ -6,6 +6,7 @@ import { monsterAiDatas } from '../coreMethod/monsterMove.js';
 import { RoomStateType } from '../enumTyps.js';
 import { getRedisData, setRedisData } from '../handlerMethod.js';
 
+// 시간 안에 탈출하지 못했을 경우
 export const gameEndNotification = async (roomId: number) => {
   const rooms: Room[] = await getRedisData('roomData');
   let room: Room | null = null;
@@ -17,12 +18,10 @@ export const gameEndNotification = async (roomId: number) => {
     return;
   }
 
-  // 이미 끝난 게임이면 실행 종료
+  // 이미 탈출하여서 끝난 게임이면 실행 종료
   if (room.state !== RoomStateType.INGAME) {
     return;
   }
-
-  // 실제 승자 / 패자 구별하는 로직 추가 (bossRound 에서 결정)
 
   // 몬스터를 roomData에서 삭제
   for (let i = 0; i < room.users.length; i++) {

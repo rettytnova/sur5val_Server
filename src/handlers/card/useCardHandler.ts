@@ -92,7 +92,6 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
       }
     }
 
-    // 삭제 ㄴㄴ
     // sendPacket(socket, config.packetType.USE_CARD_RESPONSE, {
     //   success: true,
     //   failCode: GlobalFailCode.NONE
@@ -111,11 +110,9 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
           console.log('마나가 부족합니다.');
           return;
         }
-        characterStat.mp -= 2;
-        await setRedisData('userStatusData', characterStats);
 
         // 스킬 실행1
-        await attackTarget(user, rooms, room, 1, target, characterStats);
+        if (await attackTarget(1, user, rooms, room, 1, target, characterStats)) return;
         let index: number | null = null;
         for (let i = 0; i < monsterAiDatas[room.id].length; i++) {
           if (monsterAiDatas[room.id][i].id === target.id) {
@@ -130,7 +127,7 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
 
         // 스킬 실행2
         setTimeout(async () => {
-          await attackTarget(user, rooms, room, 1.5, target, characterStats);
+          await attackTarget(1, user, rooms, room, 1.5, target, characterStats);
           monsterAiDatas[room.id][index].animationDelay = animationDelay;
           sendAnimation(user, user, 1);
           sendAnimation(user, target, 2);
@@ -185,14 +182,10 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
 
       // 소모품 101 ~ 200 // 소모품 101 ~ 200 //  소모품 101 ~ 200 //  소모품 101 ~ 200 //  소모품 101 ~ 200 //  소모품 101 ~ 200 //  소모품 101 ~ 200 //
 
-      // 이름:
-      // 설명:
+      // 이름: 하급 HP 회복 포션
+      // 설명: 한 모금의 생기로 체력을 1 회복해준다! 지친 몸에 활력을 불어넣어 다시 전투에 나설 준비를 해보자!
       case CardType.BASIC_HP_POTION:
-        usePotion(user, 1, 1, rooms, room, CardType.BASIC_HP_POTION);
-        // sendPacket(socket, config.packetType.USE_CARD_RESPONSE, {
-        //   success: true,
-        //   failCode: GlobalFailCode.NONE
-        // });
+        usePotion(user, 1, 0, rooms, room, CardType.BASIC_HP_POTION);
         break;
 
       // 이름:
@@ -208,21 +201,6 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
       // 이름:
       // 설명:
       case CardType.NONE:
-
-      // 이름:
-      // 설명:
-      case CardType.NONE:
-        break;
-
-      // 이름:
-      // 설명:
-      case CardType.NONE:
-        break;
-
-      // 이름:
-      // 설명:
-      case CardType.NONE:
-        break;
 
       // 이름:
       // 설명:
@@ -411,6 +389,7 @@ const partyBuff = async (
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // 타겟이 된 적 공격 (적군 체력 감소)
 const attackTarget = async (
+  mp: number,
   attacker: User,
   rooms: Room[],
   room: Room,
@@ -421,8 +400,19 @@ const attackTarget = async (
   // 적군이 선택되었는지 검사
   if (target.character.roleType === 2) {
     console.error('적군에게만 사용할 수 있는 스킬입니다.');
-    return;
+    return true;
   }
+
+  // 살아있는 적인지 검사
+  if (target.character.hp <= 0) {
+    console.error('살아있는 적에게만 스킬을 사용할 수 있습니다.');
+    return true;
+  }
+
+  // 공격 스킬 실행
+  const characterStat = characterStats[room.id][attacker.id];
+  characterStat.mp -= mp;
+  await setRedisData('userStatusData', characterStats);
 
   // 공격 스킬 실행
   const damage = Math.round(characterStats[room.id][attacker.id].attack * skillCoeffcient);

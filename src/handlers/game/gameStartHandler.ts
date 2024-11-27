@@ -87,7 +87,7 @@ export const gameStartHandler = async (socket: CustomSocket, payload: Object) =>
       for (let i = 0; i < normalRound; i++) {
         await normalPhaseNotification(i + 1, room.id, inGameTime * i);
       }
-      bossPhaseNotification(5, room.id, inGameTime * normalRound);
+      bossPhaseNotification(normalRound + 1, room.id, inGameTime * normalRound);
       inGameTimeSessions[room.id] = Date.now();
 
       // 게임 종료 notification 보내기
@@ -125,18 +125,19 @@ export const normalPhaseNotification = async (level: number, roomId: number, sen
     }
     if (!room) return;
 
+    const gameStateData = { phaseType: PhaseType.DAY, nextPhaseAt: Date.now() + inGameTime };
+    const notifiData = {
+      gameState: gameStateData,
+      users: room.users,
+      characterPositions: characterPositionDatas[roomId]
+    };
     for (let i = 0; i < room.users.length; i++) {
       const userSocket = socketSessions[room.users[i].id];
-      const gameStateData = { phaseType: PhaseType.DAY, nextPhaseAt: Date.now() + inGameTime };
-      const notifiData = {
-        gameState: gameStateData,
-        users: room.users,
-        characterPositions: characterPositionDatas[roomId]
-      };
       if (userSocket) {
         sendPacket(userSocket, config.packetType.GAME_START_NOTIFICATION, notifiData);
       }
     }
+
     await monsterMoveStart(roomId, inGameTime);
   }, sendTime);
 };
@@ -158,19 +159,19 @@ export const bossPhaseNotification = async (level: number, roomId: number, sendT
     }
     if (!room) return;
 
+    const gameStateData = { phaseType: PhaseType.DAY, nextPhaseAt: Date.now() + bossGameTime };
+    const notifiData = {
+      gameState: gameStateData,
+      users: room.users,
+      characterPositions: characterPositionDatas[roomId]
+    };
     for (let i = 0; i < room.users.length; i++) {
       const userSocket = socketSessions[room.users[i].id];
-      const gameStateData = { phaseType: PhaseType.DAY, nextPhaseAt: Date.now() + bossGameTime };
-      const notifiData = {
-        gameState: gameStateData,
-        users: room.users,
-        characterPositions: characterPositionDatas[roomId]
-      };
       if (userSocket) {
         sendPacket(userSocket, config.packetType.GAME_START_NOTIFICATION, notifiData);
         sendPacket(userSocket, config.packetType.REACTION_RESPONSE, { success: 1, failCode: 0 });
       }
     }
-    await monsterMoveStart(roomId, inGameTime);
+    await monsterMoveStart(roomId, bossGameTime);
   }, sendTime);
 };

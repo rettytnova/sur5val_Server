@@ -1,5 +1,5 @@
 import { config } from '../../config/config.js';
-import { Room } from '../../interface/interface.js';
+import { CharacterPositionData, Room } from '../../interface/interface.js';
 import { sendPacket } from '../../packet/createPacket.js';
 import { socketSessions } from '../../session/socketSession.js';
 import { getRedisData, monsterAI, setRedisData } from '../handlerMethod.js';
@@ -41,7 +41,10 @@ export const monsterMoveStart = async (roomId: number, totalTime: number) => {
   let callme = 0;
   totalTime -= 500;
   const monsterMove = setInterval(async () => {
-    const characterPositions = await getRedisData('characterPositionDatas');
+    const characterPositions: { [roomId: number]: CharacterPositionData[] | undefined } | undefined =
+      await getRedisData('characterPositionDatas');
+    if (characterPositions === undefined) return;
+    if (characterPositions[roomId] === undefined) return;
     await monsterAttackCheck(roomData);
     callme++;
     for (let i = 0; i < monsterAiDatas[roomId].length; i++) {
