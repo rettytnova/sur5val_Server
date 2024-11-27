@@ -17,7 +17,6 @@ export const getRoomListHandler = async (socket: CustomSocket) => {
           failCode: GlobalFailCode.NONE
         };
         sendPacket(socket, config.packetType.JOIN_ROOM_RESPONSE, sendData);
-        console.log('rooms: ', rooms[0].users);
       }
     }
   }

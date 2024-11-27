@@ -11,7 +11,7 @@ export const userCharacterData: {
 } = {
   // 핑크슬라임 - 보스
   [UserCharacterType.PINK_SLIME]: {
-    hp: 5,
+    hp: 100,
     weapon: 0,
     roleType: 4,
     // equips: 20,
@@ -27,9 +27,22 @@ export const userCharacterData: {
       { type: 101, count: 10 }
     ]
   },
-  // 탱커 - 물안경군
+  // 가면군 - 마법사
+  [UserCharacterType.MASK]: {
+    hp: 8,
+    weapon: 7,
+    roleType: 2,
+    // equips: 16,
+    handCards: [
+      { type: 1, count: 1 }, //8
+      { type: 19, count: 1 },
+      { type: 21, count: 3 },
+      { type: 22, count: 1 }
+    ]
+  },
+  // 물안경군 - 궁수
   [UserCharacterType.SWIM_GLASSES]: {
-    hp: 5,
+    hp: 10,
     weapon: 0,
     roleType: 2,
     // equips: 14,
@@ -45,9 +58,9 @@ export const userCharacterData: {
       { type: 101, count: 10 }
     ]
   },
-  // 로그 - 개굴군(근딜)
+  // 개굴군 - 로그
   [UserCharacterType.FROGGY]: {
-    hp: 5,
+    hp: 9,
     weapon: 4,
     roleType: 2,
     // equips: 12,
@@ -58,22 +71,10 @@ export const userCharacterData: {
       { type: 22, count: 1 }
     ]
   },
-  // 가면군 - 마법사(원딜)
-  [UserCharacterType.MASK]: {
-    hp: 5,
-    weapon: 7,
-    roleType: 2,
-    // equips: 16,
-    handCards: [
-      { type: 1, count: 1 }, //8
-      { type: 19, count: 1 },
-      { type: 21, count: 3 },
-      { type: 22, count: 1 }
-    ]
-  },
-  // 빨강이 - 서포터
+
+  // 빨강이 - 성기사
   [UserCharacterType.RED]: {
-    hp: 5,
+    hp: 8,
     weapon: 10,
     roleType: 2,
     // equips: 15,
@@ -198,6 +199,7 @@ export const setCharacterInfoInit = (users: User[]) => {
 
   // 보스가 무조건 선택되도록 하기
   if (selectedTypes.indexOf(UserCharacterType.PINK_SLIME) === -1) {
+    console.log('보스 선택안되어서 선택되도록 변경함');
     const j = Math.round(Math.random() * selectedTypes.length);
     selectedTypes[j] = UserCharacterType.PINK_SLIME;
   }
@@ -208,7 +210,7 @@ export const setCharacterInfoInit = (users: User[]) => {
     users[i].character.roleType = userCharacterData[selectedTypes[i]].roleType;
     users[i].character.maxHp = userCharacterData[selectedTypes[i]].hp;
     users[i].character.hp = userCharacterData[selectedTypes[i]].hp;
-    users[i].character.weapon = userCharacterData[selectedTypes[i]].weapon; // 무기 아닙니다 기획 따라 바뀌어서 스킬입니다
+    users[i].character.weapon = userCharacterData[selectedTypes[i]].weapon;
     //users[i].character.equips = userCharacterData[selectedTypes[i]].equips;
     users[i].character.handCards = userCharacterData[selectedTypes[i]].handCards;
   }
