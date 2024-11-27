@@ -172,7 +172,7 @@ export const monsterSpawn = async (roomId: number, level: number) => {
     monsterNumber,
     position[positionIndex][0],
     position[positionIndex][1],
-    0,
+    monsterData[level].attackCool / 2,
     monsterData[level].attackRange
   );
 };
