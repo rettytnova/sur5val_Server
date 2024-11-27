@@ -172,17 +172,17 @@ export const setCharacterInfoInit = (users: User[]) => {
 
   // 배열을 랜덤으로 섞기 (Fisher-Yates Shuffle Algorithm)
   for (let i = users.length - 1; i > 0; i--) {
-    const j = Math.round(Math.random() * (i + 1));
+    const j = Math.floor(Math.random() * (i + 1));
     [numbers[i], numbers[j]] = [numbers[j], numbers[i]];
   }
   const selectedTypes = numbers.slice(0, users.length);
 
-  // 보스가 무조건 선택되도록 하기
-  if (selectedTypes.indexOf(UserCharacterType.PINK_SLIME) === -1) {
-    console.log('보스 선택안되어서 선택되도록 변경함');
-    const j = Math.round(Math.random() * selectedTypes.length);
-    selectedTypes[j] = UserCharacterType.PINK_SLIME;
-  }
+  // // 보스가 무조건 선택되도록 하기
+  // if (selectedTypes.indexOf(UserCharacterType.PINK_SLIME) === -1) {
+  //   console.log('보스 선택안되어서 선택되도록 변경함');
+  //   const j = Math.round(Math.random() * selectedTypes.length);
+  //   selectedTypes[j] = UserCharacterType.PINK_SLIME;
+  // }
 
   // 직업 부여 랜덤 로직
   for (let i = 0; i < users.length; i++) {
