@@ -117,7 +117,7 @@ export const monsterSpawn = async (roomId: number, level: number) => {
       roleType: 1,
       maxHp: monsterData[level].hp,
       hp: monsterData[level].hp,
-      weapon: monsterData[level].attackPower,
+      weapon: 0,
       potion: 0,
       stateInfo: {
         state: 0,

@@ -26,7 +26,6 @@ export const gameStartHandler = async (socket: CustomSocket, payload: Object) =>
 
     if (!room) return;
     const realUserNumber = room.users.length;
-    // await monsterSpawnStart(socket, 1);
     // 유저가 있는 방 찾기
     if (user !== undefined) {
       if (room === null) {

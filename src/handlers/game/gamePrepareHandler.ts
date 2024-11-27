@@ -16,28 +16,19 @@ export const userCharacterData: {
     roleType: 4,
     // equips: 20,
     handCards: [
-      { type: 1, count: 1 },
-      { type: 2, count: 1 },
-      { type: 3, count: 1 },
-      { type: 4, count: 1 },
-      { type: 5, count: 1 },
-      { type: 6, count: 1 },
-      { type: 7, count: 1 },
-      { type: 8, count: 1 },
-      { type: 101, count: 10 }
+      { type: 101, count: 1 },
+      { type: 201, count: 5 }
     ]
   },
   // 가면군 - 마법사
   [UserCharacterType.MASK]: {
     hp: 8,
-    weapon: 7,
+    weapon: 0,
     roleType: 2,
     // equips: 16,
     handCards: [
-      { type: 1, count: 1 }, //8
-      { type: 19, count: 1 },
-      { type: 21, count: 3 },
-      { type: 22, count: 1 }
+      { type: 101, count: 1 },
+      { type: 201, count: 3 }
     ]
   },
   // 물안경군 - 궁수
@@ -47,15 +38,8 @@ export const userCharacterData: {
     roleType: 2,
     // equips: 14,
     handCards: [
-      { type: 1, count: 1 },
-      { type: 2, count: 1 },
-      { type: 3, count: 1 },
-      { type: 4, count: 1 },
-      { type: 5, count: 1 },
-      { type: 6, count: 1 },
-      { type: 7, count: 1 },
-      { type: 8, count: 1 },
-      { type: 101, count: 10 }
+      { type: 102, count: 1 },
+      { type: 201, count: 3 }
     ]
   },
   // 개굴군 - 로그
@@ -65,10 +49,8 @@ export const userCharacterData: {
     roleType: 2,
     // equips: 12,
     handCards: [
-      { type: 1, count: 1 }, //5
-      { type: 18, count: 1 },
-      { type: 21, count: 3 },
-      { type: 22, count: 1 }
+      { type: 103, count: 1 },
+      { type: 201, count: 3 }
     ]
   },
 
@@ -79,10 +61,8 @@ export const userCharacterData: {
     roleType: 2,
     // equips: 15,
     handCards: [
-      { type: 1, count: 1 }, //11
-      { type: 19, count: 1 },
-      { type: 21, count: 3 },
-      { type: 22, count: 1 }
+      { type: 104, count: 1 },
+      { type: 201, count: 3 }
     ]
   }
 };
@@ -184,9 +164,9 @@ export const gamePrepareHandler = async (socket: CustomSocket, payload: Object) 
 export const setCharacterInfoInit = (users: User[]) => {
   const numbers: number[] = [
     UserCharacterType.PINK_SLIME,
+    UserCharacterType.MASK,
     UserCharacterType.SWIM_GLASSES,
     UserCharacterType.FROGGY,
-    UserCharacterType.MASK,
     UserCharacterType.RED
   ];
 
