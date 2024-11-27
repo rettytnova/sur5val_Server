@@ -11,7 +11,7 @@
     "postbuild": "copyfiles -u 1 src/database/schema.sql dist",
     "build-and-run": "tsc --build && copyfiles -u 1 src/database/schema.sql dist && node ./dist/main.js",
     "clean": "tsc --build --clean",
-    "script-all": "tsc --build --clean && tsc --build && copyfiles -u 1 src/database/schema.sql dist && node ./dist/main.js"
+    "script-all": "tsc --build --clean && copyfiles -u 1 src/database/schema.sql dist && tsc --build && node ./dist/main.js"
   },
   "keywords": [],
   "author": "",
