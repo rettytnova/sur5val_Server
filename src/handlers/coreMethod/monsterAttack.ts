@@ -89,12 +89,12 @@ export const monsterAttackPlayer = async (player: User, monster: User, room: Roo
     (monsterPosition.x - playerPosition.x) ** 2 + (monsterPosition.y - playerPosition.y) ** 2 <
     monsterData.attackRange ** 2
   ) {
-    monsterData.attackCool = monsterDatas[monster.character.characterType][monster.character.handCardsCount].attackCool;
+    monsterData.attackCool = monsterDatas[monster.character.characterType][monster.character.level].attackCool;
     for (let i = 0; i < rooms.length; i++) {
       for (let j = 0; j < rooms[i].users.length; j++) {
         if (rooms[i].users[j].id === player.id) {
           rooms[i].users[j].character.hp -=
-            monsterDatas[monster.character.characterType][monster.character.handCardsCount].attackPower;
+            monsterDatas[monster.character.characterType][monster.character.level].attackPower;
           if (rooms[i].users[j].character.hp <= 0)
             (rooms[i].users[j].character.stateInfo.state = 15), (rooms[i].users[j].character.hp = 0);
           userUpdateNotification(rooms[i]);

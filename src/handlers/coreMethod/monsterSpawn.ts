@@ -6,29 +6,37 @@ import { monsterAiDatas } from './monsterMove.js';
 const initMonster = 8;
 export const monsterDatas: {
   [type: number]: {
-    [level: number]: { nickname: string; attackCool: number; attackRange: number; attackPower: number; hp: number };
+    [level: number]: {
+      nickname: string;
+      gold: number;
+      attackCool: number;
+      attackRange: number;
+      attackPower: number;
+      hp: number;
+      armor: number;
+    };
   };
 } = {
   5: {
-    1: { nickname: `Lv1 말랑이`, attackCool: 40, attackRange: 2, attackPower: 1, hp: 3 },
-    2: { nickname: `Lv2 말랑이`, attackCool: 40, attackRange: 2, attackPower: 2, hp: 5 },
-    3: { nickname: `Lv3 말랑이`, attackCool: 40, attackRange: 2, attackPower: 3, hp: 8 },
-    4: { nickname: `Lv4 말랑이`, attackCool: 40, attackRange: 2, attackPower: 4, hp: 12 },
-    5: { nickname: `Lv5 말랑이`, attackCool: 40, attackRange: 2, attackPower: 5, hp: 18 }
+    1: { nickname: `Lv1 말랑이`, gold: 5, attackCool: 40, attackRange: 2, attackPower: 1, hp: 3, armor: 0 },
+    2: { nickname: `Lv2 말랑이`, gold: 5, attackCool: 40, attackRange: 2, attackPower: 2, hp: 5, armor: 1 },
+    3: { nickname: `Lv3 말랑이`, gold: 10, attackCool: 40, attackRange: 2, attackPower: 3, hp: 8, armor: 1 },
+    4: { nickname: `Lv4 말랑이`, gold: 10, attackCool: 40, attackRange: 2, attackPower: 4, hp: 12, armor: 2 },
+    5: { nickname: `Lv5 말랑이`, gold: 15, attackCool: 40, attackRange: 2, attackPower: 5, hp: 18, armor: 2 }
   },
   8: {
-    1: { nickname: `Lv1 핑크군`, attackCool: 50, attackRange: 2, attackPower: 1, hp: 3 },
-    2: { nickname: `Lv2 핑크군`, attackCool: 50, attackRange: 2, attackPower: 2, hp: 5 },
-    3: { nickname: `Lv3 핑크군`, attackCool: 50, attackRange: 2, attackPower: 3, hp: 8 },
-    4: { nickname: `Lv4 핑크군`, attackCool: 50, attackRange: 2, attackPower: 5, hp: 11 },
-    5: { nickname: `Lv5 핑크군`, attackCool: 50, attackRange: 2, attackPower: 8, hp: 15 }
+    1: { nickname: `Lv1 핑크군`, gold: 5, attackCool: 50, attackRange: 2, attackPower: 1, hp: 3, armor: 0 },
+    2: { nickname: `Lv2 핑크군`, gold: 5, attackCool: 50, attackRange: 2, attackPower: 2, hp: 5, armor: 1 },
+    3: { nickname: `Lv3 핑크군`, gold: 10, attackCool: 50, attackRange: 2, attackPower: 3, hp: 8, armor: 1 },
+    4: { nickname: `Lv4 핑크군`, gold: 10, attackCool: 50, attackRange: 2, attackPower: 5, hp: 11, armor: 2 },
+    5: { nickname: `Lv5 핑크군`, gold: 15, attackCool: 50, attackRange: 2, attackPower: 8, hp: 15, armor: 2 }
   },
   12: {
-    1: { nickname: 'Lv1 공룡군', attackCool: 60, attackRange: 2.5, attackPower: 1, hp: 3 },
-    2: { nickname: 'Lv2 공룡군', attackCool: 60, attackRange: 2.5, attackPower: 2, hp: 6 },
-    3: { nickname: 'Lv3 공룡군', attackCool: 60, attackRange: 2.5, attackPower: 3, hp: 10 },
-    4: { nickname: 'Lv4 공룡군', attackCool: 60, attackRange: 2.5, attackPower: 4, hp: 15 },
-    5: { nickname: 'Lv5 공룡군', attackCool: 60, attackRange: 2.5, attackPower: 5, hp: 20 }
+    1: { nickname: 'Lv1 공룡군', gold: 5, attackCool: 60, attackRange: 2.5, attackPower: 1, hp: 3, armor: 0 },
+    2: { nickname: 'Lv2 공룡군', gold: 5, attackCool: 60, attackRange: 2.5, attackPower: 2, hp: 6, armor: 1 },
+    3: { nickname: 'Lv3 공룡군', gold: 10, attackCool: 60, attackRange: 2.5, attackPower: 3, hp: 10, armor: 1 },
+    4: { nickname: 'Lv4 공룡군', gold: 10, attackCool: 60, attackRange: 2.5, attackPower: 4, hp: 15, armor: 2 },
+    5: { nickname: 'Lv5 공룡군', gold: 15, attackCool: 60, attackRange: 2.5, attackPower: 5, hp: 20, armor: 2 }
   }
 };
 
@@ -115,8 +123,14 @@ export const monsterSpawn = async (roomId: number, level: number) => {
     character: {
       characterType: type,
       roleType: 1,
+      level: level,
+      exp: 0,
+      gold: monsterData[level].gold,
       maxHp: monsterData[level].hp,
       hp: monsterData[level].hp,
+      mp: 0,
+      attack: monsterData[level].attackPower,
+      armor: monsterData[level].armor,
       weapon: 0,
       potion: 0,
       stateInfo: {
@@ -127,9 +141,7 @@ export const monsterSpawn = async (roomId: number, level: number) => {
       },
       equips: [],
       debuffs: [],
-      handCards: [],
-      bbangCount: 0,
-      handCardsCount: level // level 취급
+      handCards: []
     }
   };
 

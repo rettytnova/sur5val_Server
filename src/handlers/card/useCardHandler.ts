@@ -1,12 +1,5 @@
 import { config } from '../../config/config.js';
-import {
-  CustomSocket,
-  UseCardRequest,
-  UseCardResponse,
-  Room,
-  User,
-  userStatusData
-} from '../../interface/interface.js';
+import { CustomSocket, UseCardRequest, UseCardResponse, Room, User, Character } from '../../interface/interface.js';
 import { CardType, GlobalFailCode } from '../enumTyps.js';
 import { sendPacket } from '../../packet/createPacket.js';
 import { getRedisData, getUserBySocket, setRedisData } from '../../handlers/handlerMethod.js';
@@ -76,7 +69,7 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
     if (user === null) return;
 
     // user의 캐릭터 스탯 정보 찾기
-    const characterStats: { [roomId: number]: { [userId: number]: userStatusData } } | undefined =
+    const characterStats: { [roomId: number]: { [userId: number]: Character } } | undefined =
       await getRedisData('userStatusData');
     if (characterStats === undefined) {
       console.error('userStatusData 정보가 존재하지 않습니다.');
@@ -92,6 +85,7 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
       }
     }
 
+    // 삭제 ㄴㄴ
     // sendPacket(socket, config.packetType.USE_CARD_RESPONSE, {
     //   success: true,
     //   failCode: GlobalFailCode.NONE
@@ -110,9 +104,11 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
           console.log('마나가 부족합니다.');
           return;
         }
+        characterStat.mp -= 2;
+        await setRedisData('userStatusData', characterStats);
 
         // 스킬 실행1
-        if (await attackTarget(1, user, rooms, room, 1, target, characterStats)) return;
+        await attackTarget(user, rooms, room, 1, target, characterStats);
         let index: number | null = null;
         for (let i = 0; i < monsterAiDatas[room.id].length; i++) {
           if (monsterAiDatas[room.id][i].id === target.id) {
@@ -127,7 +123,7 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
 
         // 스킬 실행2
         setTimeout(async () => {
-          await attackTarget(1, user, rooms, room, 1.5, target, characterStats);
+          await attackTarget(user, rooms, room, 1.5, target, characterStats);
           monsterAiDatas[room.id][index].animationDelay = animationDelay;
           sendAnimation(user, user, 1);
           sendAnimation(user, target, 2);
@@ -182,10 +178,14 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
 
       // 소모품 101 ~ 200 // 소모품 101 ~ 200 //  소모품 101 ~ 200 //  소모품 101 ~ 200 //  소모품 101 ~ 200 //  소모품 101 ~ 200 //  소모품 101 ~ 200 //
 
-      // 이름: 하급 HP 회복 포션
-      // 설명: 한 모금의 생기로 체력을 1 회복해준다! 지친 몸에 활력을 불어넣어 다시 전투에 나설 준비를 해보자!
+      // 이름:
+      // 설명:
       case CardType.BASIC_HP_POTION:
-        usePotion(user, 1, 0, rooms, room, CardType.BASIC_HP_POTION);
+        usePotion(user, 1, 1, rooms, room, CardType.BASIC_HP_POTION);
+        // sendPacket(socket, config.packetType.USE_CARD_RESPONSE, {
+        //   success: true,
+        //   failCode: GlobalFailCode.NONE
+        // });
         break;
 
       // 이름:
@@ -201,6 +201,21 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
       // 이름:
       // 설명:
       case CardType.NONE:
+
+      // 이름:
+      // 설명:
+      case CardType.NONE:
+        break;
+
+      // 이름:
+      // 설명:
+      case CardType.NONE:
+        break;
+
+      // 이름:
+      // 설명:
+      case CardType.NONE:
+        break;
 
       // 이름:
       // 설명:
@@ -315,7 +330,7 @@ const changeStatus = async (
   }
 
   // 마나가 충분한지 검사
-  const characterStats: { [roomId: number]: { [userId: number]: userStatusData } } | undefined =
+  const characterStats: { [roomId: number]: { [userId: number]: Character } } | undefined =
     await getRedisData('userStatusData');
   if (characterStats === undefined) {
     console.error('userStatusData 정보가 존재하지 않습니다.');
@@ -354,7 +369,7 @@ const partyBuff = async (
   attack: number
 ) => {
   // 캐릭터 / 유저 정보 검사
-  const characterStats: { [roomId: number]: { [userId: number]: userStatusData } } | undefined =
+  const characterStats: { [roomId: number]: { [userId: number]: Character } } | undefined =
     await getRedisData('userStatusData');
   if (characterStats === undefined) {
     console.error('userStatusData 정보가 존재하지 않습니다.');
@@ -389,30 +404,18 @@ const partyBuff = async (
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // 타겟이 된 적 공격 (적군 체력 감소)
 const attackTarget = async (
-  mp: number,
   attacker: User,
   rooms: Room[],
   room: Room,
   skillCoeffcient: number,
   target: User,
-  characterStats: { [roomId: number]: { [userId: number]: userStatusData } }
+  characterStats: { [roomId: number]: { [userId: number]: Character } }
 ) => {
   // 적군이 선택되었는지 검사
   if (target.character.roleType === 2) {
     console.error('적군에게만 사용할 수 있는 스킬입니다.');
-    return true;
+    return;
   }
-
-  // 살아있는 적인지 검사
-  if (target.character.hp <= 0) {
-    console.error('살아있는 적에게만 스킬을 사용할 수 있습니다.');
-    return true;
-  }
-
-  // 공격 스킬 실행
-  const characterStat = characterStats[room.id][attacker.id];
-  characterStat.mp -= mp;
-  await setRedisData('userStatusData', characterStats);
 
   // 공격 스킬 실행
   const damage = Math.round(characterStats[room.id][attacker.id].attack * skillCoeffcient);
@@ -433,7 +436,7 @@ const usePotion = async (
   cardsType: number
 ) => {
   // 스탯 데이터가 존재하는지 검사
-  const characterStats: { [roomId: number]: { [userId: number]: userStatusData } } | undefined =
+  const characterStats: { [roomId: number]: { [userId: number]: Character } } | undefined =
     await getRedisData('userStatusData');
   if (characterStats === undefined) {
     console.error('userStatusData 정보가 존재하지 않습니다.');

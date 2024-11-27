@@ -191,8 +191,8 @@ export const setCharacterInfoInit = (users: User[]) => {
     users[i].character.maxHp = userCharacterData[selectedTypes[i]].hp;
     users[i].character.hp = userCharacterData[selectedTypes[i]].hp;
     users[i].character.weapon = userCharacterData[selectedTypes[i]].weapon;
-    //users[i].character.equips = userCharacterData[selectedTypes[i]].equips;
     users[i].character.handCards = userCharacterData[selectedTypes[i]].handCards;
+    //users[i].character.equips = userCharacterData[selectedTypes[i]].equips;
   }
   return users;
 };

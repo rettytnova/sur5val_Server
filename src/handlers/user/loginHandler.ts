@@ -79,8 +79,14 @@ export const loginHandler = async (socket: CustomSocket, payload: Object): Promi
       character: {
         characterType: 0,
         roleType: 2,
+        level: 1,
+        exp: 0,
+        gold: 20,
         maxHp: 0,
         hp: 0,
+        mp: 0,
+        attack: 0,
+        armor: 0,
         weapon: 0,
         potion: 0,
         stateInfo: {
@@ -91,9 +97,7 @@ export const loginHandler = async (socket: CustomSocket, payload: Object): Promi
         },
         equips: [],
         debuffs: [],
-        handCards: [],
-        bbangCount: 0,
-        handCardsCount: 0
+        handCards: []
       }
     };
 
