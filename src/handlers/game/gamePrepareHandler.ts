@@ -202,8 +202,6 @@ export const setCharacterInfoInit = (users: User[]) => {
     selectedTypes[j] = UserCharacterType.PINK_SLIME;
   }
 
-  console.log('selectedTypes:', selectedTypes);
-
   // 직업 부여 랜덤 로직
   for (let i = 0; i < users.length; i++) {
     users[i].character.characterType = selectedTypes[i];
