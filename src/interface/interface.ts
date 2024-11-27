@@ -41,6 +41,9 @@ export interface CharacterStateInfo {
 export interface Character {
   characterType: number;
   roleType: number;
+  level: number;
+  exp: number;
+  gold: number;
   maxHp: number;
   hp: number;
   mp: number;
@@ -52,8 +55,6 @@ export interface Character {
   equips: number[];
   debuffs: number[];
   handCards: Card[];
-  bbangCount: number;
-  handCardsCount: number;
 }
 
 export interface User {
