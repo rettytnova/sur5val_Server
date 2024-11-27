@@ -53,6 +53,8 @@ message CharacterData {
     repeated int32 equips = 14;
     repeated int32 debuffs = 15;
     repeated CardData handCards = 16;
+    int32 handCardsCount = 17;
+    int32 bbangCount = 18;
 }
 
 message CharacterPositionData {
