@@ -85,7 +85,6 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
       }
     }
 
-    // 삭제 ㄴㄴ
     // sendPacket(socket, config.packetType.USE_CARD_RESPONSE, {
     //   success: true,
     //   failCode: GlobalFailCode.NONE
@@ -104,11 +103,9 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
           console.log('마나가 부족합니다.');
           return;
         }
-        characterStat.mp -= 2;
-        await setRedisData('userStatusData', characterStats);
 
         // 스킬 실행1
-        await attackTarget(user, rooms, room, 1, target, characterStats);
+        if (await attackTarget(user, rooms, room, 1, target, characterStats)) return;
         let index: number | null = null;
         for (let i = 0; i < monsterAiDatas[room.id].length; i++) {
           if (monsterAiDatas[room.id][i].id === target.id) {
@@ -128,6 +125,10 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
           sendAnimation(user, user, 1);
           sendAnimation(user, target, 2);
         }, 600);
+
+        // 마나 소모
+        characterStat.mp -= 2;
+        await setRedisData('userStatusData', characterStats);
         break;
 
       // 이름: 전사 기본 스킬
@@ -414,7 +415,12 @@ const attackTarget = async (
   // 적군이 선택되었는지 검사
   if (target.character.roleType === 2) {
     console.error('적군에게만 사용할 수 있는 스킬입니다.');
-    return;
+    return true;
+  }
+
+  // 살아있는 적이 맞는지 검사
+  if (target.character.hp <= 0) {
+    return true;
   }
 
   // 공격 스킬 실행

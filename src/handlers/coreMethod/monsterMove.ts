@@ -41,10 +41,21 @@ export const monsterMoveStart = async (roomId: number, totalTime: number) => {
   let callme = 0;
   totalTime -= 500;
   const monsterMove = setInterval(async () => {
+    // 시간 다되면 함수 종료
+    if (Date.now() - time >= totalTime)
+      console.log('함수 실행 횟수:', callme, '함수 실행 시간:', Date.now() - time), clearInterval(monsterMove);
+
+    // characterPositions 없으면 return
     const characterPositions: { [roomId: number]: CharacterPositionData[] | undefined } | undefined =
       await getRedisData('characterPositionDatas');
-    if (characterPositions === undefined) return;
-    if (characterPositions[roomId] === undefined) return;
+    if (characterPositions === undefined) {
+      console.log('함수 실행 횟수:', callme, '함수 실행 시간:', Date.now() - time), clearInterval(monsterMove);
+      return;
+    }
+    if (characterPositions[roomId] === undefined) {
+      console.log('함수 실행 횟수:', callme, '함수 실행 시간:', Date.now() - time), clearInterval(monsterMove);
+      return;
+    }
     await monsterAttackCheck(roomData);
     callme++;
     for (let i = 0; i < monsterAiDatas[roomId].length; i++) {
@@ -126,9 +137,5 @@ export const monsterMoveStart = async (roomId: number, totalTime: number) => {
         });
       }
     }
-
-    // 시간 다되면 함수 종료
-    if (Date.now() - time >= totalTime)
-      console.log('함수 실행 횟수:', callme, '함수 실행 시간:', Date.now() - time), clearInterval(monsterMove);
   }, 100);
 };
