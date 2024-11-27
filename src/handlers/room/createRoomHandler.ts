@@ -46,6 +46,7 @@ export const createRoomHandler = async (socket: net.Socket, payload: Object) => 
     } else {
       const users: User[] = [];
       users.push(redisUserData);
+      createRoomPayload.maxUserNum = 5;
 
       roomDatas = await getRedisData('roomData');
       if (!roomDatas) {
