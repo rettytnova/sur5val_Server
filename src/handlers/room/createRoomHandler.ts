@@ -5,7 +5,13 @@ import { getRedisData, getUserBySocket, setRedisData } from '../handlerMethod.js
 import { CreateRoomPayload, CustomSocket, RedisUserData, Room, User } from '../../interface/interface.js';
 import { GlobalFailCode, RoomStateType } from '../enumTyps.js';
 
-export let gRoomId = 1;
+let gRoomId: number = 1;
+export const getgRoomId = () => {
+  return gRoomId;
+};
+export const addgRoomId = () => {
+  gRoomId++;
+};
 
 export const createRoomHandler = async (socket: net.Socket, payload: Object) => {
   let failCode: Number = GlobalFailCode.NONE;

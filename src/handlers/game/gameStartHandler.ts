@@ -92,7 +92,7 @@ export const gameStartHandler = async (socket: CustomSocket, payload: Object) =>
       // 게임 종료 notification 보내기
       setTimeout(
         async () => {
-          await gameEndNotification(room.id);
+          await gameEndNotification(room.id, 4);
         },
         inGameTime * normalRound + bossGameTime
       );
@@ -168,7 +168,7 @@ export const bossPhaseNotification = async (level: number, roomId: number, sendT
       const userSocket = socketSessions[room.users[i].id];
       if (userSocket) {
         sendPacket(userSocket, config.packetType.GAME_START_NOTIFICATION, notifiData);
-        sendPacket(userSocket, config.packetType.REACTION_RESPONSE, { success: 1, failCode: 0 });
+        sendPacket(userSocket, config.packetType.REACTION_RESPONSE, { success: 1, failCode: roomId });
       }
     }
     await monsterMoveStart(roomId, bossGameTime);
