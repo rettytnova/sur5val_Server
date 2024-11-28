@@ -178,10 +178,6 @@ message GamePacket {
 
         // 효과 알림
         S2CAnimationNotification animationNotification = 47;
-
-        // 몬스터 사망 및 보상
-	    C2SMonsterDeathRewardRequest monsterDeathRewardRequest = 48;
-        S2CMonsterDeathRewardResponse monsterDeathRewardResponse = 49;
     }
 }
 

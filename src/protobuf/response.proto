@@ -106,9 +106,3 @@ message S2CCardSelectResponse {
     bool success = 1;
     GlobalFailCode failCode = 2;
 }
-
-// 몬스터 보상 응답
-message S2CMonsterDeathRewardResponse {
-    bool success = 1;
-    GlobalFailCode failCode = 2;
-}

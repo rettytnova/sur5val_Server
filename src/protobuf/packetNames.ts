@@ -19,8 +19,7 @@
     C2SReactionRequest: 'request.C2SReactionRequest',
     C2SPassDebuffRequest: 'request.C2SPassDebuffRequest',
     C2SDestroyCardRequest: 'request.C2SDestroyCardRequest',
-    C2SCardSelectRequest: 'request.C2SCardSelectRequest',
-    C2SMonsterDeathRewardRequest: 'request.C2SMonsterDeathRewardRequest'
+    C2SCardSelectRequest: 'request.C2SCardSelectRequest'
   },
   response: {
     S2CRegisterResponse: 'response.S2CRegisterResponse',
@@ -38,8 +37,7 @@
     S2CReactionResponse: 'response.S2CReactionResponse',
     S2CDestroyCardResponse: 'response.S2CDestroyCardResponse',
     S2CCardSelectResponse: 'response.S2CCardSelectResponse',
-    S2CPassDebuffResponse: 'response.S2CPassDebuffResponse',
-    S2CMonsterDeathRewardResponse: 'response.S2CMonsterDeathRewardResponse'
+    S2CPassDebuffResponse: 'response.S2CPassDebuffResponse'
   },
   notification: {
     S2CJoinRoomNotification: 'notification.S2CJoinRoomNotification',
