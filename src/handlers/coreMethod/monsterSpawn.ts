@@ -1,4 +1,5 @@
 import { Room, User } from '../../interface/interface.js';
+import { RoleType } from '../enumTyps.js';
 import { userCharacterData } from '../game/gamePrepareHandler.js';
 import { getRedisData, monsterAI, setRedisData } from '../handlerMethod.js';
 import { monsterAiDatas } from './monsterMove.js';
@@ -123,7 +124,7 @@ export const monsterSpawn = async (roomId: number, level: number) => {
     nickname: monsterData[level].nickname,
     character: {
       characterType: type,
-      roleType: 1,
+      roleType: RoleType.WEAK_MONSTER,
       level: level,
       exp: 0,
       gold: monsterData[level].gold,

@@ -4,7 +4,7 @@ import { config } from '../../config/config.js';
 import { sendPacket } from '../../packet/createPacket.js';
 import { getRedisData, getRoomByUserId, getUserBySocket, setRedisData } from '../handlerMethod.js';
 import { socketSessions } from '../../session/socketSession.js';
-import { CardType } from '../enumTyps.js';
+import { CardType, RoleType } from '../enumTyps.js';
 
 // DB에 넣을 데이터
 export const userCharacterData: {
@@ -23,16 +23,16 @@ export const userCharacterData: {
     mp: 99,
     attack: 5,
     armor: 1,
-    roleType: 4,
+    roleType: RoleType.BOSS_MONSTER,
     handCards: [
       { type: CardType.MAGICIAN_BASIC_SKILL, count: 1 },
-      { type: 105, count: 1 },
-      { type: 201, count: 3 },
-      { type: 306, count: 1 },
-      { type: 307, count: 1 },
-      { type: 308, count: 1 },
-      { type: 309, count: 1 },
-      { type: 310, count: 1 }
+      { type: CardType.MAGICIAN_EXTENDED_SKILL, count: 1 },
+      { type: CardType.BASIC_HP_POTION, count: 3 },
+      { type: CardType.BASIC_WEAPON, count: 1 },
+      { type: CardType.BASIC_HEAD, count: 1 },
+      { type: CardType.BASIC_ARMOR, count: 1 },
+      { type: CardType.BASIC_CLOAK, count: 1 },
+      { type: CardType.BASIC_GLOVE, count: 1 }
     ]
   },
   // 가면군 - 마법사
@@ -41,7 +41,7 @@ export const userCharacterData: {
     mp: 14,
     attack: 2,
     armor: 0,
-    roleType: 2,
+    roleType: RoleType.SUR5VAL,
     handCards: [
       { type: CardType.MAGICIAN_BASIC_SKILL, count: 1 },
       { type: CardType.MAGICIAN_EXTENDED_SKILL, count: 1 },
@@ -59,7 +59,7 @@ export const userCharacterData: {
     mp: 12,
     attack: 2,
     armor: 0,
-    roleType: 2,
+    roleType: RoleType.SUR5VAL,
     handCards: [
       { type: CardType.MAGICIAN_BASIC_SKILL, count: 2 },
       { type: CardType.BASIC_HP_POTION, count: 3 }
@@ -71,7 +71,7 @@ export const userCharacterData: {
     mp: 13,
     attack: 2,
     armor: 0,
-    roleType: 2,
+    roleType: RoleType.SUR5VAL,
     handCards: [
       { type: CardType.MAGICIAN_BASIC_SKILL, count: 2 },
       { type: CardType.BASIC_HP_POTION, count: 3 }
@@ -84,7 +84,7 @@ export const userCharacterData: {
     mp: 10,
     attack: 2,
     armor: 0,
-    roleType: 2,
+    roleType: RoleType.SUR5VAL,
     handCards: [
       { type: CardType.MAGICIAN_BASIC_SKILL, count: 2 },
       { type: CardType.BASIC_HP_POTION, count: 3 }
@@ -206,9 +206,9 @@ export const setCharacterInfoInit = (users: User[]) => {
     users[i].character.mp = userCharacterData[selectedTypes[i]].mp;
     users[i].character.attack = userCharacterData[selectedTypes[i]].attack;
     users[i].character.armor = userCharacterData[selectedTypes[i]].armor;
-    users[i].character.weapon = 301;
+    users[i].character.weapon = CardType.NONE_WEAPON;
     users[i].character.stateInfo.state = 0;
-    users[i].character.equips = [302, 303, 304, 305];
+    users[i].character.equips = [CardType.NONE_HEAD, CardType.NONE_ARMOR, CardType.NONE_CLOAK, CardType.NONE_GLOVE];
     users[i].character.handCards = userCharacterData[selectedTypes[i]].handCards;
   }
 
