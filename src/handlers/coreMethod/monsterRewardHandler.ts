@@ -6,6 +6,7 @@ import {
   CustomSocket,
   Room,
   User,
+  Character,
   Card,
   MonsterDeathRewardRequest,
   MonsterDeathRewardResponse
@@ -35,7 +36,7 @@ export const monsterRewardHandler = async (socket: CustomSocket, payload: Object
   let rooms: Room[] | null = null;
   let room: Room | null = null;
   let user: User | null = null;
-  let characterStats: { [roomId: number]: { [userId: number]: userStatusData } } | null = null;
+  let characterStats: { [roomId: number]: { [userId: number]: Character } } | null = null;
   // 응답 데이터들 초기화
   let logMessage: string = '';
   let responseData: MonsterDeathRewardResponse = {
@@ -117,12 +118,11 @@ export const monsterRewardHandler = async (socket: CustomSocket, payload: Object
         // setRewardsSuccessState = await setRewards(user, characterStats[room.id][user.id], 10, 10, null, 1, 1);
         break;
       case MonsterCharacterType.MALANG: // 말랑이
-        responseData.success = setRewards(user, characterStats[room.id][user.id], 10, 10, null, 1, 1);
+        responseData.success = setRewards(user, 10, 10, null, 1, 1);
         break;
       case MonsterCharacterType.PINK: // 핑크군
         responseData.success = setRewards(
           user,
-          characterStats[room.id][user.id],
           10,
           10,
           [
@@ -136,7 +136,6 @@ export const monsterRewardHandler = async (socket: CustomSocket, payload: Object
       case MonsterCharacterType.DINOSAUR: // 공룡이
         responseData.success = setRewards(
           user,
-          characterStats[room.id][user.id],
           20,
           20,
           [
@@ -150,7 +149,6 @@ export const monsterRewardHandler = async (socket: CustomSocket, payload: Object
       case MonsterCharacterType.PINK_SLIME: // 핑크슬라임
         responseData.success = setRewards(
           user,
-          characterStats[room.id][user.id],
           30,
           30,
           [
@@ -238,7 +236,7 @@ const removeMonsterFromRoom = (monsterId: number, room: Room): boolean => {
  * 주고 싶지 않은 값은 0으로 설정 하면 된다.(card의 경우 type: 0, count: 0)
  *
  * @param {User} user - 보상을 받을 유저
- * @param {userStatusData} userStatus - 보상을 받을 유저의 스탯
+ * @param {Character} userStatus - 보상을 받을 유저의 스탯
  * @param {number} gold - 보상으로 주는 골드
  * @param {number} exprience - 보상으로 주는 경험치
  * @param {Card} card - 보상으로 주는 카드
@@ -249,7 +247,6 @@ const removeMonsterFromRoom = (monsterId: number, room: Room): boolean => {
  */
 const setRewards = (
   user: User,
-  userStatus: userStatusData,
   gold: number,
   exprience: number,
   cards: Card[] | null,
@@ -259,39 +256,39 @@ const setRewards = (
   try {
     user.character.characterType = 0;
     // 몬스터 죽일시 경험치 지급
-    userStatus.experience += exprience;
+    user.character.exp += exprience;
 
     // 유저의 경험치가 100 이상일 경우 레벨업
-    if (userStatus.experience >= 100) {
+    if (user.character.exp >= 100) {
       // 레벨업
-      userStatus.level += 1;
+      user.character.level += 1;
       // 경험치 초기화
-      userStatus.experience -= 100;
+      user.character.exp -= 100;
       // 레벨업시 직업별 스탯 증가
       switch (user.character.characterType) {
         case UserCharacterType.PINK_SLIME: // 핑크슬라임 - 보스
-          userLevelUp(user, userStatus, 25, 10, 25);
+          userLevelUp(user, 25, 10, 25);
           break;
         case UserCharacterType.MASK: // 가면군 - 마법사
-          userLevelUp(user, userStatus, 5, 20, 5);
+          userLevelUp(user, 5, 20, 5);
           break;
         case UserCharacterType.SWIM_GLASSES: // 물안경군 - 궁수
-          userLevelUp(user, userStatus, 5, 15, 10);
+          userLevelUp(user, 5, 15, 10);
           break;
         case UserCharacterType.FROGGY: // 개굴군 - 로그
-          userLevelUp(user, userStatus, 10, 10, 10);
+          userLevelUp(user, 10, 10, 10);
           break;
         case UserCharacterType.RED: // 빨강이 - 성기사
-          userLevelUp(user, userStatus, 10, 5, 15);
+          userLevelUp(user, 10, 5, 15);
           break;
         default: // user.character.characterType이 잘못된 경우 에러 발생
-          userStatus.level -= 1; // 레벨 업을 시키면 안되는 에러가 발생 했으므로 유저 레벨 -1
+          user.character.level -= 1; // 레벨 업을 시키면 안되는 에러가 발생 했으므로 유저 레벨 -1
           throw new Error('레벨업시 user.character.characterType이 잘못되었습니다.');
       }
     }
 
     // 몬스터 죽일시 골드 지급
-    userStatus.gold += gold;
+    user.character.gold += gold;
 
     // 몬스터 죽일시 카드 지급
     if (cards !== null) {
@@ -308,9 +305,9 @@ const setRewards = (
       user.character.hp = user.character.maxHp;
 
     // 몬스터 죽일시 마나 회복
-    if (MAX_MP >= userStatus.mp + manaPointRecoveryAmount) userStatus.mp += manaPointRecoveryAmount;
+    if (MAX_MP >= user.character.mp + manaPointRecoveryAmount) user.character.mp += manaPointRecoveryAmount;
     // 마나 회복시 마나 값이 최대 마나를 넘어가지 않도록 설정
-    else if (MAX_MP < userStatus.mp + manaPointRecoveryAmount) userStatus.mp = MAX_MP;
+    else if (MAX_MP < user.character.mp + manaPointRecoveryAmount) user.character.mp = MAX_MP;
   } catch (error) {
     // 에러 발생시 로그 출력 후 return false
     console.error(`setRewards ${error as Error}`);
@@ -332,11 +329,11 @@ const setRewards = (
  * @param {number} armor - 방어력
  * @returns {void} 별도의 반환 값이 존재하지 않는다.
  */
-const userLevelUp = (user: User, userStatus: userStatusData, maxHp: number, attack: number, armor: number) => {
+const userLevelUp = (user: User, maxHp: number, attack: number, armor: number) => {
   // 레벨업시 스탯 증가
   user.character.maxHp += maxHp;
-  userStatus.attack += attack;
-  userStatus.armor += armor;
+  user.character.attack += attack;
+  user.character.armor += armor;
 };
 
 /***
