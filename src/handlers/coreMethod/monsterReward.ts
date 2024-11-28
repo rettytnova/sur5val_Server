@@ -21,23 +21,17 @@ export const monsterReward = async (room: Room, user: User, monster: User): Prom
     // 몬스터 처치 보상 처리 ----------------------------------------------------------------------
     // 몬스터의 종류에 따라 보상 값을 설정
     switch (monster.character.characterType) {
-      case MonsterCharacterType.SHARK: // 상어군
-        // rewardSuccess = setRewards(user, 10, 10, null, 1, 1);
-        break;
-      case MonsterCharacterType.MALANG: // 말랑이
-        rewardSuccess = setRewards(user, 10, 10, null, 1, 1);
-        break;
-      case MonsterCharacterType.PINK: // 핑크군
+      case MonsterCharacterType.PINK_SLIME: // 핑크슬라임
         rewardSuccess = setRewards(
           user,
-          10,
-          10,
+          30,
+          30,
           [
-            { type: CardType.MAGICIAN_BASIC_SKILL, count: 1 },
-            { type: CardType.BASIC_HP_POTION, count: 1 }
+            { type: CardType.MAGICIAN_BASIC_SKILL, count: 3 },
+            { type: CardType.BASIC_HP_POTION, count: 5 }
           ],
-          1,
-          1
+          3,
+          3
         );
         break;
       case MonsterCharacterType.DINOSAUR: // 공룡이
@@ -53,18 +47,24 @@ export const monsterReward = async (room: Room, user: User, monster: User): Prom
           2
         );
         break;
-      case MonsterCharacterType.PINK_SLIME: // 핑크슬라임
+      case MonsterCharacterType.PINK: // 핑크군
         rewardSuccess = setRewards(
           user,
-          30,
-          30,
+          10,
+          10,
           [
-            { type: CardType.MAGICIAN_BASIC_SKILL, count: 3 },
-            { type: CardType.BASIC_HP_POTION, count: 5 }
+            { type: CardType.MAGICIAN_BASIC_SKILL, count: 1 },
+            { type: CardType.BASIC_HP_POTION, count: 1 }
           ],
-          3,
-          3
+          1,
+          1
         );
+        break;
+      case MonsterCharacterType.MALANG: // 말랑이
+        rewardSuccess = setRewards(user, 10, 10, null, 1, 1);
+        break;
+      case MonsterCharacterType.SHARK: // 상어군
+        // rewardSuccess = setRewards(user, 10, 10, null, 1, 1);
         break;
       default: {
         logMessage = 'monster.character.characterType이 잘못되었습니다.';
