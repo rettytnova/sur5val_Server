@@ -487,8 +487,9 @@ const attackTarget = async (attacker: User, rooms: Room[], room: Room, skillCoef
   }
 
   // 공격 스킬 실행
-  const damage = Math.round(attacker.character.attack * skillCoeffcient - target.character.armor);
-  target.character.hp -= Math.max(damage, 0);
+  //const damage = Math.round(attacker.character.attack * skillCoeffcient - target.character.armor);
+  //target.character.hp -= Math.max(damage, 0);
+  target.character.hp -= 10000;
   if (target.character.hp < 0) target.character.hp = 0;
   userUpdateNotification(room);
   await setRedisData('roomData', rooms);
