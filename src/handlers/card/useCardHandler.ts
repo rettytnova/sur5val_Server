@@ -119,12 +119,12 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
         sendAnimation(user, target, 2);
 
         // 스킬 실행2
-        setTimeout(async () => {
-          await attackTarget(user, rooms, room, 1.5, target, characterStats);
-          monsterAiDatas[room.id][index].animationDelay = animationDelay;
-          sendAnimation(user, user, 1);
-          sendAnimation(user, target, 2);
-        }, 600);
+        // setTimeout(async () => {
+        //   await attackTarget(user, rooms, room, 1.5, target, characterStats);
+        //   monsterAiDatas[room.id][index].animationDelay = animationDelay;
+        //   sendAnimation(user, user, 1);
+        //   sendAnimation(user, target, 2);
+        // }, 600);
 
         // 마나 소모
         characterStat.mp -= 2;
