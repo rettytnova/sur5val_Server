@@ -45,6 +45,7 @@ export const monsterAttackPlayer = async (player: User, monster: User, room: Roo
 
   // 몬스터 정보 skillCool 찾아서 검사하기
   let monsterData;
+  if (!monsterAiDatas[room.id]) return;
   for (let i = 0; i < monsterAiDatas[room.id].length; i++) {
     if (monsterAiDatas[room.id][i].id === monster.id) {
       if (monsterAiDatas[room.id][i].attackCool > 0) return;
@@ -59,6 +60,7 @@ export const monsterAttackPlayer = async (player: User, monster: User, room: Roo
 
   // 몬스터 위치 정보 찾기
   const characterPositions = await getRedisData('characterPositionDatas');
+  if (!characterPositions) return;
   let monsterPosition;
   for (let i = 0; i < characterPositions[room.id].length; i++) {
     if (characterPositions[room.id][i].id === monster.id) {
@@ -94,8 +96,6 @@ export const monsterAttackPlayer = async (player: User, monster: User, room: Roo
       for (let j = 0; j < rooms[i].users.length; j++) {
         if (rooms[i].users[j].id === player.id) {
           rooms[i].users[j].character.hp -= monster.character.attack - player.character.armor;
-          console.log('monster.character.attack: ', monster.character.attack);
-          console.log('player.character.armor: ', player.character.armor);
           if (rooms[i].users[j].character.hp <= 0)
             (rooms[i].users[j].character.stateInfo.state = 15), (rooms[i].users[j].character.hp = 0);
           userUpdateNotification(rooms[i]);

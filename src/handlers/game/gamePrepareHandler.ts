@@ -19,9 +19,9 @@ export const userCharacterData: {
   // 핑크슬라임 - 보스
   [UserCharacterType.PINK_SLIME]: {
     hp: 1000,
-    mp: 99,
-    attack: 5,
-    armor: 1,
+    mp: 30,
+    attack: 10,
+    armor: 2,
     roleType: 4,
     handCards: [
       { type: 101, count: 1 },
@@ -120,8 +120,6 @@ export const gamePrepareHandler = async (socket: CustomSocket, payload: Object) 
 
         // 방에있는 유저들 캐릭터 랜덤 배정하기
         room.state = RoomStateType.PREPARE;
-        console.log(room.users[0].character.stateInfo);
-        console.log(room.users[1].character.stateInfo);
         room.users = setCharacterInfoInit(room.users);
 
         const rooms: Room[] | null = await getRedisData('roomData');
