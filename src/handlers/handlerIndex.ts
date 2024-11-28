@@ -15,6 +15,7 @@ import { destoryCardHandler } from './card/destoryCardHandler.js';
 import { cardSelectHandler } from './card/cardSelectHandler.js';
 import { passDebuffHandler } from './user/passDebuffHandler.js';
 import { fleaMarketItemSelectHandler } from './market/fleaMarketItemSelectHandler.js';
+import { monsterRewardHandler } from './coreMethod/monsterRewardHandler.js';
 import { gameEndHandler } from './game/gameEndHandler.js';
 
 const handlers = {
@@ -84,6 +85,10 @@ const handlers = {
   },
   [config.packetType.PASS_DEBUFF_REQUEST]: {
     handler: passDebuffHandler,
+    protoType: 'request.C2SPassDebuffRequest'
+  },
+  [config.packetType.MONSTER_REWARD_REQUEST]: {
+    handler: monsterRewardHandler,
     protoType: 'request.C2SPassDebuffRequest'
   }
 };
