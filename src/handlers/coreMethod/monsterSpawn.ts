@@ -8,35 +8,36 @@ export const monsterDatas: {
   [type: number]: {
     [level: number]: {
       nickname: string;
+      exp: number;
       gold: number;
       attackCool: number;
       attackRange: number;
-      attackPower: number;
+      attack: number;
       hp: number;
       armor: number;
     };
   };
 } = {
   5: {
-    1: { nickname: `Lv1 말랑이`, gold: 5, attackCool: 40, attackRange: 2, attackPower: 1, hp: 3, armor: 0 },
-    2: { nickname: `Lv2 말랑이`, gold: 5, attackCool: 40, attackRange: 2, attackPower: 2, hp: 5, armor: 1 },
-    3: { nickname: `Lv3 말랑이`, gold: 10, attackCool: 40, attackRange: 2, attackPower: 3, hp: 8, armor: 1 },
-    4: { nickname: `Lv4 말랑이`, gold: 10, attackCool: 40, attackRange: 2, attackPower: 4, hp: 12, armor: 2 },
-    5: { nickname: `Lv5 말랑이`, gold: 15, attackCool: 40, attackRange: 2, attackPower: 5, hp: 18, armor: 2 }
+    1: { nickname: `Lv1 말랑이`, gold: 10, exp: 1, attackCool: 40, attackRange: 2, attack: 1, hp: 5, armor: 0 },
+    2: { nickname: `Lv2 말랑이`, gold: 30, exp: 1, attackCool: 40, attackRange: 2, attack: 2, hp: 8, armor: 1 },
+    3: { nickname: `Lv3 말랑이`, gold: 60, exp: 2, attackCool: 40, attackRange: 2, attack: 3, hp: 12, armor: 1 },
+    4: { nickname: `Lv4 말랑이`, gold: 100, exp: 2, attackCool: 40, attackRange: 2, attack: 5, hp: 18, armor: 2 },
+    5: { nickname: `Lv5 말랑이`, gold: 150, exp: 3, attackCool: 40, attackRange: 2, attack: 7, hp: 25, armor: 2 }
   },
   8: {
-    1: { nickname: `Lv1 핑크군`, gold: 5, attackCool: 50, attackRange: 2, attackPower: 1, hp: 3, armor: 0 },
-    2: { nickname: `Lv2 핑크군`, gold: 5, attackCool: 50, attackRange: 2, attackPower: 2, hp: 5, armor: 1 },
-    3: { nickname: `Lv3 핑크군`, gold: 10, attackCool: 50, attackRange: 2, attackPower: 3, hp: 8, armor: 1 },
-    4: { nickname: `Lv4 핑크군`, gold: 10, attackCool: 50, attackRange: 2, attackPower: 5, hp: 11, armor: 2 },
-    5: { nickname: `Lv5 핑크군`, gold: 15, attackCool: 50, attackRange: 2, attackPower: 8, hp: 15, armor: 2 }
+    1: { nickname: `Lv1 핑크군`, gold: 10, exp: 1, attackCool: 50, attackRange: 2, attack: 1, hp: 5, armor: 0 },
+    2: { nickname: `Lv2 핑크군`, gold: 30, exp: 1, attackCool: 50, attackRange: 2, attack: 2, hp: 8, armor: 1 },
+    3: { nickname: `Lv3 핑크군`, gold: 60, exp: 2, attackCool: 50, attackRange: 2, attack: 3, hp: 11, armor: 1 },
+    4: { nickname: `Lv4 핑크군`, gold: 100, exp: 2, attackCool: 50, attackRange: 2, attack: 5, hp: 15, armor: 2 },
+    5: { nickname: `Lv5 핑크군`, gold: 150, exp: 3, attackCool: 50, attackRange: 2, attack: 8, hp: 20, armor: 2 }
   },
   12: {
-    1: { nickname: 'Lv1 공룡군', gold: 5, attackCool: 60, attackRange: 2.5, attackPower: 1, hp: 3, armor: 0 },
-    2: { nickname: 'Lv2 공룡군', gold: 5, attackCool: 60, attackRange: 2.5, attackPower: 2, hp: 6, armor: 1 },
-    3: { nickname: 'Lv3 공룡군', gold: 10, attackCool: 60, attackRange: 2.5, attackPower: 3, hp: 10, armor: 1 },
-    4: { nickname: 'Lv4 공룡군', gold: 10, attackCool: 60, attackRange: 2.5, attackPower: 4, hp: 15, armor: 2 },
-    5: { nickname: 'Lv5 공룡군', gold: 15, attackCool: 60, attackRange: 2.5, attackPower: 5, hp: 20, armor: 2 }
+    1: { nickname: 'Lv1 공룡군', gold: 10, exp: 1, attackCool: 60, attackRange: 2.5, attack: 1, hp: 6, armor: 0 },
+    2: { nickname: 'Lv2 공룡군', gold: 30, exp: 1, attackCool: 60, attackRange: 2.5, attack: 2, hp: 10, armor: 1 },
+    3: { nickname: 'Lv3 공룡군', gold: 60, exp: 2, attackCool: 60, attackRange: 2.5, attack: 3, hp: 15, armor: 1 },
+    4: { nickname: 'Lv4 공룡군', gold: 100, exp: 2, attackCool: 60, attackRange: 2.5, attack: 5, hp: 20, armor: 2 },
+    5: { nickname: 'Lv5 공룡군', gold: 150, exp: 3, attackCool: 60, attackRange: 2.5, attack: 7, hp: 28, armor: 2 }
   }
 };
 
@@ -71,10 +72,10 @@ export const monsterSpawnStart = async (roomId: number, level: number) => {
   }
   if (roomData === null) return;
 
-  // 유저 체력 회복시키기
+  // 공격팀 유저 상태 회복시키기
   for (let i = 0; i < roomData.users.length; i++) {
     if (roomData.users[i].character.roleType === 2) {
-      roomData.users[i].character.hp = userCharacterData[roomData.users[i].character.characterType].hp;
+      roomData.users[i].character.hp = roomData.users[i].character.maxHp;
       roomData.users[i].character.stateInfo.state = 0;
     }
   }
@@ -129,7 +130,7 @@ export const monsterSpawn = async (roomId: number, level: number) => {
       maxHp: monsterData[level].hp,
       hp: monsterData[level].hp,
       mp: 0,
-      attack: monsterData[level].attackPower,
+      attack: monsterData[level].attack,
       armor: monsterData[level].armor,
       weapon: 0,
       potion: 0,
