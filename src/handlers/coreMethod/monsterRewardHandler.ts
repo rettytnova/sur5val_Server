@@ -6,7 +6,6 @@ import {
   CustomSocket,
   Room,
   User,
-  userStatusData,
   Card,
   MonsterDeathRewardRequest,
   MonsterDeathRewardResponse
