@@ -94,8 +94,8 @@ export const monsterAttackPlayer = async (player: User, monster: User, room: Roo
       for (let j = 0; j < rooms[i].users.length; j++) {
         if (rooms[i].users[j].id === player.id) {
           rooms[i].users[j].character.hp -= monster.character.attack - player.character.armor;
-          console.log('monster.character.attack: ', monster.character.attack);
-          console.log('player.character.armor: ', player.character.armor);
+          //console.log('monster.character.attack: ', monster.character.attack);
+          //console.log('player.character.armor: ', player.character.armor);
           if (rooms[i].users[j].character.hp <= 0)
             (rooms[i].users[j].character.stateInfo.state = 15), (rooms[i].users[j].character.hp = 0);
           userUpdateNotification(rooms[i]);
