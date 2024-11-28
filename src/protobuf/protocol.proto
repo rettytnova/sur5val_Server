@@ -302,6 +302,15 @@ message S2CAnimationNotification {
     AnimationType animationType = 2;
 }
 
+message C2SMonsterDeathRewardRequest {
+    UserData user = 1;
+}
+
+message S2CMonsterDeathRewardResponse {
+    bool success = 1;
+    GlobalFailCode failCode = 2;
+}
+
 // 최상위 GamePacket 메시지
 message GamePacket {
     oneof payload {
@@ -395,6 +404,10 @@ message GamePacket {
 
         // 효과 알림
         S2CAnimationNotification animationNotification = 47;
+
+	    // 몬스터 사망 및 보상
+	    C2SMonsterDeathRewardRequest monsterDeathRewardRequest = 48;
+        S2CMonsterDeathRewardResponse monsterDeathRewardResponse = 49;
     }
 }
 
@@ -489,6 +502,15 @@ enum CardType {
     CONTAINMENT_UNIT = 21; // 3장
     SATELLITE_TARGET = 22; // 1장
     BOMB = 23; // 1장
+    MAGICIAN_BASIC_SKILL = 101;
+    WARRIOR_BASIC_SKILL = 102;
+    ARCHER_BASIC_SKILL = 103;
+    PALADIN_BASIC_SKILL = 104;
+    MAGICIAN_EXTENDED_SKILL = 105;
+    WARRIOR_EXTENDED_SKILL = 106;
+    ARCHER_EXTENDED_SKILL = 107;
+    PALADIN_EXTENDED_SKILL = 108;
+    BASIC_HP_POTION = 201;
 }
 
 enum RoleType {

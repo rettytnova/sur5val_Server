@@ -170,3 +170,14 @@ export interface userStatusData {
   mp: number;
   gold: number;
 }
+
+/* MonsterDeathRewardRequest 타입 정의 */
+export interface MonsterDeathRewardRequest {
+  user: User;
+}
+
+/* MonsterDeathRewardResponse 타입 정의 */
+export interface MonsterDeathRewardResponse {
+  success: boolean;
+  failCode: number;
+}

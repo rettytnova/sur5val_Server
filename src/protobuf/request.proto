@@ -91,3 +91,8 @@ message C2SPassDebuffRequest {
     int64 targetUserId = 1;
     CardType debuffCardType = 2;
 }
+
+// 몬스터 보상 요청
+message C2SMonsterDeathRewardRequest {
+    UserData user = 1;
+}
