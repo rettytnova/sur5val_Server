@@ -19,7 +19,7 @@ export const monsterAiDatas: {
 export const moveSpeed = 0.11;
 export const directionChangeBasic = 8;
 export const directionChangeRandom = 3;
-export const animationDelay = 5;
+export const animationDelay = 6;
 
 // 몬스터 이동 및 공격 시작
 export const monsterMoveStart = async (roomId: number, totalTime: number) => {

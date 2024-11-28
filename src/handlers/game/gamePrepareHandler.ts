@@ -1,59 +1,65 @@
-import { GlobalFailCode, RoomStateType, UserCharacterType, CardType, RoleType } from '../enumTyps.js';
-import { Card, CustomSocket, RedisUserData, Room, User, userStatusData } from '../../interface/interface.js';
+import { GlobalFailCode, RoomStateType, UserCharacterType } from '../enumTyps.js';
+import { Card, CustomSocket, RedisUserData, Room, User } from '../../interface/interface.js';
 import { config } from '../../config/config.js';
 import { sendPacket } from '../../packet/createPacket.js';
 import { getRedisData, getRoomByUserId, getUserBySocket, setRedisData } from '../handlerMethod.js';
 import { socketSessions } from '../../session/socketSession.js';
+import { CardType } from '../enumTyps.js';
 
 // DB에 넣을 데이터
 export const userCharacterData: {
   [types: number]: {
-    maxHp: number;
     hp: number;
-    maxMp: number;
     mp: number;
-    weapon: number;
+    attack: number;
+    armor: number;
     roleType: number;
     handCards: Card[];
   };
 } = {
   // 핑크슬라임 - 보스
   [UserCharacterType.PINK_SLIME]: {
-    maxHp: 100,
-    hp: 100,
-    maxMp: 10,
-    mp: 10,
-    weapon: 0,
-    roleType: RoleType.BOSS_MONSTER,
-    // equips: 20,
+    hp: 1000,
+    mp: 99,
+    attack: 5,
+    armor: 1,
+    roleType: 4,
     handCards: [
-      { type: CardType.MAGICIAN_BASIC_SKILL, count: 3 },
-      { type: CardType.BASIC_HP_POTION, count: 5 }
+      { type: CardType.MAGICIAN_BASIC_SKILL, count: 1 },
+      { type: 105, count: 1 },
+      { type: 201, count: 3 },
+      { type: 306, count: 1 },
+      { type: 307, count: 1 },
+      { type: 308, count: 1 },
+      { type: 309, count: 1 },
+      { type: 310, count: 1 }
     ]
   },
   // 가면군 - 마법사
   [UserCharacterType.MASK]: {
-    maxHp: 6,
-    hp: 6,
-    maxMp: 30,
-    mp: 30,
-    weapon: 0,
-    roleType: RoleType.SUR5VAL,
-    // equips: 16,
+    hp: 9,
+    mp: 14,
+    attack: 2,
+    armor: 0,
+    roleType: 2,
     handCards: [
-      { type: CardType.MAGICIAN_BASIC_SKILL, count: 2 },
-      { type: CardType.BASIC_HP_POTION, count: 3 }
+      { type: CardType.MAGICIAN_BASIC_SKILL, count: 1 },
+      { type: CardType.MAGICIAN_EXTENDED_SKILL, count: 1 },
+      { type: CardType.BASIC_HP_POTION, count: 2 },
+      { type: CardType.BASIC_WEAPON, count: 1 },
+      { type: CardType.BASIC_HEAD, count: 1 },
+      { type: CardType.BASIC_ARMOR, count: 1 },
+      { type: CardType.BASIC_CLOAK, count: 1 },
+      { type: CardType.BASIC_GLOVE, count: 1 }
     ]
   },
   // 물안경군 - 궁수
   [UserCharacterType.SWIM_GLASSES]: {
-    maxHp: 8,
-    hp: 8,
-    maxMp: 20,
-    mp: 20,
-    weapon: 0,
-    roleType: RoleType.SUR5VAL,
-    // equips: 14,
+    hp: 11,
+    mp: 12,
+    attack: 2,
+    armor: 0,
+    roleType: 2,
     handCards: [
       { type: CardType.MAGICIAN_BASIC_SKILL, count: 2 },
       { type: CardType.BASIC_HP_POTION, count: 3 }
@@ -61,13 +67,11 @@ export const userCharacterData: {
   },
   // 개굴군 - 로그
   [UserCharacterType.FROGGY]: {
-    maxHp: 10,
-    hp: 10,
-    maxMp: 15,
-    mp: 15,
-    weapon: 0,
-    roleType: RoleType.SUR5VAL,
-    // equips: 12,
+    hp: 12,
+    mp: 13,
+    attack: 2,
+    armor: 0,
+    roleType: 2,
     handCards: [
       { type: CardType.MAGICIAN_BASIC_SKILL, count: 2 },
       { type: CardType.BASIC_HP_POTION, count: 3 }
@@ -76,13 +80,11 @@ export const userCharacterData: {
 
   // 빨강이 - 성기사
   [UserCharacterType.RED]: {
-    maxHp: 20,
-    hp: 20,
-    maxMp: 10,
+    hp: 14,
     mp: 10,
-    weapon: 0,
-    roleType: RoleType.SUR5VAL,
-    // equips: 15,
+    attack: 2,
+    armor: 0,
+    roleType: 2,
     handCards: [
       { type: CardType.MAGICIAN_BASIC_SKILL, count: 2 },
       { type: CardType.BASIC_HP_POTION, count: 3 }
@@ -119,23 +121,9 @@ export const gamePrepareHandler = async (socket: CustomSocket, payload: Object) 
 
         // 방에있는 유저들 캐릭터 랜덤 배정하기
         room.state = RoomStateType.PREPARE;
+        console.log(room.users[0].character.stateInfo);
+        console.log(room.users[1].character.stateInfo);
         room.users = setCharacterInfoInit(room.users);
-
-        // 방에있는 유저들 캐릭터 초기 능력치 세팅하기
-        let userStatusDatas: { [roomId: number]: { [userId: number]: userStatusData } } | undefined =
-          await getRedisData('userStatusData');
-        if (userStatusDatas === undefined) {
-          userStatusDatas = { [room.id]: {} };
-        }
-        if (userStatusDatas[room.id] === undefined) {
-          userStatusDatas[room.id] = {};
-        }
-        const userStatusData = userStatusDatas[room.id];
-
-        for (let i = 0; i < room.users.length; i++) {
-          userStatusData[room.users[i].id] = { level: 1, experience: 0, attack: 1, armor: 0, mp: 10, gold: 0 };
-        }
-        await setRedisData('userStatusData', userStatusDatas);
 
         const rooms: Room[] | null = await getRedisData('roomData');
         if (!rooms) {
@@ -210,11 +198,18 @@ export const setCharacterInfoInit = (users: User[]) => {
   for (let i = 0; i < selectedTypes.length; i++) {
     users[i].character.characterType = selectedTypes[i];
     users[i].character.roleType = userCharacterData[selectedTypes[i]].roleType;
-    users[i].character.maxHp = userCharacterData[selectedTypes[i]].maxHp;
+    users[i].character.level = 1;
+    users[i].character.exp = 0;
+    users[i].character.gold = 0;
+    users[i].character.maxHp = userCharacterData[selectedTypes[i]].hp;
     users[i].character.hp = userCharacterData[selectedTypes[i]].hp;
-    users[i].character.weapon = userCharacterData[selectedTypes[i]].weapon;
+    users[i].character.mp = userCharacterData[selectedTypes[i]].mp;
+    users[i].character.attack = userCharacterData[selectedTypes[i]].attack;
+    users[i].character.armor = userCharacterData[selectedTypes[i]].armor;
+    users[i].character.weapon = 301;
+    users[i].character.stateInfo.state = 0;
+    users[i].character.equips = [302, 303, 304, 305];
     users[i].character.handCards = userCharacterData[selectedTypes[i]].handCards;
-    //users[i].character.equips = userCharacterData[selectedTypes[i]].equips;
   }
 
   return users;
