@@ -39,7 +39,10 @@ export const gameEndNotification = async (roomId: number, winRoleType: number) =
   for (let i = 0; i < room.users.length; i++) {
     const userSocket = socketSessions[room.users[i].id];
     if (userSocket) {
-      sendPacket(userSocket, config.packetType.GAME_END_NOTIFICATION, { winners: winnersUserId, winType: 0 });
+      sendPacket(userSocket, config.packetType.GAME_END_NOTIFICATION, {
+        winners: winnersUserId,
+        winType: winRoleType / 2
+      });
     }
   }
 
