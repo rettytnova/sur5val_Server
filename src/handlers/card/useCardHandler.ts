@@ -290,14 +290,14 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
 
       // 장비 201 ~ 300 // 장비 201 ~ 300 // 장비 201 ~ 300 // 장비 201 ~ 300 // 장비 201 ~ 300 // 장비 201 ~ 300 // 장비 201 ~ 300 // 장비 201 ~ 300 //
 
-      // 이름:
-      // 설명:
+      // 이름: 초심자의 무기
+      // 설명: 모험을 시작한 초보자를 위한 기본 무기. 공격력 +2
       case CardType.BASIC_WEAPON:
         equipWeapon(user, rooms, room, CardType.BASIC_WEAPON);
         break;
 
       // 이름: 초심자의 투구
-      // 설명:
+      // 설명: 생존력을 높여주는 초보자용 장비. 체력 +8
       case CardType.BASIC_HEAD:
         equipItem(user, rooms, room, 0, CardType.BASIC_HEAD);
         break;
@@ -370,8 +370,6 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
       case CardType.NONE:
         break;
     }
-
-    console.log('남은 마나: ', user.character.mp);
   } catch (error) {
     console.error(`useCardHandler ${error as Error}`);
   }
