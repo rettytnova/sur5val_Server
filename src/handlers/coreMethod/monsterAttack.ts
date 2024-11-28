@@ -93,8 +93,9 @@ export const monsterAttackPlayer = async (player: User, monster: User, room: Roo
     for (let i = 0; i < rooms.length; i++) {
       for (let j = 0; j < rooms[i].users.length; j++) {
         if (rooms[i].users[j].id === player.id) {
-          rooms[i].users[j].character.hp -=
-            monsterDatas[monster.character.characterType][monster.character.level].attackPower;
+          rooms[i].users[j].character.hp -= monster.character.attack - player.character.armor;
+          console.log('monster.character.attack: ', monster.character.attack);
+          console.log('player.character.armor: ', player.character.armor);
           if (rooms[i].users[j].character.hp <= 0)
             (rooms[i].users[j].character.stateInfo.state = 15), (rooms[i].users[j].character.hp = 0);
           userUpdateNotification(rooms[i]);
@@ -111,10 +112,6 @@ export const monsterAttackPlayer = async (player: User, monster: User, room: Roo
           break;
         }
       }
-      sendPacket(socketSessions[player.id], config.packetType.ANIMATION_NOTIFICATION, {
-        userId: monster.id,
-        animationType: 1
-      });
       sendPacket(socketSessions[player.id], config.packetType.ANIMATION_NOTIFICATION, {
         userId: player.id,
         animationType: 2

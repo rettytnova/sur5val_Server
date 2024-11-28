@@ -23,10 +23,7 @@ export const positionUpdateHandler = async (socket: net.Socket, payload: Object)
         const positionData: CharacterPositionData[] = positionDatas[roomDatas[i].id]; // 유저가 속한 방의 위치데이터
 
         // positionData 중 socket보낸 사람의 data를 찾아서 update하기
-        if (!positionData) {
-          console.log('비정상적인 접근입니다. => 해당 유저의 위치 정보가 없습니다.');
-          return;
-        }
+        if (!positionData) return;
 
         const changedPosition: CharacterPositionData = {
           id: user.id,
