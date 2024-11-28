@@ -41,6 +41,7 @@ export interface CharacterStateInfo {
 export interface Character {
   characterType: number;
   roleType: number;
+  aliveState: boolean;
   level: number;
   exp: number;
   gold: number;

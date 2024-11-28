@@ -24,22 +24,23 @@ message UserData {
 message CharacterData {
     CharacterType characterType = 1;
     RoleType roleType = 2;
-    int32 level = 3;
-    int32 exp = 4;
-    int32 gold = 5;
-    int32 maxHp = 6;
-    int32 hp = 7;
-    int32 mp = 8;
-    int32 attack = 9;
-    int32 armor = 10;
-    int32 weapon = 11;
-    int32 potion = 12;
-    CharacterStateInfoData stateInfo = 13;
-    repeated int32 equips = 14;
-    repeated int32 debuffs = 15;
-    repeated CardData handCards = 16;
-    int32 handCardsCount = 17;
-    int32 bbangCount = 18;
+    bool aliveState = 3;
+    int32 level = 4;
+    int32 exp = 5;
+    int32 gold = 6;
+    int32 maxHp = 7;
+    int32 hp = 8;
+    int32 mp = 9;
+    int32 attack = 10;
+    int32 armor = 11;
+    int32 weapon = 12;
+    int32 potion = 13;
+    CharacterStateInfoData stateInfo = 14;
+    repeated int32 equips = 15;
+    repeated int32 debuffs = 16;
+    repeated CardData handCards = 17;
+    int32 handCardsCount = 18;
+    int32 bbangCount = 19;
 }
 
 message CharacterPositionData {
@@ -405,8 +406,8 @@ message GamePacket {
         // 효과 알림
         S2CAnimationNotification animationNotification = 47;
 
-	    // 몬스터 사망 및 보상
-	    C2SMonsterDeathRewardRequest monsterDeathRewardRequest = 48;
+	// 몬스터 사망 및 보상
+	C2SMonsterDeathRewardRequest monsterDeathRewardRequest = 48;
         S2CMonsterDeathRewardResponse monsterDeathRewardResponse = 49;
     }
 }
