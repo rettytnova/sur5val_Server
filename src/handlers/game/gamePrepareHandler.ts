@@ -1,4 +1,4 @@
-import { GlobalFailCode, RoomStateType, UserCharacterType } from '../enumTyps.js';
+import { GlobalFailCode, RoomStateType, UserCharacterType, CardType, RoleType } from '../enumTyps.js';
 import { Card, CustomSocket, RedisUserData, Room, User, userStatusData } from '../../interface/interface.js';
 import { config } from '../../config/config.js';
 import { sendPacket } from '../../packet/createPacket.js';
@@ -7,62 +7,85 @@ import { socketSessions } from '../../session/socketSession.js';
 
 // DB에 넣을 데이터
 export const userCharacterData: {
-  [types: number]: { hp: number; weapon: number; roleType: number; handCards: Card[] };
+  [types: number]: {
+    maxHp: number;
+    hp: number;
+    maxMp: number;
+    mp: number;
+    weapon: number;
+    roleType: number;
+    handCards: Card[];
+  };
 } = {
   // 핑크슬라임 - 보스
   [UserCharacterType.PINK_SLIME]: {
+    maxHp: 100,
     hp: 100,
+    maxMp: 10,
+    mp: 10,
     weapon: 0,
-    roleType: 4,
+    roleType: RoleType.BOSS_MONSTER,
     // equips: 20,
     handCards: [
-      { type: 101, count: 1 },
-      { type: 201, count: 5 }
+      { type: CardType.MAGICIAN_BASIC_SKILL, count: 3 },
+      { type: CardType.BASIC_HP_POTION, count: 5 }
     ]
   },
   // 가면군 - 마법사
   [UserCharacterType.MASK]: {
-    hp: 8,
+    maxHp: 6,
+    hp: 6,
+    maxMp: 30,
+    mp: 30,
     weapon: 0,
-    roleType: 2,
+    roleType: RoleType.SUR5VAL,
     // equips: 16,
     handCards: [
-      { type: 101, count: 1 },
-      { type: 201, count: 3 }
+      { type: CardType.MAGICIAN_BASIC_SKILL, count: 2 },
+      { type: CardType.BASIC_HP_POTION, count: 3 }
     ]
   },
   // 물안경군 - 궁수
   [UserCharacterType.SWIM_GLASSES]: {
-    hp: 10,
+    maxHp: 8,
+    hp: 8,
+    maxMp: 20,
+    mp: 20,
     weapon: 0,
-    roleType: 2,
+    roleType: RoleType.SUR5VAL,
     // equips: 14,
     handCards: [
-      { type: 102, count: 1 },
-      { type: 201, count: 3 }
+      { type: CardType.MAGICIAN_BASIC_SKILL, count: 2 },
+      { type: CardType.BASIC_HP_POTION, count: 3 }
     ]
   },
   // 개굴군 - 로그
   [UserCharacterType.FROGGY]: {
-    hp: 9,
-    weapon: 4,
-    roleType: 2,
+    maxHp: 10,
+    hp: 10,
+    maxMp: 15,
+    mp: 15,
+    weapon: 0,
+    roleType: RoleType.SUR5VAL,
     // equips: 12,
     handCards: [
-      { type: 103, count: 1 },
-      { type: 201, count: 3 }
+      { type: CardType.MAGICIAN_BASIC_SKILL, count: 2 },
+      { type: CardType.BASIC_HP_POTION, count: 3 }
     ]
   },
 
   // 빨강이 - 성기사
   [UserCharacterType.RED]: {
-    hp: 8,
-    weapon: 10,
-    roleType: 2,
+    maxHp: 20,
+    hp: 20,
+    maxMp: 10,
+    mp: 10,
+    weapon: 0,
+    roleType: RoleType.SUR5VAL,
     // equips: 15,
     handCards: [
-      { type: 104, count: 1 },
-      { type: 201, count: 3 }
+      { type: CardType.MAGICIAN_BASIC_SKILL, count: 2 },
+      { type: CardType.BASIC_HP_POTION, count: 3 }
     ]
   }
 };
@@ -170,29 +193,29 @@ export const setCharacterInfoInit = (users: User[]) => {
     UserCharacterType.RED
   ];
 
-  // 배열을 랜덤으로 섞기 (Fisher-Yates Shuffle Algorithm)
-  for (let i = users.length - 1; i > 0; i--) {
+  // 직업 배열을 랜덤으로 섞기 (Fisher-Yates Shuffle Algorithm)
+  for (let i = numbers.length - 1; 0 < i; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [numbers[i], numbers[j]] = [numbers[j], numbers[i]];
   }
   const selectedTypes = numbers.slice(0, users.length);
 
-  // // 보스가 무조건 선택되도록 하기
-  // if (selectedTypes.indexOf(UserCharacterType.PINK_SLIME) === -1) {
-  //   console.log('보스 선택안되어서 선택되도록 변경함');
-  //   const j = Math.round(Math.random() * selectedTypes.length);
-  //   selectedTypes[j] = UserCharacterType.PINK_SLIME;
-  // }
+  // 보스가 무조건 선택되도록 하기
+  if (selectedTypes.indexOf(UserCharacterType.PINK_SLIME) === -1) {
+    const j = Math.floor(Math.random() * selectedTypes.length);
+    selectedTypes[j] = UserCharacterType.PINK_SLIME;
+  }
 
-  // 직업 부여 랜덤 로직
-  for (let i = 0; i < users.length; i++) {
+  // 선택된 직업에 따라 초기화
+  for (let i = 0; i < selectedTypes.length; i++) {
     users[i].character.characterType = selectedTypes[i];
     users[i].character.roleType = userCharacterData[selectedTypes[i]].roleType;
-    users[i].character.maxHp = userCharacterData[selectedTypes[i]].hp;
+    users[i].character.maxHp = userCharacterData[selectedTypes[i]].maxHp;
     users[i].character.hp = userCharacterData[selectedTypes[i]].hp;
     users[i].character.weapon = userCharacterData[selectedTypes[i]].weapon;
     users[i].character.handCards = userCharacterData[selectedTypes[i]].handCards;
     //users[i].character.equips = userCharacterData[selectedTypes[i]].equips;
   }
+
   return users;
 };
