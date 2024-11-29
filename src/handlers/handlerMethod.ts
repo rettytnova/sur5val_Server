@@ -27,12 +27,12 @@ export const deleteRedisData = async (key: string) => {
 };
 
 // socket으로 유저 데이터 가져오기 ex: getUserBySocket(socket)
-export const getUserBySocket = async (socket: CustomSocket) => {
+export const getUserIdBySocket = async (socket: CustomSocket) => {
   const userDatas = await getRedisData('userData');
   if (userDatas) {
     for (let i = 0; i < userDatas.length; i++) {
       if (socketSessions[userDatas[i].id] === socket) {
-        return userDatas[i];
+        return userDatas[i].id;
       }
     }
   }
@@ -107,7 +107,7 @@ export const monsterAI = (
   }
 };
 
-// a ~ b 중 m개를 안겹치게 랜덤하게 뽑기
+// a이상 ~ b이하 중 m개를 안겹치게 랜덤하게 뽑기
 export const nonSameRandom = (a: number, b: number, m: number) => {
   const numbers: number[] = [];
   for (let i = a; i < b + 1; i++) numbers.push(i);

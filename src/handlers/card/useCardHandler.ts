@@ -2,7 +2,7 @@ import { config } from '../../config/config.js';
 import { CustomSocket, UseCardRequest, UseCardResponse, Room, User } from '../../interface/interface.js';
 import { CardType, GlobalFailCode } from '../enumTyps.js';
 import { sendPacket } from '../../packet/createPacket.js';
-import { getRedisData, getRoomByUserId, getUserBySocket, setRedisData } from '../../handlers/handlerMethod.js';
+import { getRedisData, getRoomByUserId, getUserIdBySocket, setRedisData } from '../../handlers/handlerMethod.js';
 import { userUpdateNotification } from '../notification/userUpdate.js';
 import { socketSessions } from '../../session/socketSession.js';
 import { monsterAiDatas } from '../coreMethod/monsterMove.js';
@@ -53,8 +53,8 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
     // 카드 사용 성공 처리 ----------------------------------------------------------------------
     // responseMessage = `카드 사용 성공 : ${cardType}`;
     // redisUser 정보 찾기
-    const redisUser: User | null = await getUserBySocket(socket);
-    if (redisUser === null) {
+    const userId: number | null = await getUserIdBySocket(socket);
+    if (userId === null) {
       console.error('카드 사용자의 정보를 찾을 수 없습니다.');
       return;
     }
@@ -68,7 +68,7 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
     let room: Room | undefined;
     for (let i = 0; i < rooms.length; i++) {
       for (let j = 0; j < rooms[i].users.length; j++) {
-        if (rooms[i].users[j].id === redisUser.id) {
+        if (rooms[i].users[j].id === userId) {
           room = rooms[i];
         }
       }
@@ -81,7 +81,7 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
     // room 의 user정보 찾기
     let user: User | null = null;
     for (let i = 0; i < room.users.length; i++) {
-      if (room.users[i].id === redisUser.id) {
+      if (room.users[i].id === userId) {
         user = room.users[i];
       }
     }
@@ -420,7 +420,7 @@ const changeStatus = async (
   user.character.mp += attack;
 
   await setRedisData('roomData', rooms);
-  userUpdateNotification(room);
+  await userUpdateNotification(room);
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -455,7 +455,7 @@ const partyBuff = async (
     }
   }
   await setRedisData('roomData', rooms);
-  userUpdateNotification(room);
+  await userUpdateNotification(room);
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -488,7 +488,7 @@ const attackTarget = async (attacker: User, rooms: Room[], room: Room, skillCoef
   const damage = Math.round(attacker.character.attack * skillCoeffcient - target.character.armor);
   target.character.hp -= Math.max(damage, 0);
   if (target.character.hp < 0) target.character.hp = 0;
-  userUpdateNotification(room);
+  await userUpdateNotification(room);
   await setRedisData('roomData', rooms);
 };
 
@@ -508,6 +508,7 @@ const usePotion = async (
     if (user.character.handCards[i].type === cardsType && user.character.handCards[i].count > 0) {
       user.character.handCards[i].count--;
       isOwned = true;
+      break;
     }
   }
   if (isOwned === false) return;
@@ -520,7 +521,7 @@ const usePotion = async (
   }
   user.character.mp += restoreMp;
   await setRedisData('roomData', rooms);
-  userUpdateNotification(room);
+  await userUpdateNotification(room);
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -569,7 +570,7 @@ const equipItem = async (user: User, rooms: Room[], room: Room, equipIndex: numb
   user.character.hp += DBEquip[cardsType].hp;
 
   await setRedisData('roomData', rooms);
-  userUpdateNotification(room);
+  await userUpdateNotification(room);
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -613,5 +614,5 @@ const equipWeapon = async (user: User, rooms: Room[], room: Room, cardsType: num
   user.character.hp += DBEquip[cardsType].hp;
 
   await setRedisData('roomData', rooms);
-  userUpdateNotification(room);
+  await userUpdateNotification(room);
 };
