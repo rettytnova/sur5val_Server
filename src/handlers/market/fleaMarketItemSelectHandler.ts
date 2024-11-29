@@ -126,7 +126,7 @@ export const fleaMarketItemSelectHandler = async (socket: net.Socket, payload: O
       break;
     }
   }
-  userUpdateNotification(room);
+  await userUpdateNotification(room);
   await setRedisData('roomData', rooms);
   sendPacket(socket, config.packetType.FLEA_MARKET_CARD_PICK_RESPONSE, {
     userId: cardPickUser.id,
