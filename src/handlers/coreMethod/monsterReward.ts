@@ -77,7 +77,7 @@ export const monsterReward = async (room: Room, user: User, monster: User): Prom
       return;
     }
 
-    // 몬스터를 room에서 삭제 or 죽은 상태로 변경
+    // 몬스터를 죽은 상태로 변경(몬스터 사망시 room에서 삭제하게될 경우 이곳 수정)
     const isMonsterRemoved = removeMonsterFromRoom(monster.id, room);
     if (!isMonsterRemoved) {
       logMessage = `room.monsters에서 몬스터(id:${monster.id})를 찾을 수 없습니다.`;
