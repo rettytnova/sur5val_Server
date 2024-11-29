@@ -15,8 +15,9 @@ message CommonPacket{
 }
 
 message ChattingPacket{
-    oneof payload{
+    oneof chattingPayload{
         C2SChattingServerLoginRequest chattingServerLoginRequest = 1;
-        S2CChattingServerLoginRequest chattingServerLoginResponse = 2;       
+        S2CChattingServerLoginRequest chattingServerLoginResponse = 2;  
+        C2SChattingServerCreateRoomRequest chattingServerCreateRoomRequest = 3;     
     }
 }

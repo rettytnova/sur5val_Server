@@ -5,9 +5,18 @@ syntax = "proto3";
 */
 
 //------------------------------------
+// 로그인 요청
 // email : 로그인 대상 email
 //------------------------------------
 message C2SChattingServerLoginRequest{    
+    string email = 1;
+}
+
+//------------------------------------
+// 방 생성
+// email : 방장 email
+//------------------------------------
+message C2SChattingServerCreateRoomRequest{
     string email = 1;
 }
 
@@ -29,10 +38,11 @@ message S2CChattingServerLoginResponse{
 */
 
 message ChattingPacket{
-    oneof payload{
+    oneof chattingPayload{
         // 로그인
-        C2SChattingServerLoginRequest loginRequest = 1;
-        S2CChattingServerLoginRequest loginResponse = 2;       
+        C2SChattingServerLoginRequest chattingServerLoginRequest = 1;
+        S2CChattingServerLoginResponse chattingServerLoginResponse = 2;    
+        C2SChattingServerCreateRoomRequest chattingServerCreateRoomRequest = 3;     
     }
 }
 
