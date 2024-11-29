@@ -10,6 +10,8 @@ import { inGameTimeSessions } from '../../session/inGameTimeSession.js';
 import { gameEndNotification } from '../notification/gameEnd.js';
 import { fleaMarketCardCreate } from '../coreMethod/fleaMarketCardCreate.js';
 
+export let monsterLevel: number = 0;
+
 export const gameStartHandler = async (socket: CustomSocket, payload: Object) => {
   // 핸들러가 호출되면 success. response 만들어서 보냄
   // responseData = { success: true, failCode: GlobalFailCode.value }
@@ -82,9 +84,11 @@ export const gameStartHandler = async (socket: CustomSocket, payload: Object) =>
 
       // 방에있는 유저들에게 게임 시작 notificationn 보내기, 게임 시작 시간 저장
       room.state = RoomStateType.INGAME;
+      monsterLevel = 1;
       await setRedisData('roomData', rooms);
       for (let i = 0; i < normalRound; i++) {
         await normalPhaseNotification(i + 1, room.id, inGameTime * i);
+        monsterLevel++;
       }
       bossPhaseNotification(normalRound + 1, room.id, inGameTime * normalRound);
       inGameTimeSessions[room.id] = Date.now();
