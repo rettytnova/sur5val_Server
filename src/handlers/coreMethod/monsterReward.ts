@@ -86,16 +86,18 @@ export const monsterReward = async (room: Room, user: User, monster: User): Prom
 
     // 데이터 전송 및 로그 출력 ----------------------------------------------------------------------
   } catch (error) {
-    // 치명적 에러 발생시 로그 출력
+    // 에러 발생시 로그 출력
     console.error(`monsterRewardHandler ${error as Error}`);
   } finally {
     // 보상 실패 로그 출력
     if (rewardSuccess === false) console.error('monsterRewardHandler', logMessage);
+    // 보상 성공 로그 출력
+    else {
+      console.info(
+        `'${(user as User).nickname}(id:${(user as User).id})'가 몬스터 '${(monster as User).nickname}(id:${(monster as User).id})'로부터 보상을 받았습니다.`
+      );
+    }
   }
-  // 보상 성공 로그 출력
-  console.info(
-    `'${(user as User).nickname}(id:${(user as User).id})'가 몬스터 '${(monster as User).nickname}(id:${(monster as User).id})'로부터 보상을 받았습니다.`
-  );
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
