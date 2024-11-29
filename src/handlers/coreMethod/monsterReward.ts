@@ -124,7 +124,7 @@ const removeMonsterFromRoom = (monsterId: number, room: Room): boolean => {
 };
 
 /***
- * - 몬스터 처치 보상 값 설정 함수
+ * - 몬스터 처치 보상 값 설정 함수(필요시 보상 추가 및 수정)
  *
  * 유저가 몬스터 처치시 보상을 받기해 그 값을 설정 함수.
  * 주고 싶지 않은 값은 0으로 설정 하면 된다.(card의 경우 type: 0, count: 0)
@@ -208,15 +208,15 @@ const setRewards = (
 };
 
 /***
- * - 유저가 레벨업시 스탯을 증가시켜주는 함수
+ * - 유저가 레벨업시 스탯을 증가시켜주는 함수(필요시 레벨업 스탯 추가 및 수정)
  *
  * 유저가 몬스터 처치시 보상을 받기해 그 값을 설정 함수.
  * 주고 싶지 않은 값은 0으로 설정 하면 된다.
  *
  * @param {User} user - 스탯을 증가시킬 유저
- * @param {number} maxHp - 최대 체력
- * @param {number} attack - 공격력
- * @param {number} armor - 방어력
+ * @param {number} maxHp - 최대 체력 증가량
+ * @param {number} attack - 공격력 증가량
+ * @param {number} armor - 방어력 증가량
  * @returns {void} 별도의 반환 값이 존재하지 않는다.
  */
 const userLevelUp = (user: User, maxHp: number, attack: number, armor: number) => {
