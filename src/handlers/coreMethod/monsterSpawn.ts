@@ -1,44 +1,211 @@
-import { Room, User } from '../../interface/interface.js';
-import { RoleType } from '../enumTyps.js';
+import { Room, User, MonsterDatas } from '../../interface/interface.js';
+import { RoleType, MonsterCharacterType } from '../enumTyps.js';
 import { userCharacterData } from '../game/gamePrepareHandler.js';
 import { getRedisData, monsterAI, setRedisData } from '../handlerMethod.js';
 import { monsterAiDatas } from './monsterMove.js';
 
 const initMonster = 8;
-export const monsterDatas: {
-  [type: number]: {
-    [level: number]: {
-      nickname: string;
-      exp: number;
-      gold: number;
-      attackCool: number;
-      attackRange: number;
-      attack: number;
-      hp: number;
-      armor: number;
-    };
-  };
-} = {
-  5: {
-    1: { nickname: `Lv1 말랑이`, gold: 10, exp: 1, attackCool: 40, attackRange: 2, attack: 1, hp: 5, armor: 0 },
-    2: { nickname: `Lv2 말랑이`, gold: 30, exp: 1, attackCool: 40, attackRange: 2, attack: 2, hp: 8, armor: 1 },
-    3: { nickname: `Lv3 말랑이`, gold: 60, exp: 2, attackCool: 40, attackRange: 2, attack: 3, hp: 12, armor: 1 },
-    4: { nickname: `Lv4 말랑이`, gold: 100, exp: 2, attackCool: 40, attackRange: 2, attack: 5, hp: 18, armor: 2 },
-    5: { nickname: `Lv5 말랑이`, gold: 150, exp: 3, attackCool: 40, attackRange: 2, attack: 7, hp: 25, armor: 2 }
+export const monsterDatas: MonsterDatas = {
+  [MonsterCharacterType.MALANG]: {
+    1: {
+      nickname: `Lv1 말랑이`,
+      hp: 5,
+      attackCool: 40,
+      attackRange: 2,
+      attack: 1,
+      armor: 0,
+      exp: 1,
+      gold: 10,
+      hpRecovery: 1,
+      mpRecovery: 1
+      //cardRewards: []
+    },
+    2: {
+      nickname: `Lv2 말랑이`,
+      hp: 8,
+      attackCool: 40,
+      attackRange: 2,
+      attack: 2,
+      armor: 1,
+      exp: 1,
+      gold: 30,
+      hpRecovery: 2,
+      mpRecovery: 2
+      //cardRewards: []
+    },
+    3: {
+      nickname: `Lv3 말랑이`,
+      hp: 12,
+      attackCool: 40,
+      attackRange: 2,
+      attack: 3,
+      armor: 1,
+      exp: 2,
+      gold: 60,
+      hpRecovery: 3,
+      mpRecovery: 3
+      //cardRewards: []
+    },
+    4: {
+      nickname: `Lv4 말랑이`,
+      hp: 18,
+      attackCool: 40,
+      attackRange: 2,
+      attack: 5,
+      armor: 2,
+      exp: 2,
+      gold: 100,
+      hpRecovery: 4,
+      mpRecovery: 4
+      //cardRewards: []
+    },
+    5: {
+      nickname: `Lv5 말랑이`,
+      hp: 25,
+      attackCool: 40,
+      attackRange: 2,
+      attack: 7,
+      armor: 2,
+      exp: 3,
+      gold: 150,
+      hpRecovery: 5,
+      mpRecovery: 5
+      //cardRewards: []
+    }
   },
-  8: {
-    1: { nickname: `Lv1 핑크군`, gold: 10, exp: 1, attackCool: 50, attackRange: 2, attack: 1, hp: 5, armor: 0 },
-    2: { nickname: `Lv2 핑크군`, gold: 30, exp: 1, attackCool: 50, attackRange: 2, attack: 2, hp: 8, armor: 1 },
-    3: { nickname: `Lv3 핑크군`, gold: 60, exp: 2, attackCool: 50, attackRange: 2, attack: 3, hp: 11, armor: 1 },
-    4: { nickname: `Lv4 핑크군`, gold: 100, exp: 2, attackCool: 50, attackRange: 2, attack: 5, hp: 15, armor: 2 },
-    5: { nickname: `Lv5 핑크군`, gold: 150, exp: 3, attackCool: 50, attackRange: 2, attack: 8, hp: 20, armor: 2 }
+  [MonsterCharacterType.PINK]: {
+    1: {
+      nickname: `Lv1 핑크군`,
+      hp: 5,
+      attackCool: 50,
+      attackRange: 2,
+      attack: 1,
+      armor: 0,
+      exp: 1,
+      gold: 10,
+      hpRecovery: 1,
+      mpRecovery: 1
+      //cardRewards: []
+    },
+    2: {
+      nickname: `Lv2 핑크군`,
+      hp: 8,
+      attackCool: 50,
+      attackRange: 2,
+      attack: 2,
+      armor: 1,
+      exp: 1,
+      gold: 30,
+      hpRecovery: 2,
+      mpRecovery: 2
+      //cardRewards: []
+    },
+    3: {
+      nickname: `Lv3 핑크군`,
+      hp: 11,
+      attackCool: 50,
+      attackRange: 2,
+      attack: 3,
+      armor: 1,
+      exp: 2,
+      gold: 60,
+      hpRecovery: 3,
+      mpRecovery: 3
+      //cardRewards: []
+    },
+    4: {
+      nickname: `Lv4 핑크군`,
+      hp: 15,
+      attackCool: 50,
+      attackRange: 2,
+      attack: 5,
+      armor: 2,
+      exp: 2,
+      gold: 100,
+      hpRecovery: 4,
+      mpRecovery: 4
+      //cardRewards: []
+    },
+    5: {
+      nickname: `Lv5 핑크군`,
+      hp: 20,
+      attackCool: 50,
+      attackRange: 2,
+      attack: 8,
+      armor: 2,
+      exp: 3,
+      gold: 150,
+      hpRecovery: 5,
+      mpRecovery: 5
+      //cardRewards: []
+    }
   },
-  12: {
-    1: { nickname: 'Lv1 공룡군', gold: 10, exp: 1, attackCool: 60, attackRange: 2.5, attack: 1, hp: 6, armor: 0 },
-    2: { nickname: 'Lv2 공룡군', gold: 30, exp: 1, attackCool: 60, attackRange: 2.5, attack: 2, hp: 10, armor: 1 },
-    3: { nickname: 'Lv3 공룡군', gold: 60, exp: 2, attackCool: 60, attackRange: 2.5, attack: 3, hp: 15, armor: 1 },
-    4: { nickname: 'Lv4 공룡군', gold: 100, exp: 2, attackCool: 60, attackRange: 2.5, attack: 5, hp: 20, armor: 2 },
-    5: { nickname: 'Lv5 공룡군', gold: 150, exp: 3, attackCool: 60, attackRange: 2.5, attack: 7, hp: 28, armor: 2 }
+  [MonsterCharacterType.DINOSAUR]: {
+    1: {
+      nickname: 'Lv1 공룡군',
+      hp: 6,
+      attackCool: 60,
+      attackRange: 2.5,
+      attack: 1,
+      armor: 0,
+      exp: 1,
+      gold: 10,
+      hpRecovery: 1,
+      mpRecovery: 1
+      //cardRewards: []
+    },
+    2: {
+      nickname: 'Lv2 공룡군',
+      hp: 10,
+      attackCool: 60,
+      attackRange: 2.5,
+      attack: 2,
+      armor: 1,
+      exp: 1,
+      gold: 30,
+      hpRecovery: 2,
+      mpRecovery: 2
+      //cardRewards: []
+    },
+    3: {
+      nickname: 'Lv3 공룡군',
+      hp: 15,
+      attackCool: 60,
+      attackRange: 2.5,
+      attack: 3,
+      armor: 1,
+      exp: 2,
+      gold: 60,
+      hpRecovery: 3,
+      mpRecovery: 3
+      //cardRewards: []
+    },
+    4: {
+      nickname: 'Lv4 공룡군',
+      hp: 20,
+      attackCool: 60,
+      attackRange: 2.5,
+      attack: 5,
+      armor: 2,
+      exp: 2,
+      gold: 100,
+      hpRecovery: 4,
+      mpRecovery: 4
+      //cardRewards: []
+    },
+    5: {
+      nickname: 'Lv5 공룡군',
+      hp: 28,
+      attackCool: 60,
+      attackRange: 2.5,
+      attack: 7,
+      armor: 2,
+      exp: 3,
+      gold: 150,
+      hpRecovery: 5,
+      mpRecovery: 5
+      //cardRewards: []
+    }
   }
 };
 
