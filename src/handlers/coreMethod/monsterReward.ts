@@ -52,11 +52,6 @@ export const monsterReward = async (room: Room, attacker: User, target: User): P
   } finally {
     // 보상 실패 로그 출력
     if (rewardSuccess === false) console.error('monsterRewardHandler', logMessage);
-    // 보상 성공 로그 출력
-    // else
-    //   console.info(
-    //     `'${(attacker as User).nickname}(id:${(attacker as User).id})'가 타겟 '${(target as User).nickname}(id:${(target as User).id})'로부터 보상을 받았습니다.`
-    //   );
   }
 };
 
@@ -121,41 +116,24 @@ const setRewards = (attacker: User, target: User): boolean => {
             console.error('setCardRewards 실패');
             return false;
           }
-
-          // console.log(
-          //   `레벨업! '${(attacker as User).nickname}(id:${(attacker as User).id})'가 ${attacker.character.level}레벨이 되었습니다.`
-          // );
         }
         // 여전히 현재 경험치가 최대 경험치보다 크다면 반복
       } while (attacker.character.exp > maxExp);
 
       // 골드 보상 ---------------------------------------------------------------
-      let goldReward: number = 0;
       // 타겟이 WEAK_MONSTER일 경우
-      if ((target.character.roleType as RoleType) == RoleType.WEAK_MONSTER) goldReward = target.character.gold;
-      // 타겟이 BOSS_MONSTER일 경우
-      else if ((target.character.roleType as RoleType) == RoleType.BOSS_MONSTER) {
-        // 타겟 골드 감소
-        goldReward = Math.floor(target.character.gold / 5);
-        target.character.gold -= goldReward;
+      if ((target.character.roleType as RoleType) == RoleType.WEAK_MONSTER) {
+        // 공격자 골드 획득
+        attacker.character.gold += target.character.gold;
       } else {
         console.error('골드 보상 실패');
         return false;
       }
-      // 공격자 골드 획득
-      attacker.character.gold += goldReward;
-      //console.log('골드 획득: ', goldReward);
     }
     // 공격자가 BOSS_MONSTER이고 타겟이 SUR5VAL일 경우
     else if (attacker.character.roleType == RoleType.BOSS_MONSTER && target.character.roleType == RoleType.SUR5VAL) {
-      let goldReward: number = 0;
-      // 타겟 골드 감소
-      goldReward = Math.floor(target.character.gold / 2);
-      target.character.gold -= goldReward;
-
-      // 공격자 골드 획득
-      attacker.character.gold += goldReward;
-      //console.log('골드 획득: ', goldReward);
+      // SUR5VAL의 골드 감소
+      target.character.gold -= Math.floor(target.character.gold / 2);
     } else {
       console.error('보상 값을 변경할 roleType이 존재하지 않습니다.');
       return false;
