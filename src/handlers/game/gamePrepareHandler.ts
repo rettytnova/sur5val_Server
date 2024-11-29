@@ -2,7 +2,7 @@ import { GlobalFailCode, RoomStateType, UserCharacterType } from '../enumTyps.js
 import { Card, CustomSocket, RedisUserData, Room, User, UserCharacterData } from '../../interface/interface.js';
 import { config } from '../../config/config.js';
 import { sendPacket } from '../../packet/createPacket.js';
-import { getRedisData, getRoomByUserId, getUserBySocket, setRedisData } from '../handlerMethod.js';
+import { getRedisData, getRoomByUserId, getUserIdBySocket, setRedisData } from '../handlerMethod.js';
 import { socketSessions } from '../../session/socketSession.js';
 import { CardType, RoleType } from '../enumTyps.js';
 
@@ -14,9 +14,9 @@ export const userCharacterData: UserCharacterData = {
     exp: 10,
     gold: 500,
     hp: 1000,
-    mp: 99,
-    attack: 5,
-    armor: 1,
+    mp: 30,
+    attack: 10,
+    armor: 2,
     handCards: [
       { type: CardType.MAGICIAN_BASIC_SKILL, count: 1 },
       { type: CardType.MAGICIAN_EXTENDED_SKILL, count: 1 },
@@ -32,7 +32,7 @@ export const userCharacterData: UserCharacterData = {
   [UserCharacterType.MASK]: {
     roleType: RoleType.SUR5VAL,
     exp: 10,
-    gold: 100,
+    gold: 990,
     hp: 9,
     mp: 14,
     attack: 2,
@@ -52,7 +52,7 @@ export const userCharacterData: UserCharacterData = {
   [UserCharacterType.SWIM_GLASSES]: {
     roleType: RoleType.SUR5VAL,
     exp: 10,
-    gold: 100,
+    gold: 990,
     hp: 11,
     mp: 12,
     attack: 2,
@@ -67,7 +67,7 @@ export const userCharacterData: UserCharacterData = {
   [UserCharacterType.FROGGY]: {
     roleType: RoleType.SUR5VAL,
     exp: 10,
-    gold: 100,
+    gold: 990,
     hp: 12,
     mp: 13,
     attack: 2,
@@ -83,7 +83,7 @@ export const userCharacterData: UserCharacterData = {
   [UserCharacterType.RED]: {
     roleType: RoleType.SUR5VAL,
     exp: 10,
-    gold: 100,
+    gold: 990,
     hp: 14,
     mp: 10,
     attack: 2,
@@ -99,11 +99,11 @@ export const userCharacterData: UserCharacterData = {
 export const gamePrepareHandler = async (socket: CustomSocket, payload: Object) => {
   try {
     // requset 보낸 유저
-    const user: RedisUserData = await getUserBySocket(socket);
+    const userId: number | null = await getUserIdBySocket(socket);
 
     // 유저가 있는 방 찾기
-    if (user !== undefined) {
-      const room: Room | null = await getRoomByUserId(user.id);
+    if (userId !== null) {
+      const room: Room | null = await getRoomByUserId(userId);
       if (room === null) {
         return;
       }
@@ -124,8 +124,6 @@ export const gamePrepareHandler = async (socket: CustomSocket, payload: Object) 
 
         // 방에있는 유저들 캐릭터 랜덤 배정하기
         room.state = RoomStateType.PREPARE;
-        console.log(room.users[0].character.stateInfo);
-        console.log(room.users[1].character.stateInfo);
         room.users = setCharacterInfoInit(room.users);
 
         const rooms: Room[] | null = await getRedisData('roomData');

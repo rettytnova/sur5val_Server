@@ -1,16 +1,16 @@
 import { sendPacket } from '../../packet/createPacket.js';
 import { config } from '../../config/config.js';
-import { getRedisData, getUserBySocket } from '../handlerMethod.js';
+import { getRedisData, getUserIdBySocket } from '../handlerMethod.js';
 import { CustomSocket, Room, User } from '../../interface/interface.js';
 import { GlobalFailCode, RoomStateType } from '../enumTyps.js';
 
 export const getRoomListHandler = async (socket: CustomSocket) => {
   const rooms: Room[] | undefined = await getRedisData('roomData');
-  const user: User = await getUserBySocket(socket);
+  const userId: number | null = await getUserIdBySocket(socket);
   if (rooms === undefined) return;
   for (let i = 0; i < rooms.length; i++) {
     for (let j = 0; j < rooms[i].users.length; j++) {
-      if (rooms[i].users[j].id === user.id) {
+      if (rooms[i].users[j].id === userId) {
         const sendData = {
           success: 1,
           room: rooms[i],

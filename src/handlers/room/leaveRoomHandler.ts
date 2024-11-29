@@ -1,5 +1,5 @@
 import net from 'net';
-import { getRedisData, getRoomByUserId, getUserBySocket, setRedisData } from '../handlerMethod.js';
+import { getRedisData, getRoomByUserId, getUserIdBySocket, setRedisData } from '../handlerMethod.js';
 import { CustomSocket, Room, User } from '../../interface/interface.js';
 import { sendPacket } from '../../packet/createPacket.js';
 import { config } from '../../config/config.js';
@@ -8,8 +8,8 @@ import { socketSessions } from '../../session/socketSession.js';
 
 export const leaveRoomHandler = async (socket: net.Socket) => {
   // 해당 소켓으로 전달받는 데이터에 유저가 있는지
-  const user: User = await getUserBySocket(socket as CustomSocket);
-  if (!user) {
+  const userId: number | null = await getUserIdBySocket(socket as CustomSocket);
+  if (!userId) {
     sendPacket(socket, config.packetType.LEAVE_ROOM_RESPONSE, {
       success: false,
       failCode: GlobalFailCode.LEAVE_ROOM_FAILED
@@ -20,7 +20,7 @@ export const leaveRoomHandler = async (socket: net.Socket) => {
 
   const rooms: Room[] = await getRedisData('roomData');
   if (!rooms) return;
-  const room = await getRoomByUserId(user.id);
+  const room = await getRoomByUserId(userId);
   if (!room) {
     sendPacket(socket, config.packetType.LEAVE_ROOM_RESPONSE, {
       success: false,
@@ -39,7 +39,7 @@ export const leaveRoomHandler = async (socket: net.Socket) => {
   let userIndex: number | null = null;
   for (let i = 0; i < rooms.length; i++) {
     for (let j = 0; j < rooms[i].users.length; j++) {
-      if (rooms[i].users[j].id === user.id) {
+      if (rooms[i].users[j].id === userId) {
         roomIndex = i;
         userIndex = j;
       }
@@ -52,7 +52,7 @@ export const leaveRoomHandler = async (socket: net.Socket) => {
   rooms[roomIndex].users.splice(userIndex, 1);
 
   // 나가는 유저가 방장일 경우 방장 변경
-  if (user.id === rooms[roomIndex].ownerId && rooms[roomIndex].users.length > 0) {
+  if (userId === rooms[roomIndex].ownerId && rooms[roomIndex].users.length > 0) {
     rooms[roomIndex].ownerId = rooms[roomIndex].users[0].id;
   }
 
@@ -67,7 +67,7 @@ export const leaveRoomHandler = async (socket: net.Socket) => {
     const roomUserSocket = socketSessions[rooms[roomIndex].users[userIdx].id];
     if (roomUserSocket) {
       sendPacket(roomUserSocket, config.packetType.LEAVE_ROOM_NOTIFICATION, {
-        userId: user.id
+        userId: userId
       });
 
       const sendData = {

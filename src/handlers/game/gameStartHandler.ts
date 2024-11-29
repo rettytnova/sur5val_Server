@@ -2,13 +2,15 @@ import { CharacterPositionData, CustomSocket, RedisUserData, Room } from '../../
 import { GlobalFailCode, PhaseType, RoomStateType } from '../enumTyps.js';
 import { sendPacket } from '../../packet/createPacket.js';
 import { config, spawnPoint, inGameTime, normalRound, bossGameTime } from '../../config/config.js';
-import { getRedisData, getUserBySocket, nonSameRandom, setRedisData } from '../handlerMethod.js';
+import { getRedisData, getUserIdBySocket, nonSameRandom, setRedisData } from '../handlerMethod.js';
 import { monsterMoveStart } from '../coreMethod/monsterMove.js';
 import { monsterSpawnStart } from '../coreMethod/monsterSpawn.js';
 import { socketSessions } from '../../session/socketSession.js';
 import { inGameTimeSessions } from '../../session/inGameTimeSession.js';
 import { gameEndNotification } from '../notification/gameEnd.js';
 import { fleaMarketCardCreate } from '../coreMethod/fleaMarketCardCreate.js';
+import { fleaMarketOpenHandler } from '../market/fleaMarketOpenHandler.js';
+import { shoppingUserIdSessions } from '../../session/shoppingSession.js';
 
 export let monsterLevel: number = 0;
 
@@ -18,9 +20,9 @@ export const gameStartHandler = async (socket: CustomSocket, payload: Object) =>
   // sendPacket(socket, config.packetType.GAME_START_RESPONSE, responseData)
   try {
     // requset 보낸 유저
-    const user: RedisUserData = await getUserBySocket(socket);
+    const userId: number | null = await getUserIdBySocket(socket);
     const rooms: Room[] = await getRedisData('roomData');
-    const room = rooms.find((room) => room.users.some((roomUser) => roomUser.id === user.id));
+    const room = rooms.find((room) => room.users.some((roomUser) => roomUser.id === userId));
     if (!room) {
       console.error('getRoomByUserId: Room not found');
       return null;
@@ -29,7 +31,7 @@ export const gameStartHandler = async (socket: CustomSocket, payload: Object) =>
     if (!room) return;
     const realUserNumber = room.users.length;
     // 유저가 있는 방 찾기
-    if (user !== undefined) {
+    if (userId !== undefined) {
       if (room === null) {
         const responseData = {
           success: false,
@@ -100,6 +102,15 @@ export const gameStartHandler = async (socket: CustomSocket, payload: Object) =>
         },
         inGameTime * normalRound + bossGameTime
       );
+
+      for (let i = 0; i < room.users.length; i++) {
+        if (room.users[i].character.roleType !== 1) {
+          const roomUserSocket = socketSessions[room.users[i].id];
+          setTimeout(async () => {
+            await fleaMarketOpenHandler(roomUserSocket);
+          }, 5000);
+        }
+      }
     }
   } catch (err) {
     const responseData = {
@@ -114,7 +125,8 @@ export const gameStartHandler = async (socket: CustomSocket, payload: Object) =>
 // 일반 라운드 시작
 export const normalPhaseNotification = async (level: number, roomId: number, sendTime: number) => {
   setTimeout(async () => {
-    await fleaMarketCardCreate(level, roomId, 8);
+    await fleaMarketCardCreate(level, roomId);
+    shoppingUserIdSessions[roomId] = [];
     await monsterSpawnStart(roomId, level);
     const characterPositionDatas = await getRedisData('characterPositionDatas');
     const roomData: Room[] = await getRedisData('roomData');
@@ -148,7 +160,8 @@ export const normalPhaseNotification = async (level: number, roomId: number, sen
 // 보스 라운드 시작
 export const bossPhaseNotification = async (level: number, roomId: number, sendTime: number) => {
   setTimeout(async () => {
-    await fleaMarketCardCreate(level, roomId, 8);
+    await fleaMarketCardCreate(level, roomId);
+    shoppingUserIdSessions[roomId] = [];
     await monsterSpawnStart(roomId, level);
     const characterPositionDatas = await getRedisData('characterPositionDatas');
     const roomData: Room[] = await getRedisData('roomData');

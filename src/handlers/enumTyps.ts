@@ -67,7 +67,8 @@ export const CardType = Object.freeze({
   ADVANCED_HEAD: 312,
   ADVANCED_ARMOR: 313,
   ADVANCED_CLOAK: 314,
-  ADVANCED_GLOVE: 315
+  ADVANCED_GLOVE: 315,
+  EXIT_BUTTON: 1000
 });
 export type CardType = (typeof CardType)[keyof typeof CardType];
 // 캐릭터 상태
