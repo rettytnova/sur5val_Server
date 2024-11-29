@@ -79,7 +79,7 @@ export const monsterReward = async (room: Room, attacker: User, target: User): P
     // 보상 성공 로그 출력
     else
       console.info(
-        `'${(attacker as User).nickname}(id:${(attacker as User).id})'가 몬스터 '${(target as User).nickname}(id:${(target as User).id})'로부터 보상을 받았습니다.`
+        `'${(attacker as User).nickname}(id:${(attacker as User).id})'가 타겟 '${(target as User).nickname}(id:${(target as User).id})'로부터 보상을 받았습니다.`
       );
   }
 };
@@ -151,6 +151,10 @@ const setRewards = (
             console.error('setCardRewards 실패');
             return false;
           }
+
+          console.log(
+            `레벨업! '${(attacker as User).nickname}(id:${(attacker as User).id})'가 ${attacker.character.level}레벨이 되었습니다.`
+          );
         }
         // 여전히 현재 경험치가 최대 경험치보다 크다면 반복
       } while (attacker.character.exp > maxExp);
