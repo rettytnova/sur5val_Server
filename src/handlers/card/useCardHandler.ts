@@ -491,7 +491,7 @@ const attackTarget = async (attacker: User, rooms: Room[], room: Room, skillCoef
   const damage = Math.round(attacker.character.attack * skillCoeffcient - target.character.armor);
   target.character.hp -= Math.max(damage, 0);
 
-  if (target.character.aliveState && target.character.hp < 0) {
+  if (target.character.aliveState && target.character.hp <= 0) {
     target.character.hp = 0;
     monsterReward(room, attacker, target);
   }
