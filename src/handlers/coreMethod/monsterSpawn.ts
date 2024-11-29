@@ -19,25 +19,25 @@ export const monsterDatas: {
   };
 } = {
   5: {
-    1: { nickname: `Lv1 말랑이`, gold: 10, exp: 1, attackCool: 30, attackRange: 2, attack: 1, hp: 5, armor: 0 },
-    2: { nickname: `Lv2 말랑이`, gold: 30, exp: 1, attackCool: 30, attackRange: 2, attack: 2, hp: 8, armor: 1 },
-    3: { nickname: `Lv3 말랑이`, gold: 60, exp: 2, attackCool: 30, attackRange: 2, attack: 3, hp: 13, armor: 1 },
-    4: { nickname: `Lv4 말랑이`, gold: 100, exp: 2, attackCool: 30, attackRange: 2, attack: 5, hp: 21, armor: 2 },
-    5: { nickname: `Lv5 말랑이`, gold: 150, exp: 3, attackCool: 30, attackRange: 2, attack: 8, hp: 34, armor: 2 }
+    1: { nickname: `Lv1 말랑이`, gold: 10, exp: 2, attackCool: 30, attackRange: 2, attack: 1, hp: 5, armor: 0 },
+    2: { nickname: `Lv2 말랑이`, gold: 30, exp: 3, attackCool: 30, attackRange: 2, attack: 2, hp: 8, armor: 1 },
+    3: { nickname: `Lv3 말랑이`, gold: 60, exp: 4, attackCool: 30, attackRange: 2, attack: 3, hp: 13, armor: 1 },
+    4: { nickname: `Lv4 말랑이`, gold: 100, exp: 5, attackCool: 30, attackRange: 2, attack: 5, hp: 21, armor: 2 },
+    5: { nickname: `Lv5 말랑이`, gold: 150, exp: 6, attackCool: 30, attackRange: 2, attack: 8, hp: 34, armor: 2 }
   },
   8: {
-    1: { nickname: `Lv1 핑크군`, gold: 10, exp: 1, attackCool: 40, attackRange: 2, attack: 1, hp: 5, armor: 0 },
-    2: { nickname: `Lv2 핑크군`, gold: 30, exp: 1, attackCool: 40, attackRange: 2, attack: 2, hp: 9, armor: 1 },
-    3: { nickname: `Lv3 핑크군`, gold: 60, exp: 2, attackCool: 40, attackRange: 2, attack: 4, hp: 14, armor: 1 },
-    4: { nickname: `Lv4 핑크군`, gold: 100, exp: 2, attackCool: 40, attackRange: 2, attack: 6, hp: 23, armor: 2 },
-    5: { nickname: `Lv5 핑크군`, gold: 150, exp: 3, attackCool: 40, attackRange: 2, attack: 9, hp: 37, armor: 2 }
+    1: { nickname: `Lv1 핑크군`, gold: 10, exp: 2, attackCool: 40, attackRange: 2, attack: 1, hp: 5, armor: 0 },
+    2: { nickname: `Lv2 핑크군`, gold: 30, exp: 3, attackCool: 40, attackRange: 2, attack: 2, hp: 9, armor: 1 },
+    3: { nickname: `Lv3 핑크군`, gold: 60, exp: 4, attackCool: 40, attackRange: 2, attack: 4, hp: 14, armor: 1 },
+    4: { nickname: `Lv4 핑크군`, gold: 100, exp: 5, attackCool: 40, attackRange: 2, attack: 6, hp: 23, armor: 2 },
+    5: { nickname: `Lv5 핑크군`, gold: 150, exp: 6, attackCool: 40, attackRange: 2, attack: 9, hp: 37, armor: 2 }
   },
   12: {
-    1: { nickname: 'Lv1 공룡군', gold: 10, exp: 1, attackCool: 50, attackRange: 2.5, attack: 2, hp: 5, armor: 0 },
-    2: { nickname: 'Lv2 공룡군', gold: 30, exp: 1, attackCool: 50, attackRange: 2.5, attack: 2, hp: 10, armor: 1 },
-    3: { nickname: 'Lv3 공룡군', gold: 60, exp: 2, attackCool: 50, attackRange: 2.5, attack: 4, hp: 15, armor: 1 },
-    4: { nickname: 'Lv4 공룡군', gold: 100, exp: 2, attackCool: 50, attackRange: 2.5, attack: 6, hp: 25, armor: 2 },
-    5: { nickname: 'Lv5 공룡군', gold: 150, exp: 3, attackCool: 50, attackRange: 2.5, attack: 10, hp: 40, armor: 2 }
+    1: { nickname: 'Lv1 공룡군', gold: 10, exp: 2, attackCool: 50, attackRange: 2.5, attack: 2, hp: 5, armor: 0 },
+    2: { nickname: 'Lv2 공룡군', gold: 30, exp: 3, attackCool: 50, attackRange: 2.5, attack: 2, hp: 10, armor: 1 },
+    3: { nickname: 'Lv3 공룡군', gold: 60, exp: 4, attackCool: 50, attackRange: 2.5, attack: 4, hp: 15, armor: 1 },
+    4: { nickname: 'Lv4 공룡군', gold: 100, exp: 5, attackCool: 50, attackRange: 2.5, attack: 6, hp: 25, armor: 2 },
+    5: { nickname: 'Lv5 공룡군', gold: 150, exp: 6, attackCool: 50, attackRange: 2.5, attack: 10, hp: 40, armor: 2 }
   }
 };
 
