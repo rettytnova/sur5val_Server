@@ -8,6 +8,48 @@ export interface CustomSocket extends net.Socket {
   id: string;
 }
 
+/* UserCharacterData 타입 정의 */
+export interface UserCharacterData {
+  [types: number]: UserCharacterInitData;
+}
+
+/* UserCharacterInitData 타입 정의 */
+export interface UserCharacterInitData {
+  roleType: number;
+  exp: number;
+  gold: number;
+  hp: number;
+  mp: number;
+  attack: number;
+  armor: number;
+  handCards: Card[];
+}
+
+/* MonsterDatas 타입 정의 */
+export interface MonsterDatas {
+  [type: number]: MonsterLevelData;
+}
+
+/* MonsterLevelData 타입 정의 */
+export interface MonsterLevelData {
+  [level: number]: MonsterInitData;
+}
+
+/* MonsterDataInit 타입 정의 */
+export interface MonsterInitData {
+  nickname: string;
+  hp: number;
+  attackCool: number;
+  attackRange: number;
+  attack: number;
+  armor: number;
+  exp: number;
+  gold: number;
+  hpRecovery: number;
+  mpRecovery: number;
+  //cardRewards: Card[];
+}
+
 export interface joinRoomPayload {
   roomId: number;
 }
