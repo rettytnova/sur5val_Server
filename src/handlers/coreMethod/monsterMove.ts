@@ -23,29 +23,36 @@ export const animationDelay = 6;
 
 // 몬스터 이동 및 공격 시작
 export const monsterMoveStart = async (roomId: number, totalTime: number) => {
-  const roomDatas: Room[] = await getRedisData('roomData');
-  let roomData: Room | null = null;
-  for (let i = 0; i < roomDatas.length; i++) {
-    if (roomDatas[i].id === roomId) {
-      roomData = roomDatas[i];
-      break;
-    }
-  }
-  if (!roomData) {
-    console.error('roomData가 존재하지 않습니다.');
-    return;
-  }
-
   // 몬스터 이동을 n초마다 반복
   const time = Date.now();
   let callme = 0;
   totalTime -= 500;
+
+  // setInterval 반복 시작
   const monsterMove = setInterval(async () => {
     // 시간 다되면 함수 종료
     if (Date.now() - time >= totalTime)
       console.log('함수 실행 횟수:', callme, '함수 실행 시간:', Date.now() - time), clearInterval(monsterMove);
 
-    // characterPositions 없으면 return
+    // roomdData 없으면 함수 종료 (게임 종료 시 없어짐)
+    const rooms: Room[] | undefined = await getRedisData('roomData');
+    if (!rooms) {
+      console.log('함수 실행 횟수:', callme, '함수 실행 시간:', Date.now() - time), clearInterval(monsterMove);
+      return;
+    }
+    let roomData: Room | null = null;
+    for (let i = 0; i < rooms.length; i++) {
+      if (rooms[i].id === roomId) {
+        roomData = rooms[i];
+        break;
+      }
+    }
+    if (!roomData) {
+      console.log('함수 실행 횟수:', callme, '함수 실행 시간:', Date.now() - time), clearInterval(monsterMove);
+      return;
+    }
+
+    // characterPositions 없으면 함수 종료 (게임 종료 시 없어짐)
     const characterPositions: { [roomId: number]: CharacterPositionData[] | undefined } | undefined =
       await getRedisData('characterPositionDatas');
     if (characterPositions === undefined) {
@@ -56,7 +63,9 @@ export const monsterMoveStart = async (roomId: number, totalTime: number) => {
       console.log('함수 실행 횟수:', callme, '함수 실행 시간:', Date.now() - time), clearInterval(monsterMove);
       return;
     }
-    await monsterAttackCheck(roomData);
+
+    // 몬스터 공격 실행
+    await monsterAttackCheck(roomData, rooms);
     callme++;
     for (let i = 0; i < monsterAiDatas[roomId].length; i++) {
       // 남은 거리가 없을 경우 새로운 경로 지정
@@ -127,7 +136,7 @@ export const monsterMoveStart = async (roomId: number, totalTime: number) => {
       }
     }
 
-    // 이동 종료 redis에 데이터 저장 및 notification 뿌리기
+    // 이동 종료: redis에 위치 데이터 저장 및 notification 뿌리기
     await setRedisData('characterPositionDatas', characterPositions);
     for (let i = 0; i < roomData.users.length; i++) {
       const roomUserSocket = socketSessions[roomData.users[i].id];

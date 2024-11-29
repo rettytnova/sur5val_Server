@@ -2,7 +2,7 @@ import { GlobalFailCode, RoomStateType, UserCharacterType } from '../enumTyps.js
 import { Card, CustomSocket, RedisUserData, Room, User } from '../../interface/interface.js';
 import { config } from '../../config/config.js';
 import { sendPacket } from '../../packet/createPacket.js';
-import { getRedisData, getRoomByUserId, getUserBySocket, setRedisData } from '../handlerMethod.js';
+import { getRedisData, getRoomByUserId, getUserIdBySocket, setRedisData } from '../handlerMethod.js';
 import { socketSessions } from '../../session/socketSession.js';
 
 // DB에 넣을 데이터
@@ -19,9 +19,9 @@ export const userCharacterData: {
   // 핑크슬라임 - 보스
   [UserCharacterType.PINK_SLIME]: {
     hp: 1000,
-    mp: 99,
-    attack: 5,
-    armor: 1,
+    mp: 30,
+    attack: 10,
+    armor: 2,
     roleType: 4,
     handCards: [
       { type: 101, count: 1 },
@@ -95,11 +95,11 @@ export const userCharacterData: {
 export const gamePrepareHandler = async (socket: CustomSocket, payload: Object) => {
   try {
     // requset 보낸 유저
-    const user: RedisUserData = await getUserBySocket(socket);
+    const userId: number | null = await getUserIdBySocket(socket);
 
     // 유저가 있는 방 찾기
-    if (user !== undefined) {
-      const room: Room | null = await getRoomByUserId(user.id);
+    if (userId !== null) {
+      const room: Room | null = await getRoomByUserId(userId);
       if (room === null) {
         return;
       }
@@ -120,8 +120,6 @@ export const gamePrepareHandler = async (socket: CustomSocket, payload: Object) 
 
         // 방에있는 유저들 캐릭터 랜덤 배정하기
         room.state = RoomStateType.PREPARE;
-        console.log(room.users[0].character.stateInfo);
-        console.log(room.users[1].character.stateInfo);
         room.users = setCharacterInfoInit(room.users);
 
         const rooms: Room[] | null = await getRedisData('roomData');
@@ -200,7 +198,7 @@ export const setCharacterInfoInit = (users: User[]) => {
     users[i].character.roleType = userCharacterData[selectedTypes[i]].roleType;
     users[i].character.level = 1;
     users[i].character.exp = 0;
-    users[i].character.gold = 0;
+    users[i].character.gold = 990;
     users[i].character.maxHp = userCharacterData[selectedTypes[i]].hp;
     users[i].character.hp = userCharacterData[selectedTypes[i]].hp;
     users[i].character.mp = userCharacterData[selectedTypes[i]].mp;

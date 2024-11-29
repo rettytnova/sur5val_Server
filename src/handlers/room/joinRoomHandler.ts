@@ -1,9 +1,9 @@
 import { config } from '../../config/config.js';
-import { CustomSocket, joinRoomPayload, Room } from '../../interface/interface.js';
+import { CustomSocket, joinRoomPayload, Room, User } from '../../interface/interface.js';
 import { sendPacket } from '../../packet/createPacket.js';
 import { socketSessions } from '../../session/socketSession.js';
 import { GlobalFailCode, RoomStateType } from '../enumTyps.js';
-import { getRedisData, getUserBySocket, setRedisData } from '../handlerMethod.js';
+import { getRedisData, getUserIdBySocket, setRedisData } from '../handlerMethod.js';
 
 export const joinRoomHandler = async (socket: CustomSocket, payload: Object) => {
   // payload로 roomId가 옴
@@ -13,8 +13,8 @@ export const joinRoomHandler = async (socket: CustomSocket, payload: Object) => 
   const rooms: Room[] = await getRedisData('roomData');
 
   // userData가 존재하지 않는 오류 발생 시
-  const user = await getUserBySocket(socket);
-  if (!user) {
+  const userId = await getUserIdBySocket(socket);
+  if (!userId) {
     console.error('요청한 클라이언트의 userData가 존재하지 않습니다.');
     const sendData = {
       success: 0,
@@ -28,7 +28,7 @@ export const joinRoomHandler = async (socket: CustomSocket, payload: Object) => 
   // 이미 참여중인 방이 있는지 검사
   for (let i = 0; i < rooms.length; i++) {
     for (let j = 0; j < rooms[i].users.length; j++) {
-      if (rooms[i].users[j].id === user.id) {
+      if (rooms[i].users[j].id === userId) {
         console.error('이미 참여중인 방이 존재합니다.');
         const sendData = {
           success: 0,
@@ -68,6 +68,16 @@ export const joinRoomHandler = async (socket: CustomSocket, payload: Object) => 
         }
 
         // 방 참가 성공 시 : 해당 유저의 정보를 roomData에 추가하고, 성공 response
+        let user: User | null = null;
+        const userDatas = await getRedisData('userData');
+        if (userDatas) {
+          for (let i = 0; i < userDatas.length; i++) {
+            if (socketSessions[userDatas[i].id] === socket) {
+              user = userDatas[i];
+            }
+          }
+        }
+        if (!user) return;
         rooms[i].users.push(user);
         setRedisData('roomData', rooms);
 
