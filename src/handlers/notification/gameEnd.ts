@@ -4,7 +4,7 @@ import { sendPacket } from '../../packet/createPacket.js';
 import { shoppingUserIdSessions } from '../../session/shoppingSession.js';
 import { socketSessions } from '../../session/socketSession.js';
 import { monsterAiDatas } from '../coreMethod/monsterMove.js';
-import { RoomStateType } from '../enumTyps.js';
+import { RoomStateType, RoleType } from '../enumTyps.js';
 import { getRedisData, setRedisData } from '../handlerMethod.js';
 import { addgRoomId, getgRoomId } from '../room/createRoomHandler.js';
 
@@ -24,7 +24,7 @@ export const gameEndNotification = async (roomId: number, winRoleType: number) =
 
   // 몬스터를 roomData에서 삭제
   for (let i = 0; i < room.users.length; i++) {
-    if (room.users[i].character.roleType === 1) room.users.splice(i, 1), i--;
+    if (room.users[i].character.roleType === RoleType.WEAK_MONSTER) room.users.splice(i, 1), i--;
   }
   room.state = RoomStateType.WAIT;
 

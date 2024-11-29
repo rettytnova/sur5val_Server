@@ -13,7 +13,7 @@ export const monsterAttackCheck = async (room: Room, rooms: Room[]) => {
   for (let i = 0; i < room.users.length; i++) {
     if (room.users[i].character.roleType === RoleType.SUR5VAL && room.users[i].character.hp > 0) {
       for (let j = 0; j < room.users.length; j++) {
-        if (room.users[j].character.roleType === 1) {
+        if (room.users[j].character.roleType === RoleType.WEAK_MONSTER) {
           await monsterAttackPlayer(room.users[i], room.users[j], room, rooms);
         }
       }

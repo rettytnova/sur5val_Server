@@ -1,6 +1,6 @@
 import { config } from '../../config/config.js';
 import { CustomSocket, UseCardRequest, UseCardResponse, Room, User } from '../../interface/interface.js';
-import { CardType, GlobalFailCode } from '../enumTyps.js';
+import { CardType, GlobalFailCode, RoleType } from '../enumTyps.js';
 import { sendPacket } from '../../packet/createPacket.js';
 import { getRedisData, getRoomByUserId, getUserIdBySocket, setRedisData } from '../../handlers/handlerMethod.js';
 import { userUpdateNotification } from '../notification/userUpdate.js';
@@ -399,7 +399,7 @@ const changeStatus = async (
   attack: number
 ) => {
   // 제대로된 대상이 지정되었는지 검사
-  if (user.character.roleType !== 2) {
+  if (user.character.roleType !== RoleType.SUR5VAL) {
     console.error('아군에게만 사용할 수 있는 스킬입니다.');
     return;
   }
@@ -445,7 +445,7 @@ const partyBuff = async (
   // 버프 스킬 실행
   user.character.mp -= manaCost;
   for (let i = 0; i < room.users.length; i++) {
-    if (room.users[i].character.roleType === 2) {
+    if (room.users[i].character.roleType === RoleType.SUR5VAL) {
       if (user.character.hp + hp <= user.character.maxHp) {
         user.character.hp += hp;
       } else {
@@ -463,7 +463,7 @@ const partyBuff = async (
 // 타겟이 된 적 공격 (적군 체력 감소)
 const attackTarget = async (attacker: User, rooms: Room[], room: Room, skillCoeffcient: number, target: User) => {
   // 적군이 선택되었는지 검사
-  if (target.character.roleType === 2) {
+  if (target.character.roleType === RoleType.SUR5VAL) {
     console.error('적군에게만 사용할 수 있는 스킬입니다.');
     return true;
   }
