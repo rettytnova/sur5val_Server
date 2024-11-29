@@ -1,5 +1,5 @@
 import { GlobalFailCode, RoomStateType, UserCharacterType } from '../enumTyps.js';
-import { Card, CustomSocket, RedisUserData, Room, User } from '../../interface/interface.js';
+import { Card, CustomSocket, RedisUserData, Room, User, UserCharacterData } from '../../interface/interface.js';
 import { config } from '../../config/config.js';
 import { sendPacket } from '../../packet/createPacket.js';
 import { getRedisData, getRoomByUserId, getUserBySocket, setRedisData } from '../handlerMethod.js';
@@ -7,23 +7,16 @@ import { socketSessions } from '../../session/socketSession.js';
 import { CardType, RoleType } from '../enumTyps.js';
 
 // DB에 넣을 데이터
-export const userCharacterData: {
-  [types: number]: {
-    hp: number;
-    mp: number;
-    attack: number;
-    armor: number;
-    roleType: number;
-    handCards: Card[];
-  };
-} = {
+export const userCharacterData: UserCharacterData = {
   // 핑크슬라임 - 보스
   [UserCharacterType.PINK_SLIME]: {
+    roleType: RoleType.BOSS_MONSTER,
+    exp: 10,
+    gold: 500,
     hp: 1000,
     mp: 99,
     attack: 5,
     armor: 1,
-    roleType: RoleType.BOSS_MONSTER,
     handCards: [
       { type: CardType.MAGICIAN_BASIC_SKILL, count: 1 },
       { type: CardType.MAGICIAN_EXTENDED_SKILL, count: 1 },
@@ -37,11 +30,13 @@ export const userCharacterData: {
   },
   // 가면군 - 마법사
   [UserCharacterType.MASK]: {
+    roleType: RoleType.SUR5VAL,
+    exp: 10,
+    gold: 100,
     hp: 9,
     mp: 14,
     attack: 2,
     armor: 0,
-    roleType: RoleType.SUR5VAL,
     handCards: [
       { type: CardType.MAGICIAN_BASIC_SKILL, count: 1 },
       { type: CardType.MAGICIAN_EXTENDED_SKILL, count: 1 },
@@ -55,11 +50,14 @@ export const userCharacterData: {
   },
   // 물안경군 - 궁수
   [UserCharacterType.SWIM_GLASSES]: {
+    roleType: RoleType.SUR5VAL,
+    exp: 10,
+    gold: 100,
     hp: 11,
     mp: 12,
     attack: 2,
     armor: 0,
-    roleType: RoleType.SUR5VAL,
+
     handCards: [
       { type: CardType.MAGICIAN_BASIC_SKILL, count: 2 },
       { type: CardType.BASIC_HP_POTION, count: 3 }
@@ -67,11 +65,14 @@ export const userCharacterData: {
   },
   // 개굴군 - 로그
   [UserCharacterType.FROGGY]: {
+    roleType: RoleType.SUR5VAL,
+    exp: 10,
+    gold: 100,
     hp: 12,
     mp: 13,
     attack: 2,
     armor: 0,
-    roleType: RoleType.SUR5VAL,
+
     handCards: [
       { type: CardType.MAGICIAN_BASIC_SKILL, count: 2 },
       { type: CardType.BASIC_HP_POTION, count: 3 }
@@ -80,11 +81,13 @@ export const userCharacterData: {
 
   // 빨강이 - 성기사
   [UserCharacterType.RED]: {
+    roleType: RoleType.SUR5VAL,
+    exp: 10,
+    gold: 100,
     hp: 14,
     mp: 10,
     attack: 2,
     armor: 0,
-    roleType: RoleType.SUR5VAL,
     handCards: [
       { type: CardType.MAGICIAN_BASIC_SKILL, count: 2 },
       { type: CardType.BASIC_HP_POTION, count: 3 }
@@ -200,7 +203,7 @@ export const setCharacterInfoInit = (users: User[]) => {
     users[i].character.roleType = userCharacterData[selectedTypes[i]].roleType;
     users[i].character.level = 1;
     users[i].character.exp = 0;
-    users[i].character.gold = 0;
+    users[i].character.gold = userCharacterData[selectedTypes[i]].gold;
     users[i].character.maxHp = userCharacterData[selectedTypes[i]].hp;
     users[i].character.hp = userCharacterData[selectedTypes[i]].hp;
     users[i].character.mp = userCharacterData[selectedTypes[i]].mp;
