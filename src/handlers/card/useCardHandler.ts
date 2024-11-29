@@ -6,6 +6,7 @@ import { getRedisData, getRoomByUserId, getUserIdBySocket, setRedisData } from '
 import { userUpdateNotification } from '../notification/userUpdate.js';
 import { socketSessions } from '../../session/socketSession.js';
 import { monsterAiDatas } from '../coreMethod/monsterMove.js';
+import { monsterReward } from '../coreMethod/monsterReward.js';
 
 // DB에 들어갈 내용
 const DBEquip: { [cardType: number]: { attack: number; armor: number; hp: number } } = {
@@ -487,9 +488,14 @@ const attackTarget = async (attacker: User, rooms: Room[], room: Room, skillCoef
   // 공격 스킬 실행
   const damage = Math.round(attacker.character.attack * skillCoeffcient - target.character.armor);
   target.character.hp -= Math.max(damage, 0);
-  if (target.character.hp < 0) target.character.hp = 0;
-  await userUpdateNotification(room);
+
+  if (target.character.aliveState && target.character.hp <= 0) {
+    target.character.hp = 0;
+    monsterReward(room, attacker, target);
+  }
+
   await setRedisData('roomData', rooms);
+  await userUpdateNotification(room);
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

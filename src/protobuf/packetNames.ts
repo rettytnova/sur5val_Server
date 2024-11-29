@@ -1,6 +1,6 @@
 ﻿export const packetNames = {
   packet: {
-    GamePacket: 'packet.GamePacket',
+    GamePacket: 'packet.GamePacket'
   },
   request: {
     C2SRegisterRequest: 'request.C2SRegisterRequest',
@@ -19,7 +19,7 @@
     C2SReactionRequest: 'request.C2SReactionRequest',
     C2SPassDebuffRequest: 'request.C2SPassDebuffRequest',
     C2SDestroyCardRequest: 'request.C2SDestroyCardRequest',
-    C2SCardSelectRequest: 'request.C2SCardSelectRequest',
+    C2SCardSelectRequest: 'request.C2SCardSelectRequest'
   },
   response: {
     S2CRegisterResponse: 'response.S2CRegisterResponse',
@@ -37,7 +37,7 @@
     S2CReactionResponse: 'response.S2CReactionResponse',
     S2CDestroyCardResponse: 'response.S2CDestroyCardResponse',
     S2CCardSelectResponse: 'response.S2CCardSelectResponse',
-    S2CPassDebuffResponse: 'response.S2CPassDebuffResponse',
+    S2CPassDebuffResponse: 'response.S2CPassDebuffResponse'
   },
   notification: {
     S2CJoinRoomNotification: 'notification.S2CJoinRoomNotification',
@@ -53,6 +53,6 @@
     S2CPhaseUpdateNotification: 'notification.S2CPhaseUpdateNotification',
     S2CGameEndNotification: 'notification.S2CGameEndNotification',
     S2CWarningNotification: 'notification.S2CWarningNotification',
-    S2CAnimationNotification: 'notification.S2CAnimationNotification',
+    S2CAnimationNotification: 'notification.S2CAnimationNotification'
   }
 };

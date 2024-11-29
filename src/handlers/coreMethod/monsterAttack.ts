@@ -6,11 +6,12 @@ import { getRedisData, setRedisData } from '../handlerMethod.js';
 import { animationDelay, monsterAiDatas } from './monsterMove.js';
 import { monsterDatas } from './monsterSpawn.js';
 import { userUpdateNotification } from '../notification/userUpdate.js';
+import { RoleType } from '../enumTyps.js';
 
 // 몬스터와 유저의 조합 찾기
 export const monsterAttackCheck = async (room: Room, rooms: Room[]) => {
   for (let i = 0; i < room.users.length; i++) {
-    if (room.users[i].character.roleType === 2 && room.users[i].character.hp > 0) {
+    if (room.users[i].character.roleType === RoleType.SUR5VAL && room.users[i].character.hp > 0) {
       for (let j = 0; j < room.users.length; j++) {
         if (room.users[j].character.roleType === 1) {
           await monsterAttackPlayer(room.users[i], room.users[j], room, rooms);
