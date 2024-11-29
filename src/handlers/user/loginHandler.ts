@@ -4,7 +4,7 @@ import { sendPacket } from '../../packet/createPacket.js';
 import { config, inGameTime, normalRound } from '../../config/config.js';
 import { getRedisData, setRedisData } from '../../handlers/handlerMethod.js';
 import { dbManager } from '../../database/user/user.db.js';
-import { GlobalFailCode, PhaseType } from '../enumTyps.js';
+import { GlobalFailCode, PhaseType, RoleType } from '../enumTyps.js';
 import { socketSessions } from '../../session/socketSession.js';
 import { inGameTimeSessions } from '../../session/inGameTimeSession.js';
 import { userUpdateNotification } from '../notification/userUpdate.js';
@@ -78,7 +78,7 @@ export const loginHandler = async (socket: CustomSocket, payload: Object): Promi
       nickname: userByEmailPw.nickname as string,
       character: {
         characterType: 0,
-        roleType: 2,
+        roleType: RoleType.SUR5VAL,
         aliveState: true,
         level: 1,
         exp: 0,

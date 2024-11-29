@@ -242,7 +242,7 @@ export const monsterSpawnStart = async (roomId: number, level: number) => {
 
   // 공격팀 유저 상태 회복시키기
   for (let i = 0; i < roomData.users.length; i++) {
-    if (roomData.users[i].character.roleType === 2) {
+    if (roomData.users[i].character.roleType === RoleType.SUR5VAL) {
       roomData.users[i].character.hp = roomData.users[i].character.maxHp;
       roomData.users[i].character.stateInfo.state = 0;
     }
@@ -250,7 +250,7 @@ export const monsterSpawnStart = async (roomId: number, level: number) => {
 
   // 이전 몬스터 모두 삭제 (roomData 삭제)
   for (let i = 0; i < roomData.users.length; i++) {
-    if (roomData.users[i].character.roleType === 1) {
+    if (roomData.users[i].character.roleType === RoleType.WEAK_MONSTER) {
       roomData.users.splice(i, 1);
       i--;
     }
@@ -294,7 +294,7 @@ export const monsterSpawn = async (roomId: number, level: number) => {
       roleType: RoleType.WEAK_MONSTER,
       aliveState: true,
       level: level,
-      exp: 0,
+      exp: monsterData[level].exp,
       gold: monsterData[level].gold,
       maxHp: monsterData[level].hp,
       hp: monsterData[level].hp,
