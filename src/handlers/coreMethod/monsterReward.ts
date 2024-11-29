@@ -1,7 +1,8 @@
-import { UserCharacterType, MonsterCharacterType, CardType } from '../enumTyps.js';
-import { Room, User, Card } from '../../interface/interface.js';
-
-const MAX_MP = 10;
+import { UserCharacterType, MonsterCharacterType, RoleType, CardType } from '../enumTyps.js';
+import { UserCharacterInitData, MonsterInitData, Room, User, Card } from '../../interface/interface.js';
+import { userCharacterData } from '../../handlers/game/gamePrepareHandler.js';
+import { monsterDatas } from '../../handlers/coreMethod/monsterSpawn.js';
+import { monsterLevel } from '../../handlers/game/gameStartHandler.js';
 
 /***
  * - 몬스터 처치 보상 처리 함수
@@ -13,75 +14,59 @@ const MAX_MP = 10;
  * @param {User} monster - 몬스터
  * @returns {Promise<void>} 별도의 반환 값은 없으며, 성공 여부와 메시지를 클라이언트에게 전송.
  */
-export const monsterReward = async (room: Room, user: User, monster: User): Promise<void> => {
+export const monsterReward = async (room: Room, attacker: User, target: User): Promise<void> => {
   // 데이터 초기화 ----------------------------------------------------------------------
   let logMessage: string = '';
   let rewardSuccess: boolean = true;
+  let attackerInitData: UserCharacterInitData | null = null;
+  let targetInitData: UserCharacterInitData | MonsterInitData | null = null;
+
   try {
-    // 몬스터 처치 보상 처리 ----------------------------------------------------------------------
-    // 몬스터의 종류에 따라 보상 값을 설정
-    switch (monster.character.characterType) {
-      case MonsterCharacterType.PINK_SLIME: // 핑크슬라임
-        rewardSuccess = setRewards(
-          user,
-          30,
-          30,
-          [
-            { type: CardType.MAGICIAN_BASIC_SKILL, count: 3 },
-            { type: CardType.BASIC_HP_POTION, count: 5 }
-          ],
-          3,
-          3
-        );
-        break;
-      case MonsterCharacterType.DINOSAUR: // 공룡이
-        rewardSuccess = setRewards(
-          user,
-          20,
-          20,
-          [
-            { type: CardType.MAGICIAN_BASIC_SKILL, count: 1 },
-            { type: CardType.BASIC_HP_POTION, count: 3 }
-          ],
-          2,
-          2
-        );
-        break;
-      case MonsterCharacterType.PINK: // 핑크군
-        rewardSuccess = setRewards(
-          user,
-          10,
-          10,
-          [
-            { type: CardType.MAGICIAN_BASIC_SKILL, count: 1 },
-            { type: CardType.BASIC_HP_POTION, count: 1 }
-          ],
-          1,
-          1
-        );
-        break;
-      case MonsterCharacterType.MALANG: // 말랑이
-        rewardSuccess = setRewards(user, 10, 10, null, 1, 1);
-        break;
-      case MonsterCharacterType.SHARK: // 상어군
-        // rewardSuccess = setRewards(user, 10, 10, null, 1, 1);
-        break;
-      default: {
-        logMessage = 'monster.character.characterType이 잘못되었습니다.';
-        return;
-      }
+    // 유효성 검사 ----------------------------------------------------------------------
+    // room, attacker, target이 존재하는지 확인
+    if (!room || !attacker || !target) {
+      logMessage = 'room, attacker, target 중 하나가 존재하지 않습니다.';
+      rewardSuccess = false;
+      return;
     }
-    // 보상 실패시 실행
+
+    // 데이터 처리 ----------------------------------------------------------------------
+    // attacker의 characterType에 따라 attacker의 초기 데이터를 가져옴
+    attackerInitData = userCharacterData[attacker.character.characterType]
+      ? userCharacterData[attacker.character.characterType]
+      : null;
+
+    // attacker의 roleType에 따라 target의 초기 데이터를 가져옴
+    if (attacker.character.roleType === RoleType.SUR5VAL) {
+      targetInitData = monsterDatas[target.character.characterType][monsterLevel]
+        ? monsterDatas[target.character.characterType][monsterLevel]
+        : null;
+    } else if (attacker.character.roleType === RoleType.BOSS_MONSTER) {
+      targetInitData = userCharacterData[target.character.characterType]
+        ? userCharacterData[target.character.characterType]
+        : null;
+    }
+
+    // 보상 처리 로직
+    rewardSuccess = setRewards(
+      attacker,
+      target,
+      attackerInitData as UserCharacterInitData,
+      targetInitData as UserCharacterInitData | MonsterInitData
+    );
+
+    // 보상 성공 유무 확인
     if (!rewardSuccess) {
       logMessage = 'Failed to set rewards';
       return;
     }
-
-    // 몬스터를 죽은 상태로 변경(몬스터 사망시 room에서 삭제하게될 경우 이곳 수정)
-    const isMonsterRemoved = removeMonsterFromRoom(monster.id, room);
-    if (!isMonsterRemoved) {
-      logMessage = `room.monsters에서 몬스터(id:${monster.id})를 찾을 수 없습니다.`;
-      return;
+    // 보상 성공시 몬스터를 죽은 상태로 변경(몬스터 사망시 room에서 삭제하게될 경우 이곳 수정)
+    else {
+      const isMonsterRemoved = removeMonsterFromRoom(target.id, room);
+      if (!isMonsterRemoved) {
+        logMessage = `room.monsters에서 몬스터(id:${target.id})를 찾을 수 없습니다.`;
+        return;
+      }
     }
 
     // 데이터 전송 및 로그 출력 ----------------------------------------------------------------------
@@ -94,7 +79,7 @@ export const monsterReward = async (room: Room, user: User, monster: User): Prom
     // 보상 성공 로그 출력
     else
       console.info(
-        `'${(user as User).nickname}(id:${(user as User).id})'가 몬스터 '${(monster as User).nickname}(id:${(monster as User).id})'로부터 보상을 받았습니다.`
+        `'${(attacker as User).nickname}(id:${(attacker as User).id})'가 몬스터 '${(target as User).nickname}(id:${(target as User).id})'로부터 보상을 받았습니다.`
       );
   }
 };
@@ -104,7 +89,7 @@ export const monsterReward = async (room: Room, user: User, monster: User): Prom
 /***
  * - 몬스터 삭제 함수
  *
- * 유저가 몬스터를 처치시 몬스터를 삭제하는 함수
+ * 유저가 몬스터를 처치시 몬스터를 비활성화 하는 함수
  *
  * @param {number} monsterId - 삭제할 몬스터의 id
  * @param {Room} room - 몬스터가 존재하는 방
@@ -124,81 +109,113 @@ const removeMonsterFromRoom = (monsterId: number, room: Room): boolean => {
 };
 
 /***
- * - 몬스터 처치 보상 값 설정 함수(필요시 보상 추가 및 수정)
+ * - 타겟 처치시 보상 처리 함수(필요시 보상 추가 및 수정)
  *
- * 유저가 몬스터 처치시 보상을 받기해 그 값을 설정 함수.
- * 주고 싶지 않은 값은 0으로 설정 하면 된다.(card의 경우 type: 0, count: 0)
+ * 유저가 타겟 처치시 얻는 보상과 관련된 값을 설정해 주는 함수.
  *
- * @param {User} user - 보상을 받을 유저
- * @param {number} gold - 보상으로 주는 골드
- * @param {number} exprience - 보상으로 주는 경험치
- * @param {Card} card - 보상으로 주는 카드
- * @param {number} healthPointRecoveryAmount - 보상으로 주는 체력 회복량
- * @param {number} manaPointRecoveryAmount - 보상으로 주는 마나 회복량
+ * @param {User} attacker - 유저
+ * @param {UserCharacterInitData} target - 처치 대상
+ * @param {UserCharacterInitData} attackerInitData - 보상 받을 유저의 초기 데이터
+ * @param {UserCharacterInitData | MonsterInitData} targetInitData - 처치 대상의 초기 데이터
  * @returns {boolean} 반환 값을 통해 보상 성공 여부를 알 수 있다.
  */
 const setRewards = (
-  user: User,
-  gold: number,
-  exprience: number,
-  cards: Card[] | null,
-  healthPointRecoveryAmount: number,
-  manaPointRecoveryAmount: number
-) => {
+  attacker: User,
+  target: User,
+  attackerInitData: UserCharacterInitData,
+  targetInitData: UserCharacterInitData | MonsterInitData
+): boolean => {
   try {
-    // 몬스터 죽일시 경험치 지급
-    user.character.exp += exprience;
+    // 경험치 보상 ---------------------------------------------------------------
+    if (attacker.character.roleType == RoleType.SUR5VAL) {
+      let maxExp: number = 0;
+      do {
+        // 최대 경험치 = 유저의 초기 경험치 * 유저의 레벨
+        maxExp = attackerInitData.exp * attacker.character.level;
+        // 현재 경험치 = 현재 경험치 + 초기 값으로 설정된 몬스터가 주는 경험치
+        attacker.character.exp += targetInitData.exp;
 
-    // 유저의 경험치가 100 이상일 경우 레벨업
-    if (user.character.exp >= 10) {
-      // 레벨업
-      user.character.level += 1;
-      // 경험치 초기화
-      user.character.exp -= 10;
-      // 레벨업시 직업별 스탯 증가
-      switch (user.character.characterType) {
-        case UserCharacterType.PINK_SLIME: // 핑크슬라임 - 보스
-          userLevelUp(user, 25, 10, 25);
-          break;
-        case UserCharacterType.MASK: // 가면군 - 마법사
-          userLevelUp(user, 5, 20, 5);
-          break;
-        case UserCharacterType.SWIM_GLASSES: // 물안경군 - 궁수
-          userLevelUp(user, 5, 15, 10);
-          break;
-        case UserCharacterType.FROGGY: // 개굴군 - 로그
-          userLevelUp(user, 10, 10, 10);
-          break;
-        case UserCharacterType.RED: // 빨강이 - 성기사
-          userLevelUp(user, 10, 5, 15);
-          break;
-        default: // user.character.characterType이 잘못된 경우 에러 발생
-          user.character.level -= 1; // 레벨 업을 시키면 안되는 에러가 발생 했으므로 유저 레벨 -1
-          throw new Error('레벨업시 user.character.characterType이 잘못되었습니다.');
-      }
+        // 현재 경험치 >= 최대 경험치
+        if (attacker.character.exp >= maxExp) {
+          // 현재 경험치 = 현재 경험치 - 최대 경험치
+          attacker.character.exp -= maxExp;
+          // 레벨업
+          attacker.character.level += 1;
+          // 레벨업시 직업별 스탯 증가
+          if (!setStatRewards(attacker)) {
+            console.error('setStatRewards 실패');
+            return false;
+          }
+          // 레벨업시 직업별 카드 보상 지급
+          else if (!setCardRewards(attacker)) {
+            console.error('setCardRewards 실패');
+            return false;
+          }
+        }
+        // 여전히 현재 경험치가 최대 경험치보다 크다면 반복
+      } while (attacker.character.exp > maxExp);
     }
 
-    // 몬스터 죽일시 골드 지급
-    user.character.gold += gold;
+    // 골드 보상 ---------------------------------------------------------------
+    // 공격자가 SUR5VAL이고 타겟이 WEAK_MONSTER일 경우
+    if (attacker.character.roleType == RoleType.SUR5VAL && target.character.roleType == RoleType.WEAK_MONSTER)
+      attacker.character.gold += targetInitData.gold;
+    // 공격자가 SUR5VAL이고 타겟이 BOSS_MONSTER이고 경우
+    else if (attacker.character.roleType == RoleType.SUR5VAL && target.character.roleType == RoleType.BOSS_MONSTER)
+      attacker.character.gold += targetInitData.gold;
 
-    // 몬스터 죽일시 카드 지급
-    if (cards !== null) {
-      for (let i = 0; i < cards.length; i++) {
-        user.character.handCards.push(cards[i]);
+    // 체력 및 마나 회복 보상 ---------------------------------------------------------------
+    // 공격자가 SUR5VAL일 경우
+    if (attacker.character.roleType == RoleType.SUR5VAL) {
+      // 타겟이 WEAK_MONSTER일 경우
+      if (target.character.roleType == RoleType.WEAK_MONSTER) {
+        // 몬스터 죽일시 체력 회복
+        if (attackerInitData.hp >= attacker.character.hp + (targetInitData as MonsterInitData).hpRecovery)
+          attacker.character.hp += (targetInitData as MonsterInitData).hpRecovery;
+        // 체력 회복시 체력 값이 최대 체력을 넘어가지 않도록 설정
+        else if (attackerInitData.hp < attacker.character.hp + (targetInitData as MonsterInitData).hpRecovery)
+          attacker.character.hp = attackerInitData.hp;
+
+        // 몬스터 죽일시 마나 회복
+        if (attackerInitData.mp >= attacker.character.mp + (targetInitData as MonsterInitData).mpRecovery)
+          attacker.character.mp += (targetInitData as MonsterInitData).mpRecovery;
+        // 마나 회복시 마나 값이 최대 마나를 넘어가지 않도록 설정
+        else if (attackerInitData.mp < attacker.character.mp + (targetInitData as MonsterInitData).mpRecovery)
+          attacker.character.mp = attackerInitData.mp;
+      }
+      // 타겟이 BOSS_MONSTER일 경우
+      else if (target.character.roleType == RoleType.BOSS_MONSTER) {
+        // 인터페이스에 없는 값이므로 임의로 설정
+        const HP_RECOVERY: number = 100;
+        const MP_RECOVERY: number = 10;
+
+        // 보스 죽일시 체력 회복
+        if (attackerInitData.hp >= attacker.character.hp + HP_RECOVERY) attacker.character.hp += HP_RECOVERY;
+        // 체력 회복시 체력 값이 최대 체력을 넘어가지 않도록 설정
+        else if (attackerInitData.hp < attacker.character.hp + HP_RECOVERY) attacker.character.hp = attackerInitData.hp;
+
+        // 보스 죽일시 마나 회복
+        if (attackerInitData.mp >= attacker.character.mp + MP_RECOVERY) attacker.character.mp += MP_RECOVERY;
+        // 마나 회복시 마나 값이 최대 마나를 넘어가지 않도록 설정
+        else if (attackerInitData.mp < attacker.character.mp + MP_RECOVERY) attacker.character.mp = attackerInitData.mp;
       }
     }
+    // 공격자가 BOSS_MONSTER이고 타겟이 SUR5VAL일 경우
+    else if (attacker.character.roleType == RoleType.BOSS_MONSTER && target.character.roleType == RoleType.SUR5VAL) {
+      // 인터페이스에 없는 값이므로 임의로 설정
+      const HP_RECOVERY: number = 100;
+      const MP_RECOVERY: number = 10;
 
-    // 몬스터 죽일시 체력 회복
-    if (user.character.maxHp >= user.character.hp + healthPointRecoveryAmount)
-      user.character.hp += healthPointRecoveryAmount;
-    // 체력 회복시 체력 값이 최대 체력을 넘어가지 않도록 설정
-    else if (user.character.maxHp < user.character.hp + healthPointRecoveryAmount)
-      user.character.hp = user.character.maxHp;
+      // 유저 죽일시 체력 회복
+      if (attackerInitData.hp >= attacker.character.hp + HP_RECOVERY) attacker.character.hp += HP_RECOVERY;
+      // 체력 회복시 체력 값이 최대 체력을 넘어가지 않도록 설정
+      else if (attackerInitData.hp < attacker.character.hp + HP_RECOVERY) attacker.character.hp = attackerInitData.hp;
 
-    // 몬스터 죽일시 마나 회복
-    if (MAX_MP >= user.character.mp + manaPointRecoveryAmount) user.character.mp += manaPointRecoveryAmount;
-    // 마나 회복시 마나 값이 최대 마나를 넘어가지 않도록 설정
-    else if (MAX_MP < user.character.mp + manaPointRecoveryAmount) user.character.mp = MAX_MP;
+      // 유저 죽일시 마나 회복
+      if (attackerInitData.mp >= attacker.character.mp + MP_RECOVERY) attacker.character.mp += MP_RECOVERY;
+      // 마나 회복시 마나 값이 최대 마나를 넘어가지 않도록 설정
+      else if (attackerInitData.mp < attacker.character.mp + MP_RECOVERY) attacker.character.mp = attackerInitData.mp;
+    }
   } catch (error) {
     // 에러 발생시 로그 출력 후 return false
     console.error(`setRewards ${error as Error}`);
@@ -210,18 +227,92 @@ const setRewards = (
 /***
  * - 유저가 레벨업시 스탯을 증가시켜주는 함수(필요시 레벨업 스탯 추가 및 수정)
  *
- * 유저가 몬스터 처치시 보상을 받기해 그 값을 설정 함수.
- * 주고 싶지 않은 값은 0으로 설정 하면 된다.
+ * 유저가 레벨업시 변화가 일어나는 값을 설정해주는 함수
  *
- * @param {User} user - 스탯을 증가시킬 유저
- * @param {number} maxHp - 최대 체력 증가량
- * @param {number} attack - 공격력 증가량
- * @param {number} armor - 방어력 증가량
- * @returns {void} 별도의 반환 값이 존재하지 않는다.
+ * @param {User} attacker - 스탯을 증가시킬 유저
+ * @returns {boolean} 반환 값을 통해 스텟 보상 성공 여부를 알 수 있다.
  */
-const userLevelUp = (user: User, maxHp: number, attack: number, armor: number) => {
-  // 레벨업시 스탯 증가
-  user.character.maxHp += maxHp;
-  user.character.attack += attack;
-  user.character.armor += armor;
+const setStatRewards = (attacker: User): boolean => {
+  // 캐릭터 타입에 따라 스탯 증가
+  if (attacker.character.characterType == UserCharacterType.MASK) {
+    attacker.character.maxHp += attacker.character.level * 3;
+    attacker.character.attack += 10;
+    attacker.character.armor += 1;
+  } else if (attacker.character.characterType == UserCharacterType.SWIM_GLASSES) {
+    attacker.character.maxHp += attacker.character.level * 5;
+    attacker.character.attack += 8;
+    attacker.character.armor += 3;
+  } else if (attacker.character.characterType == UserCharacterType.FROGGY) {
+    attacker.character.maxHp += attacker.character.level * 8;
+    attacker.character.attack += 6;
+    attacker.character.armor += 5;
+  } else if (attacker.character.characterType == UserCharacterType.RED) {
+    attacker.character.maxHp += attacker.character.level * 10;
+    attacker.character.attack += 3;
+    attacker.character.armor += 8;
+  } else {
+    console.log('캐릭터 타입이 존재하지 않습니다.');
+    return false;
+  }
+  return true;
+};
+
+/***
+ * - 유저가 레벨업시 카드 보상을 지급 해주는 함수(필요시 카드 추가 및 수정)
+ *
+ * 유저가 레벨업시 보상 받는 카드의 값을 설정해주는 함수
+ *
+ * @param {User} attacker - 스탯을 증가시킬 유저
+ * @returns {boolean} 반환 값을 통해 카드 보상 성공 여부를 알 수 있다.
+ */
+const setCardRewards = (attacker: User) => {
+  // 레벨업시 특정 레벨을 도달할 때 마다 캐릭터 타입에 따라 카드 보상 지급
+  switch (attacker.character.level) {
+    case 3: // 3레벨일 경우
+      if (attacker.character.characterType == UserCharacterType.MASK) {
+        attacker.character.handCards.push({ type: CardType.MAGICIAN_BASIC_SKILL, count: 1 });
+      } else if (attacker.character.characterType == UserCharacterType.SWIM_GLASSES) {
+        attacker.character.handCards.push({ type: CardType.MAGICIAN_BASIC_SKILL, count: 1 });
+      } else if (attacker.character.characterType == UserCharacterType.FROGGY) {
+        attacker.character.handCards.push({ type: CardType.MAGICIAN_BASIC_SKILL, count: 1 });
+      } else if (attacker.character.characterType == UserCharacterType.RED) {
+        attacker.character.handCards.push({ type: CardType.MAGICIAN_BASIC_SKILL, count: 1 });
+      } else {
+        console.log('캐릭터 타입이 존재하지 않습니다.');
+        return false;
+      }
+      break;
+    case 5: // 5레벨일 경우
+      if (attacker.character.characterType == UserCharacterType.MASK) {
+        attacker.character.handCards.push({ type: CardType.MAGICIAN_BASIC_SKILL, count: 1 });
+      } else if (attacker.character.characterType == UserCharacterType.SWIM_GLASSES) {
+        attacker.character.handCards.push({ type: CardType.MAGICIAN_BASIC_SKILL, count: 1 });
+      } else if (attacker.character.characterType == UserCharacterType.FROGGY) {
+        attacker.character.handCards.push({ type: CardType.MAGICIAN_BASIC_SKILL, count: 1 });
+      } else if (attacker.character.characterType == UserCharacterType.RED) {
+        attacker.character.handCards.push({ type: CardType.MAGICIAN_BASIC_SKILL, count: 1 });
+      } else {
+        console.log('캐릭터 타입이 존재하지 않습니다.');
+        return false;
+      }
+      break;
+    case 7: // 7레벨일 경우
+      if (attacker.character.characterType == UserCharacterType.MASK) {
+        attacker.character.handCards.push({ type: CardType.MAGICIAN_BASIC_SKILL, count: 1 });
+      } else if (attacker.character.characterType == UserCharacterType.SWIM_GLASSES) {
+        attacker.character.handCards.push({ type: CardType.MAGICIAN_BASIC_SKILL, count: 1 });
+      } else if (attacker.character.characterType == UserCharacterType.FROGGY) {
+        attacker.character.handCards.push({ type: CardType.MAGICIAN_BASIC_SKILL, count: 1 });
+      } else if (attacker.character.characterType == UserCharacterType.RED) {
+        attacker.character.handCards.push({ type: CardType.MAGICIAN_BASIC_SKILL, count: 1 });
+      } else {
+        console.log('캐릭터 타입이 존재하지 않습니다.');
+        return false;
+      }
+      break;
+    default: // 카드 보상을 받을 수 있는 레벨이 아닐 경우
+      console.log('카드 보상을 받을 수 레벨이 아닙니다.');
+      break;
+  }
+  return true;
 };
