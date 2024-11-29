@@ -1,6 +1,7 @@
 import { config } from '../../config/config.js';
 import { Room } from '../../interface/interface.js';
 import { sendPacket } from '../../packet/createPacket.js';
+import { shoppingUserIdSessions } from '../../session/shoppingSession.js';
 import { socketSessions } from '../../session/socketSession.js';
 import { monsterAiDatas } from '../coreMethod/monsterMove.js';
 import { RoomStateType } from '../enumTyps.js';
@@ -46,11 +47,18 @@ export const gameEndNotification = async (roomId: number, winRoleType: number) =
     }
   }
 
-  // characterPositions 삭제하기, monsterAi 삭제하기, 방Id 변경하기
+  // characterPositions, fleaMarketCards, monsterAi, shoppingUserIdSessions 삭제하기, 방Id 변경하기
   const characterPositions = await getRedisData('characterPositionDatas');
   delete characterPositions[roomId];
+
   await setRedisData('characterPositionDatas', characterPositions);
+  const fleaMarketCards = await getRedisData('fleaMarketCards');
+  delete fleaMarketCards[roomId];
+  await setRedisData('fleaMarketCards', fleaMarketCards);
+
   delete monsterAiDatas[roomId];
+  delete shoppingUserIdSessions[roomId];
+
   addgRoomId();
   room.id = getgRoomId();
   await setRedisData('roomData', rooms);
