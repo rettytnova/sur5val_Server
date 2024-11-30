@@ -28,6 +28,8 @@ const USER_DB_PASSWORD = process.env.DB_PASSWORD;
 const USER_DB_HOST = process.env.DB_HOST;
 const USER_DB_PORT = process.env.DB_PORT;
 
+export const CHATTING_ROOM_MAX = 5;
+
 export const config = {
   server: {
     port: PORT,
@@ -35,6 +37,10 @@ export const config = {
   },
   chattingServer: {
     chattingServerPort: CHATTING_SERVER_PORT
+  },
+  jobType: {
+    CHATTING_LOGIN_REQUEST_JOB: 1,
+    CHATTING_CREATE_ROOM_REQUEST_JOB: 2
   },
   databases: {
     userDB: {
@@ -111,7 +117,8 @@ export const config = {
   },
   chattingPacketType: {
     CHATTING_LOGIN_REQUEST: 1,
-    CHATTING_LOGIN_RESPONSE: 2
+    CHATTING_LOGIN_RESPONSE: 2,
+    CHATTING_CREATE_ROOM_REQUEST: 3
   }
 };
 
@@ -189,7 +196,8 @@ export const packetMaps = {
   [config.packetType.MONSTER_REWARD_RESPONSE]: 'monsterDeathRewardResponse',
 
   [config.chattingPacketType.CHATTING_LOGIN_REQUEST]: 'chattingServerLoginRequest',
-  [config.chattingPacketType.CHATTING_LOGIN_RESPONSE]: 'chattingServerLoginResponse'
+  [config.chattingPacketType.CHATTING_LOGIN_RESPONSE]: 'chattingServerLoginResponse',
+  [config.chattingPacketType.CHATTING_CREATE_ROOM_REQUEST]: 'chattingServerCreateRoomRequest'
 };
 /**
  * x: 11 , y : -8
