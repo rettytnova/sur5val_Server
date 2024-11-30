@@ -9,7 +9,11 @@ import { CustomSocket } from '../../interface/interface.js';
 import { chattingOnData } from '../events/chattingOnData.js';
 import { chattingOnEnd } from '../events/chattingOnEnd.js';
 import { chattingOnError } from '../events/chattingOnError.js';
-import { config } from '../../config/config.js';
+import { CHATTING_ROOM_MAX, config } from '../../config/config.js';
+import ChattingRoom from './chattingRoom.js';
+import { Job, SendPacketData } from '../interface/chattingServerInterface.js';
+import ChattingUser from './chattingUser.js';
+import { Worker } from 'worker_threads';
 
 class ChattingServer {
     private static gInstance: ChattingServer | null = null;
@@ -22,15 +26,31 @@ class ChattingServer {
     private fps: number;
     private lastFpsTime: number;
 
+    public chattingServerJobQue: Job[];
+
+    private roomId: number;
+    private rooms: ChattingRoom[];
+    private users: ChattingUser[];
+
+    private sendWorker: Worker;
+
     private constructor() {
-        this.server = net.createServer();
+        this.server = net.createServer(this.clientConnection);
+
+        this.sendWorker = new Worker('./dist/chattingServer/worker/sendWorker.js');
+
         this.frame = 60;
         this.updateTime = Math.round((1000 / this.frame) * 10) / 10;
         this.lastExecutionTime = performance.now();
         this.fps = 0;
         this.lastFpsTime = performance.now();
 
-        console.log(this.updateTime);
+        this.chattingServerJobQue = [];
+
+        this.roomId = 0;
+
+        this.rooms = [];
+        this.users = [];
     }
 
     static getInstance() {
@@ -138,13 +158,37 @@ class ChattingServer {
         const elapsed = now - this.lastExecutionTime;
 
         if (elapsed >= this.updateTime) {
+            while (this.chattingServerJobQue.length > 0) {
+                const job = this.chattingServerJobQue.shift();
+                if (!job) {
+                    console.log("job이 undefine");
+                    break;
+                }
 
-            this.fps++;
-            if (now - this.lastFpsTime >= 1000) {
-                console.log(`FPS: ${this.fps} time : ${now - this.lastFpsTime}`);
-                this.fps = 0;
-                this.lastFpsTime = now;
+                switch (job.jobType) {
+                    case config.jobType.CHATTING_LOGIN_REQUEST_JOB:
+                        const userEmail = job.payload[0];
+                        const userSocket = job.payload[1];
+
+                        console.log(`채팅서버 로그인 요청 ${userEmail}`);
+
+                        const newChattingUser = new ChattingUser(userSocket as CustomSocket, 0, userEmail as string);
+                        this.users.push(newChattingUser);
+                        break;
+                }
             }
+
+            // 방 업데이트
+            this.rooms.forEach((room) => {
+                room.update();
+            });
+
+            // this.fps++;
+            // if (now - this.lastFpsTime >= 1000) {
+            //     console.log(`FPS: ${this.fps} time : ${now - this.lastFpsTime}`);
+            //     this.fps = 0;
+            //     this.lastFpsTime = now;
+            // }
 
             // elapsed % this.updateTime은 elapsed와 this.updateTime 사이의 나머지 부분을 계산한다.
             // 예를 들어 목표 주기가 16.67ms 인데, 실제 실행 시간이 17ms인 경우
