@@ -6,3 +6,7 @@ message S2CChattingServerLoginResponse{
     bool success = 1;
     string message = 2;
 }
+
+message S2CChattingServerCreateRoomResponse{
+    int32 chattingRoomId = 1;
+}

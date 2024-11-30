@@ -18,6 +18,7 @@ message ChattingPacket{
     oneof chattingPayload{
         C2SChattingServerLoginRequest chattingServerLoginRequest = 1;
         S2CChattingServerLoginResponse chattingServerLoginResponse = 2;  
-        C2SChattingServerCreateRoomRequest chattingServerCreateRoomRequest = 3;     
+        C2SChattingServerCreateRoomRequest chattingServerCreateRoomRequest = 3;
+        C2SChattingServerJoinRoomRequest chattingServerJoinRoomRequest = 4;     
     }
 }

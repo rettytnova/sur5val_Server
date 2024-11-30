@@ -6,6 +6,10 @@ message C2SChattingServerLoginRequest{
     string email = 1;
 }
 
-message C2SChattingServerCreateRoomRequest{
-    string email = 1;
+message C2SChattingServerCreateRoomRequest{    
+}
+
+message C2SChattingServerJoinRoomRequest{
+    int32 chattingRoomId = 1;
+    string email = 2;
 }
