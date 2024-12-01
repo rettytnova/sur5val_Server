@@ -9,7 +9,7 @@ import { Job, SendPacketData } from "../../../interface/chattingServerInterface.
 export const chattingCreateRoomJobHandler = (job: Job): void => {
     const chattingUser = job.payload[0] as ChattingUser;
 
-    const roomId = ChattingServer.getInstance().getRoomdId();
+    const roomId = ChattingServer.getInstance().getRoomId();
     ChattingServer.getInstance().increaseRoomId();
 
 
