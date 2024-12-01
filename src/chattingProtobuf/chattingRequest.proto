@@ -9,7 +9,9 @@ message C2SChattingServerLoginRequest{
 message C2SChattingServerCreateRoomRequest{    
 }
 
-message C2SChattingServerJoinRoomRequest{
-    int32 chattingRoomId = 1;
-    string email = 2;
+message C2SChattingServerJoinRoomRequest{    
+    string ownerEmail = 2;
+}
+
+message C2SChattingServerLeaveRoomRequest{
 }
