@@ -1,5 +1,5 @@
 import { GlobalFailCode, RoomStateType, UserCharacterType } from '../enumTyps.js';
-import { Card, CustomSocket, RedisUserData, Room, User, UserCharacterData } from '../../interface/interface.js';
+import { Card, CustomSocket, Room, User, UserCharacterData } from '../../interface/interface.js';
 import { config } from '../../config/config.js';
 import { sendPacket } from '../../packet/createPacket.js';
 import { getRedisData, getRoomByUserId, getUserIdBySocket, setRedisData } from '../handlerMethod.js';
@@ -20,12 +20,7 @@ export const userCharacterData: UserCharacterData = {
     handCards: [
       { type: CardType.MAGICIAN_BASIC_SKILL, count: 1 },
       { type: CardType.MAGICIAN_EXTENDED_SKILL, count: 1 },
-      { type: CardType.BASIC_HP_POTION, count: 3 },
-      { type: CardType.BASIC_WEAPON, count: 1 },
-      { type: CardType.BASIC_HEAD, count: 1 },
-      { type: CardType.BASIC_ARMOR, count: 1 },
-      { type: CardType.BASIC_CLOAK, count: 1 },
-      { type: CardType.BASIC_GLOVE, count: 1 }
+      { type: CardType.BASIC_HP_POTION, count: 3 }
     ]
   },
   // 가면군 - 마법사
@@ -35,17 +30,11 @@ export const userCharacterData: UserCharacterData = {
     gold: 990,
     hp: 9,
     mp: 14,
-    attack: 2,
+    attack: 3,
     armor: 0,
     handCards: [
       { type: CardType.MAGICIAN_BASIC_SKILL, count: 1 },
-      { type: CardType.MAGICIAN_EXTENDED_SKILL, count: 1 },
-      { type: CardType.BASIC_HP_POTION, count: 2 },
-      { type: CardType.BASIC_WEAPON, count: 1 },
-      { type: CardType.BASIC_HEAD, count: 1 },
-      { type: CardType.BASIC_ARMOR, count: 1 },
-      { type: CardType.BASIC_CLOAK, count: 1 },
-      { type: CardType.BASIC_GLOVE, count: 1 }
+      { type: CardType.BASIC_HP_POTION, count: 3 }
     ]
   },
   // 물안경군 - 궁수
@@ -55,41 +44,41 @@ export const userCharacterData: UserCharacterData = {
     gold: 990,
     hp: 11,
     mp: 12,
-    attack: 2,
+    attack: 3,
     armor: 0,
 
     handCards: [
-      { type: CardType.MAGICIAN_BASIC_SKILL, count: 2 },
+      { type: CardType.MAGICIAN_BASIC_SKILL, count: 1 },
       { type: CardType.BASIC_HP_POTION, count: 3 }
     ]
   },
-  // 개굴군 - 로그
+  // 개굴군 - 도적
   [UserCharacterType.FROGGY]: {
     roleType: RoleType.SUR5VAL,
     exp: 10,
     gold: 990,
     hp: 12,
     mp: 13,
-    attack: 2,
+    attack: 3,
     armor: 0,
 
     handCards: [
-      { type: CardType.MAGICIAN_BASIC_SKILL, count: 2 },
+      { type: CardType.MAGICIAN_BASIC_SKILL, count: 1 },
       { type: CardType.BASIC_HP_POTION, count: 3 }
     ]
   },
 
-  // 빨강이 - 성기사
+  // 빨강이 - 전사
   [UserCharacterType.RED]: {
     roleType: RoleType.SUR5VAL,
     exp: 10,
     gold: 990,
     hp: 14,
     mp: 10,
-    attack: 2,
+    attack: 3,
     armor: 0,
     handCards: [
-      { type: CardType.MAGICIAN_BASIC_SKILL, count: 2 },
+      { type: CardType.MAGICIAN_BASIC_SKILL, count: 1 },
       { type: CardType.BASIC_HP_POTION, count: 3 }
     ]
   }
