@@ -1,5 +1,5 @@
 import { CharacterPositionData, CustomSocket, RedisUserData, Room } from '../../interface/interface.js';
-import { GlobalFailCode, PhaseType, RoomStateType } from '../enumTyps.js';
+import { GlobalFailCode, PhaseType, RoleType, CardType, RoomStateType } from '../enumTyps.js';
 import { sendPacket } from '../../packet/createPacket.js';
 import { config, spawnPoint, inGameTime, normalRound, bossGameTime } from '../../config/config.js';
 import { getRedisData, getUserIdBySocket, nonSameRandom, setRedisData } from '../handlerMethod.js';
@@ -11,8 +11,6 @@ import { gameEndNotification } from '../notification/gameEnd.js';
 import { fleaMarketCardCreate } from '../coreMethod/fleaMarketCardCreate.js';
 import { fleaMarketOpenHandler } from '../market/fleaMarketOpenHandler.js';
 import { shoppingUserIdSessions } from '../../session/shoppingSession.js';
-
-export let monsterLevel: number = 0;
 
 export const gameStartHandler = async (socket: CustomSocket, payload: Object) => {
   // 핸들러가 호출되면 success. response 만들어서 보냄
@@ -81,16 +79,15 @@ export const gameStartHandler = async (socket: CustomSocket, payload: Object) =>
         };
         userPositionDatas.push(characterPositionData);
       }
+
       characterPositionDatas[room.id].unshift(...userPositionDatas);
       await setRedisData('characterPositionDatas', characterPositionDatas);
 
       // 방에있는 유저들에게 게임 시작 notificationn 보내기, 게임 시작 시간 저장
       room.state = RoomStateType.INGAME;
-      monsterLevel = 1;
       await setRedisData('roomData', rooms);
       for (let i = 0; i < normalRound; i++) {
         await normalPhaseNotification(i + 1, room.id, inGameTime * i);
-        monsterLevel++;
       }
       bossPhaseNotification(normalRound + 1, room.id, inGameTime * normalRound);
       inGameTimeSessions[room.id] = Date.now();
@@ -104,7 +101,7 @@ export const gameStartHandler = async (socket: CustomSocket, payload: Object) =>
       );
 
       for (let i = 0; i < room.users.length; i++) {
-        if (room.users[i].character.roleType !== 1) {
+        if (room.users[i].character.roleType !== RoleType.WEAK_MONSTER) {
           const roomUserSocket = socketSessions[room.users[i].id];
           setTimeout(async () => {
             await fleaMarketOpenHandler(roomUserSocket);
@@ -139,6 +136,8 @@ export const normalPhaseNotification = async (level: number, roomId: number, sen
       }
     }
     if (!room) return;
+    await setBossStat(room, level);
+    setRedisData('roomData', roomData);
 
     const gameStateData = { phaseType: PhaseType.DAY, nextPhaseAt: Date.now() + inGameTime };
     const notifiData = {
@@ -174,6 +173,8 @@ export const bossPhaseNotification = async (level: number, roomId: number, sendT
       }
     }
     if (!room) return;
+    await setBossStat(room, level);
+    setRedisData('roomData', roomData);
 
     const gameStateData = { phaseType: PhaseType.DAY, nextPhaseAt: Date.now() + bossGameTime };
     const notifiData = {
@@ -190,4 +191,106 @@ export const bossPhaseNotification = async (level: number, roomId: number, sendT
     }
     await monsterMoveStart(roomId, bossGameTime);
   }, sendTime);
+};
+
+export const setBossStat = async (room: Room, level: number) => {
+  for (let i = 0; i < room.users.length; i++) {
+    if (room.users[i].character.roleType === RoleType.BOSS_MONSTER) {
+      room.users[i].character.aliveState = true;
+      room.users[i].character.gold = 500 * level;
+      room.users[i].character.hp = 1000 * level;
+      room.users[i].character.maxHp = room.users[i].character.hp;
+      room.users[i].character.mp = 30 * level;
+      room.users[i].character.attack = 10 * level;
+      room.users[i].character.armor = 2 * level;
+
+      switch (level) {
+        case 1: // 일반 라운드
+          room.users[i].character.handCards = [
+            { type: CardType.MAGICIAN_BASIC_SKILL, count: 1 },
+            { type: CardType.MAGICIAN_EXTENDED_SKILL, count: 1 },
+            { type: CardType.BASIC_HP_POTION, count: 3 * level },
+            { type: CardType.BASIC_WEAPON, count: 1 },
+            { type: CardType.BASIC_HEAD, count: 1 },
+            { type: CardType.BASIC_ARMOR, count: 1 },
+            { type: CardType.BASIC_CLOAK, count: 1 },
+            { type: CardType.BASIC_GLOVE, count: 1 }
+          ];
+          break;
+        case 2: // 일반 라운드
+          room.users[i].character.handCards = [
+            { type: CardType.WARRIOR_BASIC_SKILL, count: 1 },
+            { type: CardType.ARCHER_BASIC_SKILL, count: 1 },
+            { type: CardType.MAGICIAN_BASIC_SKILL, count: 1 },
+            { type: CardType.PALADIN_BASIC_SKILL, count: 1 },
+            { type: CardType.BASIC_HP_POTION, count: 3 * level },
+            { type: CardType.BASIC_WEAPON, count: 1 },
+            { type: CardType.BASIC_HEAD, count: 1 },
+            { type: CardType.BASIC_ARMOR, count: 1 },
+            { type: CardType.BASIC_CLOAK, count: 1 },
+            { type: CardType.BASIC_GLOVE, count: 1 }
+          ];
+          break;
+        case 3: // 일반 라운드
+          room.users[i].character.handCards = [
+            { type: CardType.WARRIOR_BASIC_SKILL, count: 1 },
+            { type: CardType.ARCHER_BASIC_SKILL, count: 1 },
+            { type: CardType.MAGICIAN_BASIC_SKILL, count: 1 },
+            { type: CardType.PALADIN_BASIC_SKILL, count: 1 },
+            { type: CardType.WARRIOR_EXTENDED_SKILL, count: 1 },
+            { type: CardType.ARCHER_EXTENDED_SKILL, count: 1 },
+            { type: CardType.BASIC_HP_POTION, count: 3 * level },
+            { type: CardType.BASIC_WEAPON, count: 1 },
+            { type: CardType.BASIC_HEAD, count: 1 },
+            { type: CardType.BASIC_ARMOR, count: 1 },
+            { type: CardType.BASIC_CLOAK, count: 1 },
+            { type: CardType.BASIC_GLOVE, count: 1 }
+          ];
+          break;
+        case 4: // 일반 라운드
+          room.users[i].character.handCards = [
+            { type: CardType.WARRIOR_BASIC_SKILL, count: 1 },
+            { type: CardType.ARCHER_BASIC_SKILL, count: 1 },
+            { type: CardType.MAGICIAN_BASIC_SKILL, count: 1 },
+            { type: CardType.PALADIN_BASIC_SKILL, count: 1 },
+            { type: CardType.WARRIOR_EXTENDED_SKILL, count: 1 },
+            { type: CardType.ARCHER_EXTENDED_SKILL, count: 1 },
+            { type: CardType.MAGICIAN_EXTENDED_SKILL, count: 1 },
+            { type: CardType.PALADIN_EXTENDED_SKILL, count: 1 },
+            { type: CardType.BASIC_HP_POTION, count: 3 * level },
+            { type: CardType.BASIC_WEAPON, count: 1 },
+            { type: CardType.BASIC_HEAD, count: 1 },
+            { type: CardType.BASIC_ARMOR, count: 1 },
+            { type: CardType.BASIC_CLOAK, count: 1 },
+            { type: CardType.BASIC_GLOVE, count: 1 }
+          ];
+          break;
+        case 5: // 보스 라운드
+          room.users[i].character.handCards = [
+            { type: CardType.WARRIOR_BASIC_SKILL, count: 1 },
+            { type: CardType.ARCHER_BASIC_SKILL, count: 1 },
+            { type: CardType.MAGICIAN_BASIC_SKILL, count: 1 },
+            { type: CardType.PALADIN_BASIC_SKILL, count: 1 },
+            { type: CardType.WARRIOR_EXTENDED_SKILL, count: 1 },
+            { type: CardType.ARCHER_EXTENDED_SKILL, count: 1 },
+            { type: CardType.MAGICIAN_EXTENDED_SKILL, count: 1 },
+            { type: CardType.PALADIN_EXTENDED_SKILL, count: 1 },
+            { type: CardType.BASIC_HP_POTION, count: 5 * level },
+            { type: CardType.BASIC_WEAPON, count: 1 },
+            { type: CardType.BASIC_HEAD, count: 1 },
+            { type: CardType.BASIC_ARMOR, count: 1 },
+            { type: CardType.BASIC_CLOAK, count: 1 },
+            { type: CardType.BASIC_GLOVE, count: 1 }
+          ];
+          break;
+        default:
+          console.log('보스 스텟 설정을 위한 라운드(level)의 값이 잘못되었습니다.:', level);
+          return;
+      }
+      console.log(
+        `${level}라운드 보스 스펙 - hp:${room.users[i].character.hp}, mp:${room.users[i].character.mp}, atk:${room.users[i].character.attack}, armor:${room.users[i].character.armor}, wallet gold:${room.users[i].character.gold}`
+      );
+      return;
+    }
+  }
 };

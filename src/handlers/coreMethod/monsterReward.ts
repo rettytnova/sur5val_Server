@@ -1,8 +1,7 @@
-import { UserCharacterType, MonsterCharacterType, RoleType, CardType } from '../enumTyps.js';
-import { UserCharacterInitData, MonsterInitData, Room, User, Card } from '../../interface/interface.js';
+import { UserCharacterType, RoleType, CardType } from '../enumTyps.js';
+import { UserCharacterData, Room, User } from '../../interface/interface.js';
 import { userCharacterData } from '../../handlers/game/gamePrepareHandler.js';
 import { monsterDatas } from '../../handlers/coreMethod/monsterSpawn.js';
-import { monsterLevel } from '../../handlers/game/gameStartHandler.js';
 
 /***
  * - 몬스터 처치 보상 처리 함수
@@ -10,16 +9,14 @@ import { monsterLevel } from '../../handlers/game/gameStartHandler.js';
  * 유저가 몬스터 처치시 보상을 받기 위한 함수(레벨업 포함)
  *
  * @param {Room} room - - 데이터를 처리하는 방
- * @param {User} user - 유저
- * @param {User} monster - 몬스터
+ * @param {User} attacker - 유저
+ * @param {User} target - 몬스터
  * @returns {Promise<void>} 별도의 반환 값은 없으며, 성공 여부와 메시지를 클라이언트에게 전송.
  */
 export const monsterReward = async (room: Room, attacker: User, target: User): Promise<void> => {
   // 데이터 초기화 ----------------------------------------------------------------------
   let logMessage: string = '';
   let rewardSuccess: boolean = true;
-  let attackerInitData: UserCharacterInitData | null = null;
-  let targetInitData: UserCharacterInitData | MonsterInitData | null = null;
 
   try {
     // 유효성 검사 ----------------------------------------------------------------------
@@ -31,36 +28,15 @@ export const monsterReward = async (room: Room, attacker: User, target: User): P
     }
 
     // 데이터 처리 ----------------------------------------------------------------------
-    // attacker의 characterType에 따라 attacker의 초기 데이터를 가져옴
-    attackerInitData = userCharacterData[attacker.character.characterType]
-      ? userCharacterData[attacker.character.characterType]
-      : null;
-
-    // attacker의 roleType에 따라 target의 초기 데이터를 가져옴
-    if (attacker.character.roleType === RoleType.SUR5VAL) {
-      targetInitData = monsterDatas[target.character.characterType][monsterLevel]
-        ? monsterDatas[target.character.characterType][monsterLevel]
-        : null;
-    } else if (attacker.character.roleType === RoleType.BOSS_MONSTER) {
-      targetInitData = userCharacterData[target.character.characterType]
-        ? userCharacterData[target.character.characterType]
-        : null;
-    }
-
     // 보상 처리 로직
-    rewardSuccess = setRewards(
-      attacker,
-      target,
-      attackerInitData as UserCharacterInitData,
-      targetInitData as UserCharacterInitData | MonsterInitData
-    );
+    rewardSuccess = setRewards(attacker, target);
 
     // 보상 성공 유무 확인
     if (!rewardSuccess) {
       logMessage = 'Failed to set rewards';
       return;
     }
-    // 보상 성공시 몬스터를 죽은 상태로 변경(몬스터 사망시 room에서 삭제하게될 경우 이곳 수정)
+    // 보상 성공시 타겟을 죽은 상태로 변경(타겟 사망시 room에서 삭제하도록 바꿀 경우 이곳 수정)
     else {
       const isMonsterRemoved = removeMonsterFromRoom(target.id, room);
       if (!isMonsterRemoved) {
@@ -76,11 +52,6 @@ export const monsterReward = async (room: Room, attacker: User, target: User): P
   } finally {
     // 보상 실패 로그 출력
     if (rewardSuccess === false) console.error('monsterRewardHandler', logMessage);
-    // 보상 성공 로그 출력
-    else
-      console.info(
-        `'${(attacker as User).nickname}(id:${(attacker as User).id})'가 타겟 '${(target as User).nickname}(id:${(target as User).id})'로부터 보상을 받았습니다.`
-      );
   }
 };
 
@@ -114,26 +85,20 @@ const removeMonsterFromRoom = (monsterId: number, room: Room): boolean => {
  * 유저가 타겟 처치시 얻는 보상과 관련된 값을 설정해 주는 함수.
  *
  * @param {User} attacker - 유저
- * @param {UserCharacterInitData} target - 처치 대상
- * @param {UserCharacterInitData} attackerInitData - 보상 받을 유저의 초기 데이터
- * @param {UserCharacterInitData | MonsterInitData} targetInitData - 처치 대상의 초기 데이터
+ * @param {User} target - 처치 대상
  * @returns {boolean} 반환 값을 통해 보상 성공 여부를 알 수 있다.
  */
-const setRewards = (
-  attacker: User,
-  target: User,
-  attackerInitData: UserCharacterInitData,
-  targetInitData: UserCharacterInitData | MonsterInitData
-): boolean => {
+const setRewards = (attacker: User, target: User): boolean => {
   try {
     // 경험치 보상 ---------------------------------------------------------------
+    // 공격자가 SUR5VAL일 경우
     if (attacker.character.roleType == RoleType.SUR5VAL) {
       let maxExp: number = 0;
       do {
         // 최대 경험치 = 유저의 초기 경험치 * 유저의 레벨
-        maxExp = attackerInitData.exp * attacker.character.level;
+        maxExp = attacker.character.exp * attacker.character.level;
         // 현재 경험치 = 현재 경험치 + 초기 값으로 설정된 몬스터가 주는 경험치
-        attacker.character.exp += targetInitData.exp;
+        attacker.character.exp += target.character.exp;
 
         // 현재 경험치 >= 최대 경험치
         if (attacker.character.exp >= maxExp) {
@@ -142,7 +107,7 @@ const setRewards = (
           // 레벨업
           attacker.character.level += 1;
           // 레벨업시 직업별 스탯 증가
-          if (!setStatRewards(attacker)) {
+          if (!setStatRewards(attacker, userCharacterData)) {
             console.error('setStatRewards 실패');
             return false;
           }
@@ -151,74 +116,118 @@ const setRewards = (
             console.error('setCardRewards 실패');
             return false;
           }
-
-          console.log(
-            `레벨업! '${(attacker as User).nickname}(id:${(attacker as User).id})'가 ${attacker.character.level}레벨이 되었습니다.`
-          );
         }
         // 여전히 현재 경험치가 최대 경험치보다 크다면 반복
       } while (attacker.character.exp > maxExp);
-    }
 
-    // 골드 보상 ---------------------------------------------------------------
-    // 공격자가 SUR5VAL이고 타겟이 WEAK_MONSTER일 경우
-    if (attacker.character.roleType == RoleType.SUR5VAL && target.character.roleType == RoleType.WEAK_MONSTER)
-      attacker.character.gold += targetInitData.gold;
-    // 공격자가 SUR5VAL이고 타겟이 BOSS_MONSTER이고 경우
-    else if (attacker.character.roleType == RoleType.SUR5VAL && target.character.roleType == RoleType.BOSS_MONSTER)
-      attacker.character.gold += targetInitData.gold;
-
-    // 체력 및 마나 회복 보상 ---------------------------------------------------------------
-    // 공격자가 SUR5VAL일 경우
-    if (attacker.character.roleType == RoleType.SUR5VAL) {
+      // 골드 보상 ---------------------------------------------------------------
       // 타겟이 WEAK_MONSTER일 경우
-      if (target.character.roleType == RoleType.WEAK_MONSTER) {
-        // 몬스터 죽일시 체력 회복
-        if (attackerInitData.hp >= attacker.character.hp + (targetInitData as MonsterInitData).hpRecovery)
-          attacker.character.hp += (targetInitData as MonsterInitData).hpRecovery;
-        // 체력 회복시 체력 값이 최대 체력을 넘어가지 않도록 설정
-        else if (attackerInitData.hp < attacker.character.hp + (targetInitData as MonsterInitData).hpRecovery)
-          attacker.character.hp = attackerInitData.hp;
-
-        // 몬스터 죽일시 마나 회복
-        if (attackerInitData.mp >= attacker.character.mp + (targetInitData as MonsterInitData).mpRecovery)
-          attacker.character.mp += (targetInitData as MonsterInitData).mpRecovery;
-        // 마나 회복시 마나 값이 최대 마나를 넘어가지 않도록 설정
-        else if (attackerInitData.mp < attacker.character.mp + (targetInitData as MonsterInitData).mpRecovery)
-          attacker.character.mp = attackerInitData.mp;
-      }
-      // 타겟이 BOSS_MONSTER일 경우
-      else if (target.character.roleType == RoleType.BOSS_MONSTER) {
-        // 인터페이스에 없는 값이므로 임의로 설정
-        const HP_RECOVERY: number = 100;
-        const MP_RECOVERY: number = 10;
-
-        // 보스 죽일시 체력 회복
-        if (attackerInitData.hp >= attacker.character.hp + HP_RECOVERY) attacker.character.hp += HP_RECOVERY;
-        // 체력 회복시 체력 값이 최대 체력을 넘어가지 않도록 설정
-        else if (attackerInitData.hp < attacker.character.hp + HP_RECOVERY) attacker.character.hp = attackerInitData.hp;
-
-        // 보스 죽일시 마나 회복
-        if (attackerInitData.mp >= attacker.character.mp + MP_RECOVERY) attacker.character.mp += MP_RECOVERY;
-        // 마나 회복시 마나 값이 최대 마나를 넘어가지 않도록 설정
-        else if (attackerInitData.mp < attacker.character.mp + MP_RECOVERY) attacker.character.mp = attackerInitData.mp;
+      if ((target.character.roleType as RoleType) == RoleType.WEAK_MONSTER) {
+        // 공격자 골드 획득
+        attacker.character.gold += target.character.gold;
+      } else {
+        console.error('골드 보상 실패');
+        return false;
       }
     }
     // 공격자가 BOSS_MONSTER이고 타겟이 SUR5VAL일 경우
     else if (attacker.character.roleType == RoleType.BOSS_MONSTER && target.character.roleType == RoleType.SUR5VAL) {
-      // 인터페이스에 없는 값이므로 임의로 설정
-      const HP_RECOVERY: number = 100;
-      const MP_RECOVERY: number = 10;
+      // SUR5VAL의 골드 감소
+      target.character.gold -= Math.floor(target.character.gold / 2);
+    } else {
+      console.error('보상 값을 변경할 roleType이 존재하지 않습니다.');
+      return false;
+    }
 
-      // 유저 죽일시 체력 회복
-      if (attackerInitData.hp >= attacker.character.hp + HP_RECOVERY) attacker.character.hp += HP_RECOVERY;
-      // 체력 회복시 체력 값이 최대 체력을 넘어가지 않도록 설정
-      else if (attackerInitData.hp < attacker.character.hp + HP_RECOVERY) attacker.character.hp = attackerInitData.hp;
+    // 공격자가 WEAK_MONSTER가 아닐 경우
+    if ((target.character.roleType as RoleType) !== RoleType.WEAK_MONSTER) {
+      // 체력 및 마나 회복 보상 ---------------------------------------------------------------
+      // 필요 데이터 선언 및 초기화
+      let attackerMaxHp: number = userCharacterData[attacker.character.characterType].hp;
+      let attackerMaxMp: number = userCharacterData[attacker.character.characterType].mp;
+      let monsterHpRecovery: number = monsterDatas[target.character.characterType][target.character.level].hpRecovery;
+      let monsterMpRecovery: number = monsterDatas[target.character.characterType][target.character.level].mpRecovery;
 
-      // 유저 죽일시 마나 회복
-      if (attackerInitData.mp >= attacker.character.mp + MP_RECOVERY) attacker.character.mp += MP_RECOVERY;
-      // 마나 회복시 마나 값이 최대 마나를 넘어가지 않도록 설정
-      else if (attackerInitData.mp < attacker.character.mp + MP_RECOVERY) attacker.character.mp = attackerInitData.mp;
+      // 공격자가 SUR5VAL일 경우
+      if (attacker.character.roleType === RoleType.SUR5VAL) {
+        // 타겟이 WEAK_MONSTER일 경우
+        if ((target.character.roleType as RoleType) === RoleType.WEAK_MONSTER) {
+          // 몬스터 죽일시 체력 회복
+          if (attackerMaxHp >= attacker.character.hp + monsterHpRecovery) attacker.character.hp += monsterHpRecovery;
+          // 체력 회복시 체력 값이 최대 체력을 넘어가지 않도록 설정
+          else if (attackerMaxHp < attacker.character.hp + monsterHpRecovery) attacker.character.hp = attackerMaxHp;
+          else {
+            console.error('생존자가 몬스터를 죽인 뒤 얻는 체력 회복 보상 실패');
+            return false;
+          }
+
+          // 몬스터 죽일시 마나 회복
+          if (attackerMaxMp >= attacker.character.mp + monsterMpRecovery) attacker.character.mp += monsterMpRecovery;
+          // 마나 회복시 마나 값이 최대 마나를 넘어가지 않도록 설정
+          else if (attackerMaxMp < attacker.character.mp + monsterMpRecovery) attacker.character.mp = attackerMaxMp;
+          else {
+            console.error('생존자가 몬스터를 죽인 뒤 얻는 마나 회복 보상 실패');
+            return false;
+          }
+        }
+        // 타겟이 BOSS_MONSTER일 경우
+        else if (target.character.roleType === RoleType.BOSS_MONSTER) {
+          // 인터페이스에 없는 값이므로 임의로 설정
+          const HP_RECOVERY: number = 100;
+          const MP_RECOVERY: number = 10;
+
+          // 보스 죽일시 체력 회복
+          if (attackerMaxHp >= attacker.character.hp + HP_RECOVERY) attacker.character.hp += HP_RECOVERY;
+          // 체력 회복시 체력 값이 최대 체력을 넘어가지 않도록 설정
+          else if (attackerMaxHp < attacker.character.hp + HP_RECOVERY) attacker.character.hp = attackerMaxHp;
+          else {
+            console.error('생존자가 보스를 죽인 뒤 얻는 체력 회복 보상 실패');
+            return false;
+          }
+
+          // 보스 죽일시 마나 회복
+          if (attackerMaxMp >= attacker.character.mp + MP_RECOVERY) attacker.character.mp += MP_RECOVERY;
+          // 마나 회복시 마나 값이 최대 마나를 넘어가지 않도록 설정
+          else if (attackerMaxMp < attacker.character.mp + MP_RECOVERY) attacker.character.mp = attackerMaxMp;
+          else {
+            console.error('생존자가 보스를 죽인 뒤 얻는 마나 회복 보상 실패');
+            return false;
+          }
+        } else {
+          console.error('생존자의 체력 및 마나 회복 보상 실패');
+          return false;
+        }
+      }
+      // 공격자가 BOSS_MONSTER이고 타겟이 SUR5VAL일 경우
+      else if (
+        attacker.character.roleType === RoleType.BOSS_MONSTER &&
+        target.character.roleType === RoleType.SUR5VAL
+      ) {
+        // 인터페이스에 없는 값이므로 임의로 설정
+        const HP_RECOVERY: number = 100;
+        const MP_RECOVERY: number = 10;
+
+        // 유저 죽일시 체력 회복
+        if (attackerMaxHp >= attacker.character.hp + HP_RECOVERY) attacker.character.hp += HP_RECOVERY;
+        // 체력 회복시 체력 값이 최대 체력을 넘어가지 않도록 설정
+        else if (attackerMaxHp < attacker.character.hp + HP_RECOVERY) attacker.character.hp = attackerMaxHp;
+        else {
+          console.error('보스가 생존자를 죽인 뒤 얻는 체력 회복 보상 실패');
+          return false;
+        }
+
+        // 유저 죽일시 마나 회복
+        if (attackerMaxMp >= attacker.character.mp + MP_RECOVERY) attacker.character.mp += MP_RECOVERY;
+        // 마나 회복시 마나 값이 최대 마나를 넘어가지 않도록 설정
+        else if (attackerMaxMp < attacker.character.mp + MP_RECOVERY) attacker.character.mp = attackerMaxMp;
+        else {
+          console.error('보스가 생존자를 죽인 뒤 얻는 마나 회복 보상 실패');
+          return false;
+        }
+      } else {
+        console.error('체력 및 마나 회복 보상 실패');
+        return false;
+      }
     }
   } catch (error) {
     // 에러 발생시 로그 출력 후 return false
@@ -234,9 +243,10 @@ const setRewards = (
  * 유저가 레벨업시 변화가 일어나는 값을 설정해주는 함수
  *
  * @param {User} attacker - 스탯을 증가시킬 유저
+ * @param {UserCharacterData} attacker - 스탯을 증가시킬 유저의 데이터
  * @returns {boolean} 반환 값을 통해 스텟 보상 성공 여부를 알 수 있다.
  */
-const setStatRewards = (attacker: User): boolean => {
+const setStatRewards = (attacker: User, userCharacterData: UserCharacterData): boolean => {
   // 캐릭터 타입에 따라 스탯 증가
   if (attacker.character.characterType == UserCharacterType.MASK) {
     attacker.character.maxHp += attacker.character.level * 3;
@@ -258,6 +268,9 @@ const setStatRewards = (attacker: User): boolean => {
     console.log('캐릭터 타입이 존재하지 않습니다.');
     return false;
   }
+  // 레벨업시 체력과 마나 최대로 회복
+  attacker.character.hp = attacker.character.maxHp;
+  attacker.character.mp = userCharacterData[attacker.character.characterType].mp;
   return true;
 };
 

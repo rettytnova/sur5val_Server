@@ -3,7 +3,7 @@ import { getRedisData, getRoomByUserId, getUserIdBySocket, setRedisData } from '
 import { CustomSocket, Room, User } from '../../interface/interface.js';
 import { sendPacket } from '../../packet/createPacket.js';
 import { config } from '../../config/config.js';
-import { GlobalFailCode, RoomStateType } from '../enumTyps.js';
+import { GlobalFailCode, RoomStateType, RoleType } from '../enumTyps.js';
 import { socketSessions } from '../../session/socketSession.js';
 
 export const leaveRoomHandler = async (socket: net.Socket) => {
@@ -83,7 +83,7 @@ export const leaveRoomHandler = async (socket: net.Socket) => {
   let isClosedRoom: boolean = true;
   for (let i = 0; i < rooms[roomIndex].users.length; i++) {
     const userRoleType = rooms[roomIndex].users[i].character.roleType;
-    if (userRoleType === 2 || userRoleType === 4) {
+    if (userRoleType === RoleType.SUR5VAL || userRoleType === RoleType.BOSS_MONSTER) {
       isClosedRoom = false;
       break;
     }
