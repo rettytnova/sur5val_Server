@@ -40,7 +40,8 @@ export const config = {
   },
   jobType: {
     CHATTING_LOGIN_REQUEST_JOB: 1,
-    CHATTING_CREATE_ROOM_REQUEST_JOB: 2
+    CHATTING_CREATE_ROOM_REQUEST_JOB: 2,
+    CHATTING_JOIN_ROOM_REQUEST_JOB: 3
   },
   databases: {
     userDB: {
@@ -118,7 +119,9 @@ export const config = {
   chattingPacketType: {
     CHATTING_LOGIN_REQUEST: 1,
     CHATTING_LOGIN_RESPONSE: 2,
-    CHATTING_CREATE_ROOM_REQUEST: 3
+    CHATTING_CREATE_ROOM_REQUEST: 3,
+    CHATTING_CREATE_ROOM_RESPONSE: 4,
+    CHATTING_JOIN_ROOM_REQUEST: 5
   }
 };
 
@@ -194,11 +197,15 @@ export const packetMaps = {
 
   [config.packetType.MONSTER_REWARD_REQUEST]: 'monsterDeathRewardRequest',
   [config.packetType.MONSTER_REWARD_RESPONSE]: 'monsterDeathRewardResponse',
+};
 
+export const chattingPacketMaps = {
   [config.chattingPacketType.CHATTING_LOGIN_REQUEST]: 'chattingServerLoginRequest',
   [config.chattingPacketType.CHATTING_LOGIN_RESPONSE]: 'chattingServerLoginResponse',
-  [config.chattingPacketType.CHATTING_CREATE_ROOM_REQUEST]: 'chattingServerCreateRoomRequest'
-};
+  [config.chattingPacketType.CHATTING_CREATE_ROOM_REQUEST]: 'chattingServerCreateRoomRequest',
+  [config.chattingPacketType.CHATTING_CREATE_ROOM_RESPONSE]: 'chattingServerCreateRoomResponse',
+  [config.chattingPacketType.CHATTING_JOIN_ROOM_REQUEST]: 'chattingServerJoinRoomRequest'
+}
 /**
  * x: 11 , y : -8
 x: 5 , y : -8
