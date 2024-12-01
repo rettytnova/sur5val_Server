@@ -102,6 +102,7 @@ export interface Character {
 
 export interface User {
   id: number;
+  email: string;
   nickname: string;
   character: Character;
 }
@@ -109,6 +110,7 @@ export interface User {
 export interface Room {
   id: number;
   ownerId: number;
+  ownerEmail: string;
   name: string;
   maxUserNum: number;
   state: RoomStateType;
