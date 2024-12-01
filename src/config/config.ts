@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const PORT: number = 5555;
+const CHATTING_SERVER_PORT: number = 5556;
 const HOST: string = '127.0.0.1';
 
 export const REDIS_PORT = process.env.REDIS_PORT;
@@ -17,6 +18,9 @@ const VERSION_LENGTH = 1;
 export const CLIENT_VERSION = '1.0.0';
 const SEQUENCE_LENGTH = 4;
 const PAYLOAD_LENGTH = 4;
+export const bossGameTime = 60000;
+export const inGameTime = 30000;
+export const normalRound = 4;
 
 const USER_DB_NAME = process.env.DB_NAME;
 const USER_DB_USER = process.env.DB_USER;
@@ -24,10 +28,19 @@ const USER_DB_PASSWORD = process.env.DB_PASSWORD;
 const USER_DB_HOST = process.env.DB_HOST;
 const USER_DB_PORT = process.env.DB_PORT;
 
+export const CHATTING_ROOM_MAX = 5;
+
 export const config = {
   server: {
     port: PORT,
     host: HOST
+  },
+  chattingServer: {
+    chattingServerPort: CHATTING_SERVER_PORT
+  },
+  jobType: {
+    CHATTING_LOGIN_REQUEST_JOB: 1,
+    CHATTING_CREATE_ROOM_REQUEST_JOB: 2
   },
   databases: {
     userDB: {
@@ -84,19 +97,28 @@ export const config = {
     FLEA_MARKET_NOTIFICATION: 30,
     FLEA_MARKET_PICK_REQUEST: 31,
     FLEA_MARKET_PICK_RESPONSE: 32,
-    USER_UPDATE_NOTIFICATION: 33,
-    PHASE_UPDATE_NOTIFICATION: 34,
-    REACTION_REQUEST: 35,
-    REACTION_RESPONSE: 36,
-    DESTORY_CARD_REQUEST: 37,
-    DESTORY_CARD_RESPONSE: 38,
-    GAME_END_NOTIFICATION: 39,
-    CARD_SELECT_REQUEST: 40,
-    CARD_SELECT_RESPONSE: 41,
-    PASS_DEBUFF_REQUEST: 42,
-    PASS_DEBUFF_RESPONSE: 43,
-    WARNING_NOTIFICATION: 44,
-    ANIMATION_NOTIFICATION: 45
+    FLEA_MARKET_CARD_PICK_REQUEST: 33,
+    FLEA_MARKET_CARD_PICK_RESPONSE: 34,
+    USER_UPDATE_NOTIFICATION: 35,
+    PHASE_UPDATE_NOTIFICATION: 36,
+    REACTION_REQUEST: 37,
+    REACTION_RESPONSE: 38,
+    DESTORY_CARD_REQUEST: 39,
+    DESTORY_CARD_RESPONSE: 40,
+    GAME_END_NOTIFICATION: 41,
+    CARD_SELECT_REQUEST: 42,
+    CARD_SELECT_RESPONSE: 43,
+    PASS_DEBUFF_REQUEST: 44,
+    PASS_DEBUFF_RESPONSE: 45,
+    WARNING_NOTIFICATION: 46,
+    ANIMATION_NOTIFICATION: 47,
+    MONSTER_REWARD_REQUEST: 48,
+    MONSTER_REWARD_RESPONSE: 49
+  },
+  chattingPacketType: {
+    CHATTING_LOGIN_REQUEST: 1,
+    CHATTING_LOGIN_RESPONSE: 2,
+    CHATTING_CREATE_ROOM_REQUEST: 3
   }
 };
 
@@ -145,6 +167,8 @@ export const packetMaps = {
   [config.packetType.FLEA_MARKET_PICK_REQUEST]: 'fleaMarketPickRequest',
   [config.packetType.FLEA_MARKET_PICK_RESPONSE]: 'fleaMarketPickResponse',
   [config.packetType.FLEA_MARKET_NOTIFICATION]: 'fleaMarketNotification',
+  [config.packetType.FLEA_MARKET_CARD_PICK_REQUEST]: 'fleMarketCardPickRequest',
+  [config.packetType.FLEA_MARKET_CARD_PICK_RESPONSE]: 'fleMarketCardPickResponse',
 
   [config.packetType.USER_UPDATE_NOTIFICATION]: 'userUpdateNotification',
 
@@ -166,49 +190,67 @@ export const packetMaps = {
 
   [config.packetType.WARNING_NOTIFICATION]: 'warningNotification',
 
-  [config.packetType.ANIMATION_NOTIFICATION]: 'animationNotification'
-};
+  [config.packetType.ANIMATION_NOTIFICATION]: 'animationNotification',
 
-export const spawnPoint = {
+  [config.packetType.MONSTER_REWARD_REQUEST]: 'monsterDeathRewardRequest',
+  [config.packetType.MONSTER_REWARD_RESPONSE]: 'monsterDeathRewardResponse',
+
+  [config.chattingPacketType.CHATTING_LOGIN_REQUEST]: 'chattingServerLoginRequest',
+  [config.chattingPacketType.CHATTING_LOGIN_RESPONSE]: 'chattingServerLoginResponse',
+  [config.chattingPacketType.CHATTING_CREATE_ROOM_REQUEST]: 'chattingServerCreateRoomRequest'
+};
+/**
+ * x: 11 , y : -8
+x: 5 , y : -8
+x: - 8 , y : -8
+x: -11, y : 0
+x: -4 , y : 0
+x: 7 , y : 1
+x: 22, y : 0
+x: 23, y : -8
+x: -22.5 , y : 0
+x: -21, y : - 10.5
+ */
+export const spawnPoint: { [key: number]: { x: number; y: number } } = {
   1: {
-    x: -3.972,
-    y: 3.703
+    x: 11,
+    y: -8
   },
   2: {
-    x: 10.897,
-    y: 4.033
+    x: 5,
+    y: -8
   },
   3: {
-    x: 11.737,
-    y: -5.216
+    x: -8,
+    y: -8
   },
   4: {
-    x: 5.647,
-    y: -5.126
+    x: -11,
+    y: 0
   },
   5: {
-    x: -6.202,
-    y: 5.126
+    x: -4,
+    y: 0
   },
   6: {
-    x: -13.262,
-    y: 4.213
+    x: 7,
+    y: 1
   },
   7: {
-    x: -22.742,
-    y: 3.653
+    x: 22,
+    y: 0
   },
   8: {
-    x: -21.622,
-    y: 6.936
+    x: 23,
+    y: -8
   },
   9: {
-    x: -24.732,
-    y: -6.886
+    x: -22.5,
+    y: 0
   },
   10: {
-    x: -15.702,
-    y: 6.863
+    x: -21,
+    y: -10.5
   },
   11: {
     x: -1.562,

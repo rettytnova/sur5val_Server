@@ -8,6 +8,48 @@ export interface CustomSocket extends net.Socket {
   id: string;
 }
 
+/* UserCharacterData 타입 정의 */
+export interface UserCharacterData {
+  [types: number]: UserCharacterInitData;
+}
+
+/* UserCharacterInitData 타입 정의 */
+export interface UserCharacterInitData {
+  roleType: number;
+  exp: number;
+  gold: number;
+  hp: number;
+  mp: number;
+  attack: number;
+  armor: number;
+  handCards: Card[];
+}
+
+/* MonsterDatas 타입 정의 */
+export interface MonsterDatas {
+  [type: number]: MonsterLevelData;
+}
+
+/* MonsterLevelData 타입 정의 */
+export interface MonsterLevelData {
+  [level: number]: MonsterInitData;
+}
+
+/* MonsterDataInit 타입 정의 */
+export interface MonsterInitData {
+  nickname: string;
+  hp: number;
+  attackCool: number;
+  attackRange: number;
+  attack: number;
+  armor: number;
+  exp: number;
+  gold: number;
+  hpRecovery: number;
+  mpRecovery: number;
+  //cardRewards: Card[];
+}
+
 export interface joinRoomPayload {
   roomId: number;
 }
@@ -21,6 +63,11 @@ export interface positionUpdatePayload {
   x: number;
   y: number;
 }
+
+export interface FleaMarketItemSelectPayload {
+  pickIndex: number;
+}
+
 export interface Card {
   type: number;
   count: number;
@@ -36,14 +83,21 @@ export interface CharacterStateInfo {
 export interface Character {
   characterType: number;
   roleType: number;
+  aliveState: boolean;
+  level: number;
+  exp: number;
+  gold: number;
+  maxHp: number;
   hp: number;
+  mp: number;
+  attack: number;
+  armor: number;
   weapon: number;
+  potion: number;
   stateInfo: CharacterStateInfo;
-  equips: number;
+  equips: number[];
   debuffs: number[];
   handCards: Card[];
-  bbangCount: number;
-  handCardsCount: number;
 }
 
 export interface User {
@@ -101,19 +155,6 @@ export interface RedisUserData extends User {
   refreshToken: string;
 }
 
-/* CharacterData 타입 정의 */
-export interface CharacterData {
-  roleType: number;
-  hp: number;
-  weapon: number;
-  stateInfo: number;
-  equips: Object | null;
-  debuffs: Object | null;
-  handCards: Object | null;
-  bbangCount: number;
-  handCardsCount: number;
-}
-
 /* CharacterPositionData 타입 정의 */
 export interface CharacterPositionData {
   id: number;
@@ -143,6 +184,18 @@ export interface UseCardRequest {
 export interface UseCardResponse {
   success: boolean;
   failCode: number;
+}
+
+/* UseCardNotification 타입 정의 */
+export interface UseCardNotification {
+  cardType: number;
+  userId: number;
+  targetUserId: number;
+}
+
+/* UserUpdateNotification 타입 정의 */
+export interface UserUpdateNotification {
+  user: User[];
 }
 
 /* CardEffectNotification 타입 정의 */

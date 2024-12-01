@@ -1,10 +1,13 @@
 import { CustomSocket, User, LoginRequest, LoginResponse } from '../../interface/interface.js';
 import jwt, { SignOptions } from 'jsonwebtoken';
 import { sendPacket } from '../../packet/createPacket.js';
-import { config } from '../../config/config.js';
-import { getRedisData, saveSocketSession, setRedisData } from '../../handlers/handlerMethod.js';
+import { config, inGameTime, normalRound } from '../../config/config.js';
+import { getRedisData, setRedisData } from '../../handlers/handlerMethod.js';
 import { dbManager } from '../../database/user/user.db.js';
-import { GlobalFailCode } from '../enumTyps.js';
+import { GlobalFailCode, PhaseType, RoleType } from '../enumTyps.js';
+import { socketSessions } from '../../session/socketSession.js';
+import { inGameTimeSessions } from '../../session/inGameTimeSession.js';
+import { userUpdateNotification } from '../notification/userUpdate.js';
 
 const { jwtToken, packetType } = config;
 
@@ -75,20 +78,27 @@ export const loginHandler = async (socket: CustomSocket, payload: Object): Promi
       nickname: userByEmailPw.nickname as string,
       character: {
         characterType: 0,
-        roleType: 0,
+        roleType: RoleType.SUR5VAL,
+        aliveState: true,
+        level: 1,
+        exp: 0,
+        gold: 20,
+        maxHp: 0,
         hp: 0,
+        mp: 0,
+        attack: 0,
+        armor: 0,
         weapon: 0,
+        potion: 0,
         stateInfo: {
           state: 0,
           nextState: 0,
           nextStateAt: 0,
           stateTargetUserId: 0
         },
-        equips: 0,
+        equips: [],
         debuffs: [],
-        handCards: [],
-        bbangCount: 0,
-        handCardsCount: 0
+        handCards: []
       }
     };
 
@@ -101,7 +111,34 @@ export const loginHandler = async (socket: CustomSocket, payload: Object): Promi
     }
 
     // socketSession에 socket 저장하기
-    saveSocketSession(userByEmailPw.id, socket);
+    socketSessions[userByEmailPw.id] = socket;
+
+    // 이미 게임 중인 상태일 경우 해당 게임으로 이동
+    const rooms = await getRedisData('roomData');
+    if (rooms) {
+      for (let i = 0; i < rooms.length; i++) {
+        for (let j = 0; j < rooms[i].users.length; j++) {
+          if (rooms[i].users[j].id === userByEmailPw.id) {
+            const leftTime = (inGameTime * normalRound - (Date.now() - inGameTimeSessions[rooms[i].id])) % inGameTime;
+            const characterPositionDatas = await getRedisData('characterPositionDatas');
+            const gameStateData = { phaseType: PhaseType.DAY, nextPhaseAt: Date.now() + leftTime };
+            const notifiData = {
+              gameState: gameStateData,
+              users: rooms[i].users,
+              characterPositions: characterPositionDatas[rooms[i].id]
+            };
+            setTimeout(() => {
+              sendPacket(socket, config.packetType.GAME_START_NOTIFICATION, notifiData);
+            }, 100);
+            setTimeout(() => {
+              sendPacket(socket, config.packetType.USER_UPDATE_NOTIFICATION, {
+                user: rooms[i].users
+              });
+            }, 100);
+          }
+        }
+      }
+    }
 
     // 로그 처리 ----------------------------------------------------------------------
     console.info(`로그인 성공 : ${userByEmailPw.id}`);

@@ -1,11 +1,16 @@
-import { CharacterPositionData, CustomSocket, RedisUserData } from '../../interface/interface.js';
-import { GlobalFailCode, PhaseType } from '../enumTyps.js';
+import { CharacterPositionData, CustomSocket, RedisUserData, Room } from '../../interface/interface.js';
+import { GlobalFailCode, PhaseType, RoleType, CardType, RoomStateType } from '../enumTyps.js';
 import { sendPacket } from '../../packet/createPacket.js';
-import { config, spawnPoint } from '../../config/config.js';
-import { getRedisData, getRoomByUserId, getSocketByUser, getUserBySocket, setRedisData } from '../handlerMethod.js';
-import { monsterMoveStart } from '../notification/monsterMove.js';
-import { monsterSpawnStart } from '../notification/monsterSpawn.js';
-import { randomNumber } from '../../utils/utils.js';
+import { config, spawnPoint, inGameTime, normalRound, bossGameTime } from '../../config/config.js';
+import { getRedisData, getUserIdBySocket, nonSameRandom, setRedisData } from '../handlerMethod.js';
+import { monsterMoveStart } from '../coreMethod/monsterMove.js';
+import { monsterSpawnStart } from '../coreMethod/monsterSpawn.js';
+import { socketSessions } from '../../session/socketSession.js';
+import { inGameTimeSessions } from '../../session/inGameTimeSession.js';
+import { gameEndNotification } from '../notification/gameEnd.js';
+import { fleaMarketCardCreate } from '../coreMethod/fleaMarketCardCreate.js';
+import { fleaMarketOpenHandler } from '../market/fleaMarketOpenHandler.js';
+import { shoppingUserIdSessions } from '../../session/shoppingSession.js';
 
 export const gameStartHandler = async (socket: CustomSocket, payload: Object) => {
   // 핸들러가 호출되면 success. response 만들어서 보냄
@@ -13,15 +18,18 @@ export const gameStartHandler = async (socket: CustomSocket, payload: Object) =>
   // sendPacket(socket, config.packetType.GAME_START_RESPONSE, responseData)
   try {
     // requset 보낸 유저
-    const user: RedisUserData = await getUserBySocket(socket);
-    const room = await getRoomByUserId(user.id);
+    const userId: number | null = await getUserIdBySocket(socket);
+    const rooms: Room[] = await getRedisData('roomData');
+    const room = rooms.find((room) => room.users.some((roomUser) => roomUser.id === userId));
+    if (!room) {
+      console.error('getRoomByUserId: Room not found');
+      return null;
+    }
+
     if (!room) return;
     const realUserNumber = room.users.length;
-    await monsterSpawnStart(socket);
     // 유저가 있는 방 찾기
-    if (user !== undefined) {
-      const room = await getRoomByUserId(user.id);
-
+    if (userId !== undefined) {
       if (room === null) {
         const responseData = {
           success: false,
@@ -34,6 +42,16 @@ export const gameStartHandler = async (socket: CustomSocket, payload: Object) =>
 
       if (realUserNumber <= 1) {
         console.error('게임을 시작 할 수 없습니다.(인원 부족)');
+
+        const responseData = {
+          success: false,
+          failCode: GlobalFailCode.INVALID_REQUEST
+        };
+        sendPacket(socket, config.packetType.GAME_START_RESPONSE, responseData);
+        room.state = RoomStateType.WAIT;
+
+        await setRedisData('roomData', rooms);
+        return;
       }
 
       const responseData = {
@@ -49,11 +67,11 @@ export const gameStartHandler = async (socket: CustomSocket, payload: Object) =>
         characterPositionDatas[room.id] = [];
       }
 
+      const randomIndex = nonSameRandom(1, 10, realUserNumber);
       const userPositionDatas = [];
       for (let i = 0; i < realUserNumber; i++) {
         // 랜덤 스폰포인트
-        const spawnPointArray = Object.values(spawnPoint);
-        const randomSpawnPoint = spawnPointArray[randomNumber(1, 20)];
+        const randomSpawnPoint = spawnPoint[randomIndex[i]];
         const characterPositionData: CharacterPositionData = {
           id: room.users[i].id,
           x: randomSpawnPoint.x,
@@ -61,34 +79,36 @@ export const gameStartHandler = async (socket: CustomSocket, payload: Object) =>
         };
         userPositionDatas.push(characterPositionData);
       }
-      characterPositionDatas[room.id].unshift(...userPositionDatas);
 
+      characterPositionDatas[room.id].unshift(...userPositionDatas);
       await setRedisData('characterPositionDatas', characterPositionDatas);
 
-      // 방에있는 유저들에게 notifi 보내기
-      for (let i = 0; i < room.users.length; i++) {
-        const userSocket = await getSocketByUser(room.users[i]);
-        const now = Date.now() + 300000;
-        const gameStateData = { phaseType: PhaseType.DAY, nextPhaseAt: now };
-        const notifiData = {
-          gameState: gameStateData,
-          users: room.users,
-          characterPositions: characterPositionDatas[room.id]
-        };
-
-        if (userSocket) sendPacket(userSocket, config.packetType.GAME_START_NOTIFICATION, notifiData);
+      // 방에있는 유저들에게 게임 시작 notificationn 보내기, 게임 시작 시간 저장
+      room.state = RoomStateType.INGAME;
+      await setRedisData('roomData', rooms);
+      for (let i = 0; i < normalRound; i++) {
+        await normalPhaseNotification(i + 1, room.id, inGameTime * i);
       }
-    } else {
-      console.error('위치: gameStartHandler, 유저를 찾을 수 없습니다.');
+      bossPhaseNotification(normalRound + 1, room.id, inGameTime * normalRound);
+      inGameTimeSessions[room.id] = Date.now();
 
-      const responseData = {
-        success: false,
-        failCode: GlobalFailCode.INVALID_REQUEST
-      };
-      await sendPacket(socket, config.packetType.GAME_START_RESPONSE, responseData);
+      // 게임 종료 notification 보내기
+      setTimeout(
+        async () => {
+          await gameEndNotification(room.id, 4);
+        },
+        inGameTime * normalRound + bossGameTime
+      );
+
+      for (let i = 0; i < room.users.length; i++) {
+        if (room.users[i].character.roleType !== RoleType.WEAK_MONSTER) {
+          const roomUserSocket = socketSessions[room.users[i].id];
+          setTimeout(async () => {
+            await fleaMarketOpenHandler(roomUserSocket);
+          }, 5000);
+        }
+      }
     }
-
-    monsterMoveStart(socket);
   } catch (err) {
     const responseData = {
       success: false,
@@ -96,5 +116,181 @@ export const gameStartHandler = async (socket: CustomSocket, payload: Object) =>
     };
     sendPacket(socket, config.packetType.GAME_START_RESPONSE, responseData);
     console.log('gameStartHandler 오류', err);
+  }
+};
+
+// 일반 라운드 시작
+export const normalPhaseNotification = async (level: number, roomId: number, sendTime: number) => {
+  setTimeout(async () => {
+    await fleaMarketCardCreate(level, roomId);
+    shoppingUserIdSessions[roomId] = [];
+    await monsterSpawnStart(roomId, level);
+    const characterPositionDatas = await getRedisData('characterPositionDatas');
+    const roomData: Room[] = await getRedisData('roomData');
+
+    let room: Room | null = null;
+    for (let i = 0; i < roomData.length; i++) {
+      if (roomData[i].id === roomId) {
+        room = roomData[i];
+        break;
+      }
+    }
+    if (!room) return;
+    await setBossStat(room, level);
+    setRedisData('roomData', roomData);
+
+    const gameStateData = { phaseType: PhaseType.DAY, nextPhaseAt: Date.now() + inGameTime };
+    const notifiData = {
+      gameState: gameStateData,
+      users: room.users,
+      characterPositions: characterPositionDatas[roomId]
+    };
+    for (let i = 0; i < room.users.length; i++) {
+      const userSocket = socketSessions[room.users[i].id];
+      if (userSocket) {
+        sendPacket(userSocket, config.packetType.GAME_START_NOTIFICATION, notifiData);
+      }
+    }
+
+    await monsterMoveStart(roomId, inGameTime);
+  }, sendTime);
+};
+
+// 보스 라운드 시작
+export const bossPhaseNotification = async (level: number, roomId: number, sendTime: number) => {
+  setTimeout(async () => {
+    await fleaMarketCardCreate(level, roomId);
+    shoppingUserIdSessions[roomId] = [];
+    await monsterSpawnStart(roomId, level);
+    const characterPositionDatas = await getRedisData('characterPositionDatas');
+    const roomData: Room[] = await getRedisData('roomData');
+
+    let room: Room | null = null;
+    for (let i = 0; i < roomData.length; i++) {
+      if (roomData[i].id === roomId) {
+        room = roomData[i];
+        break;
+      }
+    }
+    if (!room) return;
+    await setBossStat(room, level);
+    setRedisData('roomData', roomData);
+
+    const gameStateData = { phaseType: PhaseType.DAY, nextPhaseAt: Date.now() + bossGameTime };
+    const notifiData = {
+      gameState: gameStateData,
+      users: room.users,
+      characterPositions: characterPositionDatas[roomId]
+    };
+    for (let i = 0; i < room.users.length; i++) {
+      const userSocket = socketSessions[room.users[i].id];
+      if (userSocket) {
+        sendPacket(userSocket, config.packetType.GAME_START_NOTIFICATION, notifiData);
+        sendPacket(userSocket, config.packetType.REACTION_RESPONSE, { success: 1, failCode: roomId });
+      }
+    }
+    await monsterMoveStart(roomId, bossGameTime);
+  }, sendTime);
+};
+
+export const setBossStat = async (room: Room, level: number) => {
+  for (let i = 0; i < room.users.length; i++) {
+    if (room.users[i].character.roleType === RoleType.BOSS_MONSTER) {
+      room.users[i].character.aliveState = true;
+      room.users[i].character.gold = 500 * level;
+      room.users[i].character.hp = 1000 * level;
+      room.users[i].character.maxHp = room.users[i].character.hp;
+      room.users[i].character.mp = 30 * level;
+      room.users[i].character.attack = 10 * level;
+      room.users[i].character.armor = 2 * level;
+
+      switch (level) {
+        case 1: // 일반 라운드
+          room.users[i].character.handCards = [
+            { type: CardType.MAGICIAN_BASIC_SKILL, count: 1 },
+            { type: CardType.MAGICIAN_EXTENDED_SKILL, count: 1 },
+            { type: CardType.BASIC_HP_POTION, count: 3 * level },
+            { type: CardType.BASIC_WEAPON, count: 1 },
+            { type: CardType.BASIC_HEAD, count: 1 },
+            { type: CardType.BASIC_ARMOR, count: 1 },
+            { type: CardType.BASIC_CLOAK, count: 1 },
+            { type: CardType.BASIC_GLOVE, count: 1 }
+          ];
+          break;
+        case 2: // 일반 라운드
+          room.users[i].character.handCards = [
+            { type: CardType.WARRIOR_BASIC_SKILL, count: 1 },
+            { type: CardType.ARCHER_BASIC_SKILL, count: 1 },
+            { type: CardType.MAGICIAN_BASIC_SKILL, count: 1 },
+            { type: CardType.PALADIN_BASIC_SKILL, count: 1 },
+            { type: CardType.BASIC_HP_POTION, count: 3 * level },
+            { type: CardType.BASIC_WEAPON, count: 1 },
+            { type: CardType.BASIC_HEAD, count: 1 },
+            { type: CardType.BASIC_ARMOR, count: 1 },
+            { type: CardType.BASIC_CLOAK, count: 1 },
+            { type: CardType.BASIC_GLOVE, count: 1 }
+          ];
+          break;
+        case 3: // 일반 라운드
+          room.users[i].character.handCards = [
+            { type: CardType.WARRIOR_BASIC_SKILL, count: 1 },
+            { type: CardType.ARCHER_BASIC_SKILL, count: 1 },
+            { type: CardType.MAGICIAN_BASIC_SKILL, count: 1 },
+            { type: CardType.PALADIN_BASIC_SKILL, count: 1 },
+            { type: CardType.WARRIOR_EXTENDED_SKILL, count: 1 },
+            { type: CardType.ARCHER_EXTENDED_SKILL, count: 1 },
+            { type: CardType.BASIC_HP_POTION, count: 3 * level },
+            { type: CardType.BASIC_WEAPON, count: 1 },
+            { type: CardType.BASIC_HEAD, count: 1 },
+            { type: CardType.BASIC_ARMOR, count: 1 },
+            { type: CardType.BASIC_CLOAK, count: 1 },
+            { type: CardType.BASIC_GLOVE, count: 1 }
+          ];
+          break;
+        case 4: // 일반 라운드
+          room.users[i].character.handCards = [
+            { type: CardType.WARRIOR_BASIC_SKILL, count: 1 },
+            { type: CardType.ARCHER_BASIC_SKILL, count: 1 },
+            { type: CardType.MAGICIAN_BASIC_SKILL, count: 1 },
+            { type: CardType.PALADIN_BASIC_SKILL, count: 1 },
+            { type: CardType.WARRIOR_EXTENDED_SKILL, count: 1 },
+            { type: CardType.ARCHER_EXTENDED_SKILL, count: 1 },
+            { type: CardType.MAGICIAN_EXTENDED_SKILL, count: 1 },
+            { type: CardType.PALADIN_EXTENDED_SKILL, count: 1 },
+            { type: CardType.BASIC_HP_POTION, count: 3 * level },
+            { type: CardType.BASIC_WEAPON, count: 1 },
+            { type: CardType.BASIC_HEAD, count: 1 },
+            { type: CardType.BASIC_ARMOR, count: 1 },
+            { type: CardType.BASIC_CLOAK, count: 1 },
+            { type: CardType.BASIC_GLOVE, count: 1 }
+          ];
+          break;
+        case 5: // 보스 라운드
+          room.users[i].character.handCards = [
+            { type: CardType.WARRIOR_BASIC_SKILL, count: 1 },
+            { type: CardType.ARCHER_BASIC_SKILL, count: 1 },
+            { type: CardType.MAGICIAN_BASIC_SKILL, count: 1 },
+            { type: CardType.PALADIN_BASIC_SKILL, count: 1 },
+            { type: CardType.WARRIOR_EXTENDED_SKILL, count: 1 },
+            { type: CardType.ARCHER_EXTENDED_SKILL, count: 1 },
+            { type: CardType.MAGICIAN_EXTENDED_SKILL, count: 1 },
+            { type: CardType.PALADIN_EXTENDED_SKILL, count: 1 },
+            { type: CardType.BASIC_HP_POTION, count: 5 * level },
+            { type: CardType.BASIC_WEAPON, count: 1 },
+            { type: CardType.BASIC_HEAD, count: 1 },
+            { type: CardType.BASIC_ARMOR, count: 1 },
+            { type: CardType.BASIC_CLOAK, count: 1 },
+            { type: CardType.BASIC_GLOVE, count: 1 }
+          ];
+          break;
+        default:
+          console.log('보스 스텟 설정을 위한 라운드(level)의 값이 잘못되었습니다.:', level);
+          return;
+      }
+      console.log(
+        `${level}라운드 보스 스펙 - hp:${room.users[i].character.hp}, mp:${room.users[i].character.mp}, atk:${room.users[i].character.attack}, armor:${room.users[i].character.armor}, wallet gold:${room.users[i].character.gold}`
+      );
+      return;
+    }
   }
 };

@@ -76,8 +76,12 @@ message S2CUseCardResponse { // 성공 여부만 반환하고 대상 유저 효�
 
 // 상점 아이템 선택 요청 응답
 message S2CFleaMarketPickResponse {
-    bool success = 1;
-    GlobalFailCode failCode = 2;
+    repeated CardType fleaMarketCardTypes = 1;
+}
+
+message S2CFleaMarketCardPickResponse{
+    int64 userId = 1;
+    repeated CardData handCards = 2;   
 }
 
 // 리액션(이모션) 요청 응답

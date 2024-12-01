@@ -41,6 +41,36 @@ export const PhaseType = Object.freeze({
 });
 export type PhaseType = (typeof PhaseType)[keyof typeof PhaseType];
 
+// 카드
+export const CardType = Object.freeze({
+  NONE: 0,
+  MAGICIAN_BASIC_SKILL: 101,
+  WARRIOR_BASIC_SKILL: 102,
+  ARCHER_BASIC_SKILL: 103,
+  PALADIN_BASIC_SKILL: 104,
+  MAGICIAN_EXTENDED_SKILL: 105,
+  WARRIOR_EXTENDED_SKILL: 106,
+  ARCHER_EXTENDED_SKILL: 107,
+  PALADIN_EXTENDED_SKILL: 108,
+  BASIC_HP_POTION: 201,
+  NONE_WEAPON: 301,
+  NONE_HEAD: 302,
+  NONE_ARMOR: 303,
+  NONE_CLOAK: 304,
+  NONE_GLOVE: 305,
+  BASIC_WEAPON: 306,
+  BASIC_HEAD: 307,
+  BASIC_ARMOR: 308,
+  BASIC_CLOAK: 309,
+  BASIC_GLOVE: 310,
+  ADVANCED_WEAPON: 311,
+  ADVANCED_HEAD: 312,
+  ADVANCED_ARMOR: 313,
+  ADVANCED_CLOAK: 314,
+  ADVANCED_GLOVE: 315,
+  EXIT_BUTTON: 1000
+});
+export type CardType = (typeof CardType)[keyof typeof CardType];
 // 캐릭터 상태
 export const CharacterStateType = Object.freeze({
   NONE_CHARACTER_STATE: 0,
@@ -73,20 +103,21 @@ export const UserCharacterType = Object.freeze({
 export type UserCharacterType = (typeof UserCharacterType)[keyof typeof UserCharacterType];
 
 // 몬스터 캐릭터 코드
-export const CharacterType = Object.freeze({
+export const MonsterCharacterType = Object.freeze({
   SHARK: 3, // 상어군
-  FROGGY: 7, // 개굴군
+  MALANG: 5, // 말랑이
   PINK: 8, // 핑크군
-  DINOSAUR: 12 // 공룡이
+  DINOSAUR: 12, // 공룡이
+  PINK_SLIME: 13 // 핑크슬라임
 });
-export type CharacterType = (typeof CharacterType)[keyof typeof CharacterType];
+export type MonsterCharacterType = (typeof MonsterCharacterType)[keyof typeof MonsterCharacterType];
 
 // 역할 코드
 export const RoleType = Object.freeze({
   NONE_ROLE: 0,
-  TARGET: 1,
-  BODYGUARD: 2,
-  HITMAN: 3,
-  PSYCHOPATH: 4
+  WEAK_MONSTER: 1, //TARGET
+  SUR5VAL: 2, //BODYGUARD
+  UNKNOWN: 3, //HITMAN
+  BOSS_MONSTER: 4 //PSYCHOPATH
 });
 export type RoleType = (typeof RoleType)[keyof typeof RoleType];

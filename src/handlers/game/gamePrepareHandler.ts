@@ -1,25 +1,109 @@
-import net from 'net';
-import { GlobalFailCode } from '../enumTyps.js';
-import { CustomSocket, RedisUserData, Room, User } from '../../interface/interface.js';
+import { GlobalFailCode, RoomStateType, UserCharacterType } from '../enumTyps.js';
+import { Card, CustomSocket, RedisUserData, Room, User, UserCharacterData } from '../../interface/interface.js';
 import { config } from '../../config/config.js';
 import { sendPacket } from '../../packet/createPacket.js';
-import {
-  getRoomByUserId,
-  getRooms,
-  getSocketByUser,
-  getUserBySocket,
-  setCharacterInfoInit,
-  setRedisData
-} from '../handlerMethod.js';
+import { getRedisData, getRoomByUserId, getUserIdBySocket, setRedisData } from '../handlerMethod.js';
+import { socketSessions } from '../../session/socketSession.js';
+import { CardType, RoleType } from '../enumTyps.js';
 
+// DB에 넣을 데이터
+export const userCharacterData: UserCharacterData = {
+  // 핑크슬라임 - 보스
+  [UserCharacterType.PINK_SLIME]: {
+    roleType: RoleType.BOSS_MONSTER,
+    exp: 10,
+    gold: 500,
+    hp: 1000,
+    mp: 30,
+    attack: 10,
+    armor: 2,
+    handCards: [
+      { type: CardType.MAGICIAN_BASIC_SKILL, count: 1 },
+      { type: CardType.MAGICIAN_EXTENDED_SKILL, count: 1 },
+      { type: CardType.BASIC_HP_POTION, count: 3 },
+      { type: CardType.BASIC_WEAPON, count: 1 },
+      { type: CardType.BASIC_HEAD, count: 1 },
+      { type: CardType.BASIC_ARMOR, count: 1 },
+      { type: CardType.BASIC_CLOAK, count: 1 },
+      { type: CardType.BASIC_GLOVE, count: 1 }
+    ]
+  },
+  // 가면군 - 마법사
+  [UserCharacterType.MASK]: {
+    roleType: RoleType.SUR5VAL,
+    exp: 10,
+    gold: 990,
+    hp: 9,
+    mp: 14,
+    attack: 2,
+    armor: 0,
+    handCards: [
+      { type: CardType.MAGICIAN_BASIC_SKILL, count: 1 },
+      { type: CardType.MAGICIAN_EXTENDED_SKILL, count: 1 },
+      { type: CardType.BASIC_HP_POTION, count: 2 },
+      { type: CardType.BASIC_WEAPON, count: 1 },
+      { type: CardType.BASIC_HEAD, count: 1 },
+      { type: CardType.BASIC_ARMOR, count: 1 },
+      { type: CardType.BASIC_CLOAK, count: 1 },
+      { type: CardType.BASIC_GLOVE, count: 1 }
+    ]
+  },
+  // 물안경군 - 궁수
+  [UserCharacterType.SWIM_GLASSES]: {
+    roleType: RoleType.SUR5VAL,
+    exp: 10,
+    gold: 990,
+    hp: 11,
+    mp: 12,
+    attack: 2,
+    armor: 0,
+
+    handCards: [
+      { type: CardType.MAGICIAN_BASIC_SKILL, count: 2 },
+      { type: CardType.BASIC_HP_POTION, count: 3 }
+    ]
+  },
+  // 개굴군 - 로그
+  [UserCharacterType.FROGGY]: {
+    roleType: RoleType.SUR5VAL,
+    exp: 10,
+    gold: 990,
+    hp: 12,
+    mp: 13,
+    attack: 2,
+    armor: 0,
+
+    handCards: [
+      { type: CardType.MAGICIAN_BASIC_SKILL, count: 2 },
+      { type: CardType.BASIC_HP_POTION, count: 3 }
+    ]
+  },
+
+  // 빨강이 - 성기사
+  [UserCharacterType.RED]: {
+    roleType: RoleType.SUR5VAL,
+    exp: 10,
+    gold: 990,
+    hp: 14,
+    mp: 10,
+    attack: 2,
+    armor: 0,
+    handCards: [
+      { type: CardType.MAGICIAN_BASIC_SKILL, count: 2 },
+      { type: CardType.BASIC_HP_POTION, count: 3 }
+    ]
+  }
+};
+
+// 게임 준비
 export const gamePrepareHandler = async (socket: CustomSocket, payload: Object) => {
   try {
     // requset 보낸 유저
-    const user: RedisUserData = await getUserBySocket(socket);
+    const userId: number | null = await getUserIdBySocket(socket);
 
     // 유저가 있는 방 찾기
-    if (user !== undefined) {
-      const room: Room | null = await getRoomByUserId(user.id);
+    if (userId !== null) {
+      const room: Room | null = await getRoomByUserId(userId);
       if (room === null) {
         return;
       }
@@ -39,8 +123,10 @@ export const gamePrepareHandler = async (socket: CustomSocket, payload: Object) 
         sendPacket(socket, config.packetType.GAME_PREPARE_RESPONSE, responseData);
 
         // 방에있는 유저들 캐릭터 랜덤 배정하기
+        room.state = RoomStateType.PREPARE;
         room.users = setCharacterInfoInit(room.users);
-        const rooms: Room[] | null = await getRooms();
+
+        const rooms: Room[] | null = await getRedisData('roomData');
         if (!rooms) {
           return;
         }
@@ -57,7 +143,7 @@ export const gamePrepareHandler = async (socket: CustomSocket, payload: Object) 
 
         // 방에있는 유저들에게 notifi 보내기
         for (let i = 0; i < room.users.length; i++) {
-          const userSocket = await getSocketByUser(room.users[i]);
+          const userSocket: CustomSocket = socketSessions[room.users[i].id]; // await getSocketByUserId(room.users[i]) 을 바꿈
           if (!userSocket) {
             console.error('gamePrepareHandler: socket not found');
             return;
@@ -84,4 +170,48 @@ export const gamePrepareHandler = async (socket: CustomSocket, payload: Object) 
     sendPacket(socket, config.packetType.GAME_PREPARE_RESPONSE, responseData);
     console.error('gameStartHandler 오류', err);
   }
+};
+
+// 유저 캐릭터 초기화
+export const setCharacterInfoInit = (users: User[]) => {
+  const numbers: number[] = [
+    UserCharacterType.PINK_SLIME,
+    UserCharacterType.MASK,
+    UserCharacterType.SWIM_GLASSES,
+    UserCharacterType.FROGGY,
+    UserCharacterType.RED
+  ];
+
+  // 직업 배열을 랜덤으로 섞기 (Fisher-Yates Shuffle Algorithm)
+  for (let i = numbers.length - 1; 0 < i; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [numbers[i], numbers[j]] = [numbers[j], numbers[i]];
+  }
+  const selectedTypes = numbers.slice(0, users.length);
+
+  // 보스가 무조건 선택되도록 하기
+  if (selectedTypes.indexOf(UserCharacterType.PINK_SLIME) === -1) {
+    const j = Math.floor(Math.random() * selectedTypes.length);
+    selectedTypes[j] = UserCharacterType.PINK_SLIME;
+  }
+
+  // 선택된 직업에 따라 초기화
+  for (let i = 0; i < selectedTypes.length; i++) {
+    users[i].character.characterType = selectedTypes[i];
+    users[i].character.roleType = userCharacterData[selectedTypes[i]].roleType;
+    users[i].character.level = 1;
+    users[i].character.exp = 0;
+    users[i].character.gold = userCharacterData[selectedTypes[i]].gold;
+    users[i].character.maxHp = userCharacterData[selectedTypes[i]].hp;
+    users[i].character.hp = userCharacterData[selectedTypes[i]].hp;
+    users[i].character.mp = userCharacterData[selectedTypes[i]].mp;
+    users[i].character.attack = userCharacterData[selectedTypes[i]].attack;
+    users[i].character.armor = userCharacterData[selectedTypes[i]].armor;
+    users[i].character.weapon = CardType.NONE_WEAPON;
+    users[i].character.stateInfo.state = 0;
+    users[i].character.equips = [CardType.NONE_HEAD, CardType.NONE_ARMOR, CardType.NONE_CLOAK, CardType.NONE_GLOVE];
+    users[i].character.handCards = userCharacterData[selectedTypes[i]].handCards;
+  }
+
+  return users;
 };
