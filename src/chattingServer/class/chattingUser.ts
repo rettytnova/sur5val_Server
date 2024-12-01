@@ -9,6 +9,18 @@ class ChattingUser {
         this.id = id;
         this.email = email;
     }
+
+    getUserSocket() {
+        return this.userSocket;
+    }
+
+    getId() {
+        return this.id;
+    }
+
+    getEmail() {
+        return this.email;
+    }
 }
 
 export default ChattingUser;
