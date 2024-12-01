@@ -1,6 +1,7 @@
-﻿import { CLIENT_VERSION, packetMaps } from '../config/config.js';
+﻿import { chattingPacketMaps, CLIENT_VERSION, packetMaps } from '../config/config.js';
 import Server from '../class/server.js';
 import net from 'net';
+import ChattingServer from '../chattingServer/class/chattingServer.js';
 
 export const sendPacket = (
   socket: net.Socket,
@@ -25,6 +26,27 @@ export const sendPacket = (
     //console.dir(deserializedPacket, { depth: null });
   } catch (error) {
     console.error('Error sending response packet', error);
+  }
+};
+
+export const sendChattingPacket = (
+  socket: net.Socket,
+  packetType: number,
+  data: Object
+) => {
+  try {
+    const protoMessages = ChattingServer.getInstance().getProtoMessages();
+    const chattingPacket = protoMessages.packet.ChattingPacket;
+
+    const packet: { [key: string]: object } = {};
+    packet[chattingPacketMaps[packetType]] = data;
+
+    const chattingPacketBuffer = chattingPacket.encode(packet).finish();
+    const serializedChattingPacket = serializer(chattingPacketBuffer, packetType);
+    socket.write(serializedChattingPacket);
+  }
+  catch (error) {
+    console.error('Error send Chatting response packet', error);
   }
 };
 

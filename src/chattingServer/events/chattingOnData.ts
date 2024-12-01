@@ -1,7 +1,7 @@
 import { CLIENT_VERSION, config, TOTAL_LENGTH, VERSION_START } from "../../config/config.js";
 import { CustomSocket } from "../../interface/interface.js";
 import { chattingPacketParser } from "../chattingPacket/chattingPacketParser.js";
-import { getChattingServerHandlerByPacketType } from "../handlers/chattingHandlerIndex.js";
+import { getChattingServerHandlerByPacketType } from "../handlers/packetHandlers/chattingHandlerIndex.js";
 
 export const chattingOnData = (socket: CustomSocket) => async (data: Buffer) => {
     socket.buffer = Buffer.concat([socket.buffer, data]);

@@ -4,7 +4,7 @@ export const chattingPacketParser = (packetType: number, payload: Buffer): objec
     try {
         const chattingProtoMessages = ChattingServer.getInstance().getProtoMessages();
 
-        const chattingPacket = chattingProtoMessages.packet.chattingPacket;
+        const chattingPacket = chattingProtoMessages.packet.ChattingPacket;
 
         const decodedChattingPacket = chattingPacket.decode(payload);
         const payloadField = chattingPacket.oneofs['chattingPayload'].oneof.find((field: any) => decodedChattingPacket[field] != null);

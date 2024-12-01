@@ -14,10 +14,18 @@ message C2SChattingServerLoginRequest{
 
 //------------------------------------
 // 방 생성
-// email : 방장 email
 //------------------------------------
-message C2SChattingServerCreateRoomRequest{
-    string email = 1;
+message C2SChattingServerCreateRoomRequest{    
+}
+
+//------------------------------------
+// 방 생성
+// roomId : 참가할 방 아이디
+// email : 참가하는 유저 email
+//------------------------------------
+message C2SChattingServerJoinRoomRequest{
+    int32 chattingRoomId = 1;
+    string email = 2;
 }
 
 /*
@@ -25,12 +33,21 @@ message C2SChattingServerCreateRoomRequest{
 */
 
 //------------------------------------
+// 로그인 응답
 // success : 로그인 성공 여부
 // message : 성공 여부에 따른 메세지
 //------------------------------------
 message S2CChattingServerLoginResponse{
     bool success = 1;
     string message = 2;
+}
+
+//-----------------------------------------
+// 방 생성 응답
+// roomId : 방 번호
+//-----------------------------------------
+message S2CChattingServerCreateRoomResponse{
+    int32 chattingRoomId = 1;
 }
 
 /*
@@ -42,7 +59,9 @@ message ChattingPacket{
         // 로그인
         C2SChattingServerLoginRequest chattingServerLoginRequest = 1;
         S2CChattingServerLoginResponse chattingServerLoginResponse = 2;    
-        C2SChattingServerCreateRoomRequest chattingServerCreateRoomRequest = 3;     
+        C2SChattingServerCreateRoomRequest chattingServerCreateRoomRequest = 3;
+        S2CChattingServerCreateRoomResponse chattingServerCreateRoomResponse = 4; 
+        C2SChattingServerJoinRoomRequest chattingServerJoinRoomRequest = 5;       
     }
 }
 
