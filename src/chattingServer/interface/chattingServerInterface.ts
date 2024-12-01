@@ -28,6 +28,5 @@ export interface ChattingLoginResponse {
 }
 
 export interface ChattingJoinRoomRequestPayload {
-    chattingRoomId: number;
-    email: string;
+    ownerEmail: string;
 }
