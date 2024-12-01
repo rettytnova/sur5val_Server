@@ -12,8 +12,6 @@ class SendWorker {
     }
 
     private enquePacket(sendPacketData: SendPacketData) {
-        console.log(`sendWorker 패킷 인큐: ${sendPacketData.packetType}`);
-
         this.sendQueue.push(sendPacketData);
     }
 

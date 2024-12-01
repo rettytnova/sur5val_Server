@@ -70,6 +70,7 @@ export const createRoomHandler = async (socket: net.Socket, payload: Object) => 
         newRoom = {
           id: gRoomId,
           ownerId: userId,
+          ownerEmail: user.email,
           name: createRoomPayload.name,
           maxUserNum: createRoomPayload.maxUserNum,
           state: RoomStateType.WAIT,
@@ -96,6 +97,7 @@ export const createRoomHandler = async (socket: net.Socket, payload: Object) => 
           newRoom = {
             id: gRoomId,
             ownerId: userId,
+            ownerEmail: user.email,
             name: createRoomPayload.name,
             maxUserNum: createRoomPayload.maxUserNum,
             state: RoomStateType.WAIT,

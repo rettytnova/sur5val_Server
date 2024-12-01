@@ -197,12 +197,12 @@ export const setBossStat = async (room: Room, level: number) => {
   for (let i = 0; i < room.users.length; i++) {
     if (room.users[i].character.roleType === RoleType.BOSS_MONSTER) {
       room.users[i].character.aliveState = true;
-      room.users[i].character.gold = 500 * level;
-      room.users[i].character.hp = 1000 * level;
-      room.users[i].character.maxHp = room.users[i].character.hp;
-      room.users[i].character.mp = 30 * level;
-      room.users[i].character.attack = 10 * level;
-      room.users[i].character.armor = 2 * level;
+      // room.users[i].character.gold = 500 * level;
+      // room.users[i].character.hp = 1000 * level;
+      // room.users[i].character.maxHp = room.users[i].character.hp;
+      // room.users[i].character.mp = 30 * level;
+      room.users[i].character.attack = 5 * (level + 1);
+      room.users[i].character.armor = 1 * level;
 
       switch (level) {
         case 1: // 일반 라운드
@@ -210,11 +210,21 @@ export const setBossStat = async (room: Room, level: number) => {
             { type: CardType.MAGICIAN_BASIC_SKILL, count: 1 },
             { type: CardType.MAGICIAN_EXTENDED_SKILL, count: 1 },
             { type: CardType.BASIC_HP_POTION, count: 3 * level },
-            { type: CardType.BASIC_WEAPON, count: 1 },
-            { type: CardType.BASIC_HEAD, count: 1 },
-            { type: CardType.BASIC_ARMOR, count: 1 },
-            { type: CardType.BASIC_CLOAK, count: 1 },
-            { type: CardType.BASIC_GLOVE, count: 1 }
+            { type: CardType.EXPLORER_WEAPON, count: 1 },
+            { type: CardType.EXPLORER_HEAD, count: 1 },
+            { type: CardType.EXPLORER_ARMOR, count: 1 },
+            { type: CardType.EXPLORER_CLOAK, count: 1 },
+            { type: CardType.EXPLORER_GLOVE, count: 1 },
+            { type: CardType.HERO_WEAPON, count: 1 },
+            { type: CardType.HERO_HEAD, count: 1 },
+            { type: CardType.HERO_ARMOR, count: 1 },
+            { type: CardType.HERO_CLOAK, count: 1 },
+            { type: CardType.HERO_GLOVE, count: 1 },
+            { type: CardType.LEGENDARY_WEAPON, count: 1 },
+            { type: CardType.LEGENDARY_HEAD, count: 1 },
+            { type: CardType.LEGENDARY_ARMOR, count: 1 },
+            { type: CardType.LEGENDARY_CLOAK, count: 1 },
+            { type: CardType.LEGENDARY_GLOVE, count: 1 }
           ];
           break;
         case 2: // 일반 라운드
@@ -222,13 +232,7 @@ export const setBossStat = async (room: Room, level: number) => {
             { type: CardType.WARRIOR_BASIC_SKILL, count: 1 },
             { type: CardType.ARCHER_BASIC_SKILL, count: 1 },
             { type: CardType.MAGICIAN_BASIC_SKILL, count: 1 },
-            { type: CardType.PALADIN_BASIC_SKILL, count: 1 },
-            { type: CardType.BASIC_HP_POTION, count: 3 * level },
-            { type: CardType.BASIC_WEAPON, count: 1 },
-            { type: CardType.BASIC_HEAD, count: 1 },
-            { type: CardType.BASIC_ARMOR, count: 1 },
-            { type: CardType.BASIC_CLOAK, count: 1 },
-            { type: CardType.BASIC_GLOVE, count: 1 }
+            { type: CardType.BASIC_HP_POTION, count: 3 * level }
           ];
           break;
         case 3: // 일반 라운드
@@ -236,15 +240,9 @@ export const setBossStat = async (room: Room, level: number) => {
             { type: CardType.WARRIOR_BASIC_SKILL, count: 1 },
             { type: CardType.ARCHER_BASIC_SKILL, count: 1 },
             { type: CardType.MAGICIAN_BASIC_SKILL, count: 1 },
-            { type: CardType.PALADIN_BASIC_SKILL, count: 1 },
             { type: CardType.WARRIOR_EXTENDED_SKILL, count: 1 },
             { type: CardType.ARCHER_EXTENDED_SKILL, count: 1 },
-            { type: CardType.BASIC_HP_POTION, count: 3 * level },
-            { type: CardType.BASIC_WEAPON, count: 1 },
-            { type: CardType.BASIC_HEAD, count: 1 },
-            { type: CardType.BASIC_ARMOR, count: 1 },
-            { type: CardType.BASIC_CLOAK, count: 1 },
-            { type: CardType.BASIC_GLOVE, count: 1 }
+            { type: CardType.BASIC_HP_POTION, count: 3 * level }
           ];
           break;
         case 4: // 일반 라운드
@@ -252,17 +250,10 @@ export const setBossStat = async (room: Room, level: number) => {
             { type: CardType.WARRIOR_BASIC_SKILL, count: 1 },
             { type: CardType.ARCHER_BASIC_SKILL, count: 1 },
             { type: CardType.MAGICIAN_BASIC_SKILL, count: 1 },
-            { type: CardType.PALADIN_BASIC_SKILL, count: 1 },
             { type: CardType.WARRIOR_EXTENDED_SKILL, count: 1 },
             { type: CardType.ARCHER_EXTENDED_SKILL, count: 1 },
             { type: CardType.MAGICIAN_EXTENDED_SKILL, count: 1 },
-            { type: CardType.PALADIN_EXTENDED_SKILL, count: 1 },
-            { type: CardType.BASIC_HP_POTION, count: 3 * level },
-            { type: CardType.BASIC_WEAPON, count: 1 },
-            { type: CardType.BASIC_HEAD, count: 1 },
-            { type: CardType.BASIC_ARMOR, count: 1 },
-            { type: CardType.BASIC_CLOAK, count: 1 },
-            { type: CardType.BASIC_GLOVE, count: 1 }
+            { type: CardType.BASIC_HP_POTION, count: 3 * level }
           ];
           break;
         case 5: // 보스 라운드
@@ -270,17 +261,10 @@ export const setBossStat = async (room: Room, level: number) => {
             { type: CardType.WARRIOR_BASIC_SKILL, count: 1 },
             { type: CardType.ARCHER_BASIC_SKILL, count: 1 },
             { type: CardType.MAGICIAN_BASIC_SKILL, count: 1 },
-            { type: CardType.PALADIN_BASIC_SKILL, count: 1 },
             { type: CardType.WARRIOR_EXTENDED_SKILL, count: 1 },
             { type: CardType.ARCHER_EXTENDED_SKILL, count: 1 },
             { type: CardType.MAGICIAN_EXTENDED_SKILL, count: 1 },
-            { type: CardType.PALADIN_EXTENDED_SKILL, count: 1 },
-            { type: CardType.BASIC_HP_POTION, count: 5 * level },
-            { type: CardType.BASIC_WEAPON, count: 1 },
-            { type: CardType.BASIC_HEAD, count: 1 },
-            { type: CardType.BASIC_ARMOR, count: 1 },
-            { type: CardType.BASIC_CLOAK, count: 1 },
-            { type: CardType.BASIC_GLOVE, count: 1 }
+            { type: CardType.BASIC_HP_POTION, count: 5 * level }
           ];
           break;
         default:

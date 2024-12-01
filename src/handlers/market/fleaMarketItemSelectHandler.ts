@@ -104,6 +104,7 @@ export const fleaMarketItemSelectHandler = async (socket: net.Socket, payload: O
   for (let i = 0; i < cardPickUser.character.handCards.length; i++) {
     if (cardPickUser.character.handCards[i].type === fleMarketPickCard) {
       cardPickUser.character.handCards[i].count++;
+      isOwned = true;
       break;
     }
   }

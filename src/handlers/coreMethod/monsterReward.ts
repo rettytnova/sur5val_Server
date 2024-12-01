@@ -107,7 +107,7 @@ const setRewards = (attacker: User, target: User): boolean => {
           // 레벨업
           attacker.character.level += 1;
           // 레벨업시 직업별 스탯 증가
-          if (!setStatRewards(attacker, userCharacterData)) {
+          if (!setStatRewards(attacker)) {
             console.error('setStatRewards 실패');
             return false;
           }
@@ -246,24 +246,28 @@ const setRewards = (attacker: User, target: User): boolean => {
  * @param {UserCharacterData} attacker - 스탯을 증가시킬 유저의 데이터
  * @returns {boolean} 반환 값을 통해 스텟 보상 성공 여부를 알 수 있다.
  */
-const setStatRewards = (attacker: User, userCharacterData: UserCharacterData): boolean => {
+export const setStatRewards = (attacker: User): boolean => {
   // 캐릭터 타입에 따라 스탯 증가
+  // 마법사
   if (attacker.character.characterType == UserCharacterType.MASK) {
-    attacker.character.maxHp += attacker.character.level * 3;
-    attacker.character.attack += 10;
-    attacker.character.armor += 1;
+    attacker.character.attack += 2;
+    attacker.character.armor += 2;
+    attacker.character.maxHp += 2;
+    // 궁수
   } else if (attacker.character.characterType == UserCharacterType.SWIM_GLASSES) {
-    attacker.character.maxHp += attacker.character.level * 5;
-    attacker.character.attack += 8;
-    attacker.character.armor += 3;
+    attacker.character.attack += 1;
+    attacker.character.armor += 1;
+    attacker.character.maxHp += 6;
+    // 전사
   } else if (attacker.character.characterType == UserCharacterType.FROGGY) {
-    attacker.character.maxHp += attacker.character.level * 8;
-    attacker.character.attack += 6;
-    attacker.character.armor += 5;
+    attacker.character.attack += 1;
+    attacker.character.armor += 3;
+    attacker.character.maxHp += 8;
+    // 성기사
   } else if (attacker.character.characterType == UserCharacterType.RED) {
-    attacker.character.maxHp += attacker.character.level * 10;
-    attacker.character.attack += 3;
-    attacker.character.armor += 8;
+    attacker.character.attack += 1;
+    attacker.character.armor += 2;
+    attacker.character.maxHp += 12;
   } else {
     console.log('캐릭터 타입이 존재하지 않습니다.');
     return false;
@@ -282,51 +286,51 @@ const setStatRewards = (attacker: User, userCharacterData: UserCharacterData): b
  * @param {User} attacker - 스탯을 증가시킬 유저
  * @returns {boolean} 반환 값을 통해 카드 보상 성공 여부를 알 수 있다.
  */
-const setCardRewards = (attacker: User) => {
+export const setCardRewards = (attacker: User) => {
   // 레벨업시 특정 레벨을 도달할 때 마다 캐릭터 타입에 따라 카드 보상 지급
   switch (attacker.character.level) {
     case 3: // 3레벨일 경우
       if (attacker.character.characterType == UserCharacterType.MASK) {
-        attacker.character.handCards.push({ type: CardType.MAGICIAN_BASIC_SKILL, count: 1 });
+        attacker.character.handCards.push({ type: CardType.MAGICIAN_EXTENDED_SKILL, count: 1 });
       } else if (attacker.character.characterType == UserCharacterType.SWIM_GLASSES) {
-        attacker.character.handCards.push({ type: CardType.MAGICIAN_BASIC_SKILL, count: 1 });
+        attacker.character.handCards.push({ type: CardType.ARCHER_EXTENDED_SKILL, count: 1 });
       } else if (attacker.character.characterType == UserCharacterType.FROGGY) {
-        attacker.character.handCards.push({ type: CardType.MAGICIAN_BASIC_SKILL, count: 1 });
+        attacker.character.handCards.push({ type: CardType.ROGUE_EXTENDED_SKILL, count: 1 });
       } else if (attacker.character.characterType == UserCharacterType.RED) {
-        attacker.character.handCards.push({ type: CardType.MAGICIAN_BASIC_SKILL, count: 1 });
+        attacker.character.handCards.push({ type: CardType.WARRIOR_EXTENDED_SKILL, count: 1 });
       } else {
         console.log('캐릭터 타입이 존재하지 않습니다.');
         return false;
       }
       break;
-    case 5: // 5레벨일 경우
-      if (attacker.character.characterType == UserCharacterType.MASK) {
-        attacker.character.handCards.push({ type: CardType.MAGICIAN_BASIC_SKILL, count: 1 });
-      } else if (attacker.character.characterType == UserCharacterType.SWIM_GLASSES) {
-        attacker.character.handCards.push({ type: CardType.MAGICIAN_BASIC_SKILL, count: 1 });
-      } else if (attacker.character.characterType == UserCharacterType.FROGGY) {
-        attacker.character.handCards.push({ type: CardType.MAGICIAN_BASIC_SKILL, count: 1 });
-      } else if (attacker.character.characterType == UserCharacterType.RED) {
-        attacker.character.handCards.push({ type: CardType.MAGICIAN_BASIC_SKILL, count: 1 });
-      } else {
-        console.log('캐릭터 타입이 존재하지 않습니다.');
-        return false;
-      }
-      break;
-    case 7: // 7레벨일 경우
-      if (attacker.character.characterType == UserCharacterType.MASK) {
-        attacker.character.handCards.push({ type: CardType.MAGICIAN_BASIC_SKILL, count: 1 });
-      } else if (attacker.character.characterType == UserCharacterType.SWIM_GLASSES) {
-        attacker.character.handCards.push({ type: CardType.MAGICIAN_BASIC_SKILL, count: 1 });
-      } else if (attacker.character.characterType == UserCharacterType.FROGGY) {
-        attacker.character.handCards.push({ type: CardType.MAGICIAN_BASIC_SKILL, count: 1 });
-      } else if (attacker.character.characterType == UserCharacterType.RED) {
-        attacker.character.handCards.push({ type: CardType.MAGICIAN_BASIC_SKILL, count: 1 });
-      } else {
-        console.log('캐릭터 타입이 존재하지 않습니다.');
-        return false;
-      }
-      break;
+    // case 5: // 5레벨일 경우 (스킬 추가 시 활성화)
+    //   if (attacker.character.characterType == UserCharacterType.MASK) {
+    //     attacker.character.handCards.push({ type: CardType.MAGICIAN_BASIC_SKILL, count: 1 });
+    //   } else if (attacker.character.characterType == UserCharacterType.SWIM_GLASSES) {
+    //     attacker.character.handCards.push({ type: CardType.MAGICIAN_BASIC_SKILL, count: 1 });
+    //   } else if (attacker.character.characterType == UserCharacterType.FROGGY) {
+    //     attacker.character.handCards.push({ type: CardType.MAGICIAN_BASIC_SKILL, count: 1 });
+    //   } else if (attacker.character.characterType == UserCharacterType.RED) {
+    //     attacker.character.handCards.push({ type: CardType.MAGICIAN_BASIC_SKILL, count: 1 });
+    //   } else {
+    //     console.log('캐릭터 타입이 존재하지 않습니다.');
+    //     return false;
+    //   }
+    //   break;
+    // case 7: // 7레벨일 경우 (스킬 추가 시 활성화)
+    //   if (attacker.character.characterType == UserCharacterType.MASK) {
+    //     attacker.character.handCards.push({ type: CardType.MAGICIAN_BASIC_SKILL, count: 1 });
+    //   } else if (attacker.character.characterType == UserCharacterType.SWIM_GLASSES) {
+    //     attacker.character.handCards.push({ type: CardType.MAGICIAN_BASIC_SKILL, count: 1 });
+    //   } else if (attacker.character.characterType == UserCharacterType.FROGGY) {
+    //     attacker.character.handCards.push({ type: CardType.MAGICIAN_BASIC_SKILL, count: 1 });
+    //   } else if (attacker.character.characterType == UserCharacterType.RED) {
+    //     attacker.character.handCards.push({ type: CardType.MAGICIAN_BASIC_SKILL, count: 1 });
+    //   } else {
+    //     console.log('캐릭터 타입이 존재하지 않습니다.');
+    //     return false;
+    //   }
+    //   break;
     default: // 카드 보상을 받을 수 있는 레벨이 아닐 경우
       console.log('카드 보상을 받을 수 레벨이 아닙니다.');
       break;

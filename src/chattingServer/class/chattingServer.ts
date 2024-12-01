@@ -14,6 +14,7 @@ import ChattingRoom from './chattingRoom.js';
 import { Job, SendPacketData } from '../interface/chattingServerInterface.js';
 import ChattingUser from './chattingUser.js';
 import { Worker } from 'worker_threads';
+import { getChattingServerJobHandlerByJobType } from '../handlers/jobHandlers/jobHandlerIndex.js';
 
 class ChattingServer {
     private static gInstance: ChattingServer | null = null;
@@ -47,7 +48,7 @@ class ChattingServer {
 
         this.chattingServerJobQue = [];
 
-        this.roomId = 0;
+        this.roomId = 1;
 
         this.rooms = [];
         this.users = [];
@@ -150,6 +151,34 @@ class ChattingServer {
         this.update();
     }
 
+    getUsers() {
+        return this.users;
+    }
+
+    getUserByEmail(email: string) {
+        return this.users.find((user: ChattingUser) => user.getEmail() === email);
+    }
+
+    getUserBySocket(socket: net.Socket) {
+        return this.users.find((user: ChattingUser) => user.getUserSocket() === socket);
+    }
+
+    getRooms() {
+        return this.rooms;
+    }
+
+    getRoomId() {
+        return this.roomId;
+    }
+
+    increaseRoomId() {
+        this.roomId;
+    }
+
+    getSendWorker() {
+        return this.sendWorker;
+    }
+
     update() {
         const now = performance.now();
 
@@ -165,17 +194,8 @@ class ChattingServer {
                     break;
                 }
 
-                switch (job.jobType) {
-                    case config.jobType.CHATTING_LOGIN_REQUEST_JOB:
-                        const userEmail = job.payload[0];
-                        const userSocket = job.payload[1];
-
-                        console.log(`채팅서버 로그인 요청 ${userEmail}`);
-
-                        const newChattingUser = new ChattingUser(userSocket as CustomSocket, 0, userEmail as string);
-                        this.users.push(newChattingUser);
-                        break;
-                }
+                const jobHandler = getChattingServerJobHandlerByJobType(job.jobType);
+                jobHandler?.(job);
             }
 
             // 방 업데이트

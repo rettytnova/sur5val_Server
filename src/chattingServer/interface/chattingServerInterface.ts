@@ -10,13 +10,11 @@ export class Job {
 }
 
 export class SendPacketData {
-    //public socket: CustomSocket;
-    public packetType: number;
-    public data: Object;
-    constructor(packetType: number, data: Object) {
-        //this.socket = socket;
-        this.packetType = packetType;
-        this.data = data;
+    public socket: CustomSocket;
+    public packet: Buffer;
+    constructor(socket: CustomSocket, packet: Buffer) {
+        this.socket = socket;
+        this.packet = packet;
     }
 }
 
@@ -29,6 +27,7 @@ export interface ChattingLoginResponse {
     message: string;
 }
 
-export interface ChattingCreateRoomRequestPayload {
+export interface ChattingJoinRoomRequestPayload {
+    chattingRoomId: number;
     email: string;
 }

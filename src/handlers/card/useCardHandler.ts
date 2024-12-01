@@ -6,7 +6,8 @@ import { getRedisData, getRoomByUserId, getUserIdBySocket, setRedisData } from '
 import { userUpdateNotification } from '../notification/userUpdate.js';
 import { socketSessions } from '../../session/socketSession.js';
 import { monsterAiDatas } from '../coreMethod/monsterMove.js';
-import { monsterReward } from '../coreMethod/monsterReward.js';
+import { monsterReward, setCardRewards, setStatRewards } from '../coreMethod/monsterReward.js';
+import { userCharacterData } from '../game/gamePrepareHandler.js';
 
 // DB에 들어갈 내용
 const DBEquip: { [cardType: number]: { attack: number; armor: number; hp: number } } = {
@@ -16,15 +17,20 @@ const DBEquip: { [cardType: number]: { attack: number; armor: number; hp: number
   304: { attack: 0, armor: 0, hp: 0 },
   305: { attack: 0, armor: 0, hp: 0 },
   306: { attack: 2, armor: 0, hp: 0 },
-  307: { attack: 0, armor: 0, hp: 8 },
-  308: { attack: 0, armor: 2, hp: 2 },
-  309: { attack: 0, armor: 1, hp: 5 },
-  310: { attack: 1, armor: 1, hp: 0 },
+  307: { attack: 0, armor: 0, hp: 16 },
+  308: { attack: 0, armor: 1, hp: 12 },
+  309: { attack: 0, armor: 2, hp: 8 },
+  310: { attack: 1, armor: 1, hp: 2 },
   311: { attack: 4, armor: 0, hp: 0 },
-  312: { attack: 0, armor: 0, hp: 16 },
-  313: { attack: 0, armor: 4, hp: 4 },
-  314: { attack: 0, armor: 2, hp: 10 },
-  315: { attack: 2, armor: 2, hp: 0 }
+  312: { attack: 0, armor: 0, hp: 32 },
+  313: { attack: 0, armor: 2, hp: 24 },
+  314: { attack: 0, armor: 4, hp: 16 },
+  315: { attack: 2, armor: 2, hp: 4 },
+  316: { attack: 6, armor: 0, hp: 0 },
+  317: { attack: 0, armor: 0, hp: 48 },
+  318: { attack: 0, armor: 3, hp: 36 },
+  319: { attack: 0, armor: 6, hp: 24 },
+  320: { attack: 3, armor: 3, hp: 6 }
 };
 
 const { packetType } = config;
@@ -41,18 +47,12 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
   // response 데이터 초기화 ----------------------------------------------------------------------
   const { cardType, targetUserId: targetUserIdRaw } = payload as UseCardRequest;
   const targetUserId = Number(targetUserIdRaw);
-  let responseMessage: string = '';
   let responseData: UseCardResponse = {
     success: true,
     failCode: GlobalFailCode.NONE
   };
 
   try {
-    // 유효성 검사 ----------------------------------------------------------------------
-    // 유효성 구현은 추후 생각해볼 문제
-
-    // 카드 사용 성공 처리 ----------------------------------------------------------------------
-    // responseMessage = `카드 사용 성공 : ${cardType}`;
     // redisUser 정보 찾기
     const userId: number | null = await getUserIdBySocket(socket);
     if (userId === null) {
@@ -140,22 +140,23 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
         await setRedisData('roomData', rooms);
         break;
       }
-      // 이름: 전사 기본 스킬
-      // 설명: 파티원의 방어력과 공격력을 올려주는 버프를 시전한다.
-      case CardType.WARRIOR_BASIC_SKILL:
-        await partyBuff(1, user, rooms, room, 0, 2, 1);
-        break;
 
       // 이름: 궁수 기본 스킬
-      // 설명:
+      // 설명: 파티원의 방어력과 공격력을 올려주는 버프를 시전한다.
       case CardType.ARCHER_BASIC_SKILL:
         console.log('궁수 기본 스킬 사용!!!!');
         break;
 
-      // 이름: 팔라딘 기본 스킬
+      // 이름: 도적 기본 스킬
       // 설명:
-      case CardType.PALADIN_BASIC_SKILL:
-        console.log('팔라딘 기본 스킬 사용!!!!');
+      case CardType.ROGUE_BASIC_SKILL:
+        console.log('도적 기본 스킬 사용!!!!');
+        break;
+
+      // 이름: 전사 기본 스킬
+      // 설명:
+      case CardType.WARRIOR_BASIC_SKILL:
+        await partyBuff(1, user, rooms, room, 0, 2, 1);
         break;
 
       // 이름: 삼중 타격
@@ -200,8 +201,20 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
         await setRedisData('roomData', rooms);
         break;
       }
-      // 이름: 전사 강화 스킬
+      // 이름: 궁수 강화 스킬
       // 설명: 일시적(10초간)으로 방어력이 대폭 상승한다.
+      case CardType.ARCHER_EXTENDED_SKILL:
+        console.log('궁수 강화 스킬 사용!!!!');
+        break;
+
+      // 이름: 도적 강화 스킬
+      // 설명:
+      case CardType.ROGUE_EXTENDED_SKILL:
+        console.log('도적 강화 스킬 사용!!!!');
+        break;
+
+      // 이름: 전사 강화 스킬
+      // 설명:
       case CardType.WARRIOR_EXTENDED_SKILL:
         if (!user) return;
         await changeStatus(1, user, rooms, room, 0, 8, -2);
@@ -210,24 +223,99 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
         }, 10000);
         break;
 
-      // 이름: 궁수 강화 스킬
+      // 이름:
       // 설명:
-      case CardType.ARCHER_EXTENDED_SKILL:
-        console.log('궁수 강화 스킬 사용!!!!');
+      case CardType.NONE:
         break;
-
-      // 이름: 팔라딘 강화 스킬
-      // 설명:
-      case CardType.PALADIN_EXTENDED_SKILL:
-        console.log('팔라딘 강화 스킬 사용!!!!');
-        break;
-
-      // 소모품 101 ~ 200 // 소모품 101 ~ 200 //  소모품 101 ~ 200 //  소모품 101 ~ 200 //  소모품 101 ~ 200 //  소모품 101 ~ 200 //  소모품 101 ~ 200 //
 
       // 이름:
       // 설명:
+      case CardType.NONE:
+        break;
+
+      // 이름:
+      // 설명:
+      case CardType.NONE:
+
+      // 이름:
+      // 설명:
+      case CardType.NONE:
+        break;
+
+      // 이름:
+      // 설명:
+      case CardType.NONE:
+        break;
+
+      // 이름:
+      // 설명:
+      case CardType.NONE:
+        break;
+
+      // 이름:
+      // 설명:
+      case CardType.NONE:
+
+      // 이름:
+      // 설명:
+      case CardType.NONE:
+        break;
+
+      // 소모품 201 ~ 300 // 소모품 201 ~ 300 //  소모품 201 ~ 300 //  소모품 201 ~ 300 //  소모품 201 ~ 300 //  소모품 201 ~ 300 //  소모품 201 ~ 300 //
+
+      // 이름: 순수한 이슬
+      // 설명: 맑고 순수한 이슬 한 방울이 체력을 3 회복해준다! 지친 몸에 활력을 더해 다시 전투에 나설 수 있도록 돕는다.
       case CardType.BASIC_HP_POTION:
-        usePotion(user, 1, 1, rooms, room, CardType.BASIC_HP_POTION);
+        usePotion(user, 3, 0, 0, rooms, room, CardType.BASIC_HP_POTION);
+        break;
+
+      // 이름: 마력의 이슬
+      // 설명: 맑고 순수한 이슬 한 방울이 마력을 3 회복해준다! 고갈된 마법 에너지를 되살려 새로운 주문을 준비하자.
+      case CardType.BASIC_MP_POTION:
+        usePotion(user, 0, 2, 0, rooms, room, CardType.BASIC_MP_POTION);
+        break;
+
+      // 이름: 치유의 빛
+      // 설명: 은은한 치유의 빛이 체력을 6 회복해준다! 깊은 상처를 어루만지고 전투의 피로를 씻어내는 신비한 물약.
+      case CardType.ADVANCED_HP_POTION:
+        usePotion(user, 6, 0, 0, rooms, room, CardType.ADVANCED_HP_POTION);
+        break;
+
+      // 이름: 마력의 빛
+      // 설명: 은은한 마나의 빛이 마력을 6 회복해준다! 흐릿했던 마법의 기운을 선명하게 채워주는 신비한 물약.
+      case CardType.ADVANCED_MP_POTION:
+        usePotion(user, 0, 4, 0, rooms, room, CardType.ADVANCED_MP_POTION);
+
+      // 이름: 생명의 숨결
+      // 설명: 신비로운 생명의 기운이 체력을 10 회복해준다! 생명의 근원이 담긴 이 물약은 가장 극한의 상황에서도 새로운 힘을 불어넣는다.
+      case CardType.MASTER_HP_POTION:
+        usePotion(user, 12, 0, 0, rooms, room, CardType.MASTER_HP_POTION);
+        break;
+
+      // 이름: 마력의 숨결
+      // 설명: 신비로운 마력의 기운이 마력을 10 회복해준다! 극한의 상황에서도 강력한 주문을 사용할 수 있는 힘을 불어넣는다.
+      case CardType.MASTER_MP_POTION:
+        usePotion(user, 0, 8, 0, rooms, room, CardType.MASTER_MP_POTION);
+        break;
+
+      // 이름: 경험치 물약1
+      // 설명: 경험치 + 10
+      case CardType.NONE:
+        break;
+
+      // 이름: 경험치 물약2
+      // 설명: 경험치 + 30
+      case CardType.NONE:
+        break;
+
+      // 이름:
+      // 설명:
+      case CardType.NONE:
+        break;
+
+      // 이름:
+      // 설명:
+      case CardType.NONE:
         break;
 
       // 이름:
@@ -243,112 +331,103 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
       // 이름:
       // 설명:
       case CardType.NONE:
+        break;
 
-      // 이름:
-      // 설명:
-      case CardType.NONE:
+      // 장비 301 ~ 400 // 장비 301 ~ 400  / 장비 301 ~ 400 // 장비 301 ~ 400 // 장비 301 ~ 400 // 장비 301 ~ 400 // 장비 301 ~ 400 // 장비 301 ~ 400 //
+
+      // 이름: 탐험가의 무기
+      // 설명: 야생에서 빛을 발하는 무기. 공격력+2
+      case CardType.EXPLORER_WEAPON:
+        equipWeapon(user, rooms, room, CardType.EXPLORER_WEAPON);
+        break;
+
+      // 이름: 탐험가의 투구
+      // 설명: 거친 환경을 견디는 투구. 체력+16
+      case CardType.EXPLORER_HEAD:
+        equipItem(user, rooms, room, 0, CardType.EXPLORER_HEAD);
+        break;
+
+      // 이름: 탐험가의 갑옷
+      // 설명: 유연성과 보호력을 겸비한 갑옷. 방어력+1, 체력+12
+      case CardType.EXPLORER_ARMOR:
+        equipItem(user, rooms, room, 1, CardType.EXPLORER_ARMOR);
+        break;
+
+      // 이름: 탐험가의 망토
+      // 설명: 바람과 비를 막아주는 견고한 망토. 방어력+2, 체력+8
+      case CardType.EXPLORER_CLOAK:
+        equipItem(user, rooms, room, 2, CardType.EXPLORER_CLOAK);
+        break;
+
+      // 이름: 탐험가의 장갑
+      // 설명: 정밀한 손놀림을 돕는 장갑. 공격력+1, 방어력+1, 체력+2
+      case CardType.EXPLORER_GLOVE:
+        equipItem(user, rooms, room, 3, CardType.EXPLORER_GLOVE);
+        break;
+
+      // 이름: 영웅의 무기
+      // 설명: 강력한 적도 제압 가능한 놀라운 무기. 공격력+4
+      case CardType.HERO_WEAPON:
+        equipWeapon(user, rooms, room, CardType.HERO_WEAPON);
+        break;
+
+      // 이름: 영웅의 투구
+      // 설명: 영광스러운 전투를 상징하는 투구. 체력+32
+      case CardType.HERO_HEAD:
+        equipItem(user, rooms, room, 0, CardType.HERO_HEAD);
+        break;
+
+      // 이름: 영웅의 갑옷
+      // 설명: 방어와 위엄을 겸비한 갑옷. 방어력+2, 체력+24
+      case CardType.HERO_ARMOR:
+        equipItem(user, rooms, room, 1, CardType.HERO_ARMOR);
+        break;
+
+      // 이름: 영웅의 망토
+      // 설명: 마법의 힘이 깃든 망토. 방어력+4, 체력+16
+      case CardType.HERO_CLOAK:
+        equipItem(user, rooms, room, 2, CardType.HERO_CLOAK);
+        break;
+
+      // 이름: 영웅의 장갑
+      // 설명: 전투 기술을 극대화하는 장갑. 공격력+2, 방어력+2, 체력+4
+      case CardType.HERO_GLOVE:
+        equipItem(user, rooms, room, 3, CardType.HERO_GLOVE);
+        break;
+
+      // 이름: 전설의 무기
+      // 설명: 신화적 힘이 담긴 무기, 적에게 파멸을 선사한다. 공격력+6
+      case CardType.LEGENDARY_WEAPON:
+        equipWeapon(user, rooms, room, CardType.LEGENDARY_WEAPON);
+        break;
+
+      // 이름: 전설의 투구
+      // 설명: 신성한 보호막을 제공하는 투구, 사용자를 불멸로 이끈다. 체력+48
+      case CardType.LEGENDARY_HEAD:
+        equipItem(user, rooms, room, 0, CardType.LEGENDARY_HEAD);
+        break;
+
+      // 이름: 전설의 갑옷
+      // 설명: 황금빛 문양과 마법이 깃든 최강의 갑옷. 방어력+3, 체력+36
+      case CardType.LEGENDARY_ARMOR:
+        equipItem(user, rooms, room, 1, CardType.LEGENDARY_ARMOR);
+        break;
+
+      // 이름: 전설의 망토
+      // 설명: 우주의 에너지가 깃든 최강의 망토. 방어력+6, 체력+24
+      case CardType.LEGENDARY_CLOAK:
+        equipItem(user, rooms, room, 2, CardType.LEGENDARY_CLOAK);
+        break;
+
+      // 이름: 전설의 장갑
+      // 설명: 신화의 기술과 힘을 담은 승리의 장갑. 공격력+3, 방어력+3, 체력+6
+      case CardType.LEGENDARY_GLOVE:
+        equipItem(user, rooms, room, 3, CardType.LEGENDARY_GLOVE);
         break;
 
       // 이름:
       // 설명:
       case CardType.NONE:
-        break;
-
-      // 이름:
-      // 설명:
-      case CardType.NONE:
-        break;
-
-      // 이름:
-      // 설명:
-      case CardType.NONE:
-        break;
-
-      // 이름:
-      // 설명:
-      case CardType.NONE:
-        break;
-
-      // 이름:
-      // 설명:
-      case CardType.NONE:
-        break;
-
-      // 이름:
-      // 설명:
-      case CardType.NONE:
-        break;
-
-      // 이름:
-      // 설명:
-      case CardType.NONE:
-        break;
-
-      // 이름:
-      // 설명:
-      case CardType.NONE:
-        break;
-
-      // 장비 201 ~ 300 // 장비 201 ~ 300 // 장비 201 ~ 300 // 장비 201 ~ 300 // 장비 201 ~ 300 // 장비 201 ~ 300 // 장비 201 ~ 300 // 장비 201 ~ 300 //
-
-      // 이름: 초심자의 무기
-      // 설명: 모험을 시작한 초보자를 위한 기본 무기. 공격력 +2
-      case CardType.BASIC_WEAPON:
-        equipWeapon(user, rooms, room, CardType.BASIC_WEAPON);
-        break;
-
-      // 이름: 초심자의 투구
-      // 설명: 생존력을 높여주는 초보자용 장비. 체력 +8
-      case CardType.BASIC_HEAD:
-        equipItem(user, rooms, room, 0, CardType.BASIC_HEAD);
-        break;
-
-      // 이름: 초심자의 갑옷
-      // 설명:
-      case CardType.BASIC_ARMOR:
-        equipItem(user, rooms, room, 1, CardType.BASIC_ARMOR);
-        break;
-
-      // 이름: 초심자의 망토
-      // 설명:
-      case CardType.BASIC_CLOAK:
-        equipItem(user, rooms, room, 2, CardType.BASIC_CLOAK);
-        break;
-
-      // 이름: 초심자의 장갑
-      // 설명:
-      case CardType.BASIC_GLOVE:
-        equipItem(user, rooms, room, 3, CardType.BASIC_GLOVE);
-        break;
-
-      // 이름:
-      // 설명:
-      case CardType.ADVANCED_WEAPON:
-        equipWeapon(user, rooms, room, CardType.ADVANCED_WEAPON);
-        break;
-
-      // 이름:
-      // 설명:
-      case CardType.ADVANCED_HEAD:
-        equipItem(user, rooms, room, 0, CardType.ADVANCED_HEAD);
-        break;
-
-      // 이름:
-      // 설명:
-      case CardType.ADVANCED_ARMOR:
-        equipItem(user, rooms, room, 1, CardType.ADVANCED_ARMOR);
-        break;
-
-      // 이름:
-      // 설명:
-      case CardType.ADVANCED_CLOAK:
-        equipItem(user, rooms, room, 2, CardType.ADVANCED_CLOAK);
-        break;
-
-      // 이름:
-      // 설명:
-      case CardType.ADVANCED_GLOVE:
-        equipItem(user, rooms, room, 3, CardType.ADVANCED_GLOVE);
         break;
 
       // 이름:
@@ -499,11 +578,12 @@ const attackTarget = async (attacker: User, rooms: Room[], room: Room, skillCoef
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
-// 본인의 Hp / Mp 회복 - MaxHp, MaxMp 만들지 회의
+// 본인의 Hp, Mp 회복 / Exp 획득
 const usePotion = async (
   user: User,
   restoreHp: number,
   restoreMp: number,
+  getExp: number,
   rooms: Room[],
   room: Room,
   cardsType: number
@@ -520,12 +600,27 @@ const usePotion = async (
   if (isOwned === false) return;
 
   // 회복 실행
-  if (user.character.hp + restoreHp <= user.character.maxHp) {
-    user.character.hp += restoreHp;
-  } else {
-    user.character.hp = user.character.maxHp;
+  user.character.hp = Math.min(user.character.hp + restoreHp, user.character.maxHp);
+  user.character.mp += Math.min(user.character.mp + restoreMp, userCharacterData[user.character.characterType].mp);
+  user.character.exp += getExp;
+
+  let maxExp = userCharacterData[user.character.characterType].exp * user.character.level;
+  while (user.character.exp >= maxExp) {
+    user.character.exp -= maxExp;
+    user.character.level += 1;
+    maxExp = userCharacterData[user.character.characterType].exp * user.character.level;
+    // 직업별 스탯 증가
+    if (!setStatRewards(user)) {
+      console.error('setStatRewards 실패');
+      return false;
+    }
+    // 직업별 카드 보상 지급
+    else if (!setCardRewards(user)) {
+      console.error('setCardRewards 실패');
+      return false;
+    }
   }
-  user.character.mp += restoreMp;
+
   await setRedisData('roomData', rooms);
   await userUpdateNotification(room);
 };
