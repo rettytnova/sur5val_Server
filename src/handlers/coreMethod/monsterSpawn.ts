@@ -272,6 +272,7 @@ export const monsterSpawn = async (roomId: number, level: number) => {
   const monsterData = monsterDatas[type];
   const monster: User = {
     id: ++monsterNumber,
+    email: '',
     nickname: monsterData[level].nickname,
     character: {
       characterType: type,
