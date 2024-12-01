@@ -321,20 +321,6 @@ export const setCardRewards = (attacker: User) => {
         return false;
       }
       break;
-    // case 7: // 7레벨일 경우 (스킬 추가 시 활성화)
-    //   if (attacker.character.characterType == UserCharacterType.MASK) {
-    //     attacker.character.handCards.push({ type: CardType.MAGICIAN_BASIC_SKILL, count: 1 });
-    //   } else if (attacker.character.characterType == UserCharacterType.SWIM_GLASSES) {
-    //     attacker.character.handCards.push({ type: CardType.MAGICIAN_BASIC_SKILL, count: 1 });
-    //   } else if (attacker.character.characterType == UserCharacterType.FROGGY) {
-    //     attacker.character.handCards.push({ type: CardType.MAGICIAN_BASIC_SKILL, count: 1 });
-    //   } else if (attacker.character.characterType == UserCharacterType.RED) {
-    //     attacker.character.handCards.push({ type: CardType.MAGICIAN_BASIC_SKILL, count: 1 });
-    //   } else {
-    //     console.log('캐릭터 타입이 존재하지 않습니다.');
-    //     return false;
-    //   }
-    //   break;
     default: // 카드 보상을 받을 수 있는 레벨이 아닐 경우
       console.log('카드 보상을 받을 수 레벨이 아닙니다.');
       break;
