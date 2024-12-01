@@ -8,6 +8,6 @@ export const chattingLoginJobHandler = (job: Job): void => {
     const userEmail = job.payload[0] as string;
     const userSocket = job.payload[1] as CustomSocket;
 
-    const newChattingUser = new ChattingUser(userSocket, 0, userEmail);
+    const newChattingUser = new ChattingUser(userSocket, userEmail);
     ChattingServer.getInstance().getUsers().push(newChattingUser);
 }
