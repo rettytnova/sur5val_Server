@@ -44,6 +44,7 @@ export type PhaseType = (typeof PhaseType)[keyof typeof PhaseType];
 // 카드
 export const CardType = Object.freeze({
   NONE: 0,
+  SUR5VER_BASIC_SKILL: 100,
   MAGICIAN_BASIC_SKILL: 101,
   ARCHER_BASIC_SKILL: 102,
   ROGUE_BASIC_SKILL: 103,
