@@ -104,7 +104,10 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
     // 카드타입 별로 사용 효과 정의 (1~100: 스킬, 101~200: 소모품, 201~: 장비)
     switch (cardType) {
       // 스킬 1 ~ 100 // 스킬 1 ~ 100 // 스킬 1 ~ 100 // 스킬 1 ~ 100 // 스킬 1 ~ 100 // 스킬 1 ~ 100 // 스킬 1 ~ 100 // 스킬 1 ~ 100 //
-
+      case CardType.SUR5VER_BASIC_SKILL: {
+        console.log('SUR5VER 기본 공격 사용');
+        break;
+      }
       // 이름: 쌍둥이 폭팔
       // 설명: 신비로운 마법의 에너지가 두 번 적을 빠르게 베어낸다. 두 번째 타격은 마법의 폭발로 적을 더 강하게 공격한다.
       case CardType.MAGICIAN_BASIC_SKILL: {
