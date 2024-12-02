@@ -164,7 +164,7 @@ export const normalPhaseNotification = async (level: number, roomId: number, sen
           break;
         case RoleType.SUR5VAL:
           const maxMp = userCharacterData[room.users[i].character.characterType].mp;
-          if (Math.floor(maxMp * 0.5) + room.users[i].character.mp < maxMp) {
+          if (Math.floor(maxMp * 0.2) + room.users[i].character.mp < maxMp) {
             room.users[i].character.mp += Math.floor(maxMp * 0.2);
           } else {
             room.users[i].character.mp = maxMp;
