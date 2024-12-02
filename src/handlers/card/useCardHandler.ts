@@ -106,6 +106,8 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
     // 카드타입 별로 사용 효과 정의 (1~100: 스킬, 101~200: 소모품, 201~: 장비)
     switch (cardType) {
       // 스킬 1 ~ 100 // 스킬 1 ~ 100 // 스킬 1 ~ 100 // 스킬 1 ~ 100 // 스킬 1 ~ 100 // 스킬 1 ~ 100 // 스킬 1 ~ 100 // 스킬 1 ~ 100 //
+      // 이름: 기본 공격
+      // 설명: 그냥 기본 공격 입니다.(직업별 기본 공격은 카드 처럼 종류와 enum을 추가해주면 됩니다.)
       case CardType.SUR5VER_BASIC_SKILL: {
         console.log('SUR5VER 기본 공격 사용');
         break;
