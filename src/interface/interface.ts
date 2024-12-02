@@ -84,6 +84,7 @@ export interface Character {
   characterType: number;
   roleType: number;
   aliveState: boolean;
+  coolDown: number;
   level: number;
   exp: number;
   gold: number;
@@ -102,6 +103,7 @@ export interface Character {
 
 export interface User {
   id: number;
+  email: string;
   nickname: string;
   character: Character;
 }
@@ -109,6 +111,7 @@ export interface User {
 export interface Room {
   id: number;
   ownerId: number;
+  ownerEmail: string;
   name: string;
   maxUserNum: number;
   state: RoomStateType;

@@ -13,7 +13,7 @@ export const monsterDatas: MonsterDatas = {
       attackRange: 2,
       attack: 1,
       armor: 0,
-      exp: 1,
+      exp: 5,
       gold: 10,
       hpRecovery: 1,
       mpRecovery: 1
@@ -25,7 +25,7 @@ export const monsterDatas: MonsterDatas = {
       attackRange: 2,
       attack: 2,
       armor: 1,
-      exp: 3,
+      exp: 10,
       gold: 30,
       hpRecovery: 2,
       mpRecovery: 2
@@ -37,7 +37,7 @@ export const monsterDatas: MonsterDatas = {
       attackRange: 2,
       attack: 3,
       armor: 1,
-      exp: 6,
+      exp: 15,
       gold: 60,
       hpRecovery: 3,
       mpRecovery: 3
@@ -49,7 +49,7 @@ export const monsterDatas: MonsterDatas = {
       attackRange: 2,
       attack: 5,
       armor: 2,
-      exp: 10,
+      exp: 20,
       gold: 100,
       hpRecovery: 4,
       mpRecovery: 4
@@ -61,7 +61,7 @@ export const monsterDatas: MonsterDatas = {
       attackRange: 2,
       attack: 7,
       armor: 2,
-      exp: 15,
+      exp: 25,
       gold: 150,
       hpRecovery: 5,
       mpRecovery: 5
@@ -75,7 +75,7 @@ export const monsterDatas: MonsterDatas = {
       attackRange: 2,
       attack: 1,
       armor: 0,
-      exp: 1,
+      exp: 5,
       gold: 10,
       hpRecovery: 1,
       mpRecovery: 1
@@ -87,7 +87,7 @@ export const monsterDatas: MonsterDatas = {
       attackRange: 2,
       attack: 2,
       armor: 1,
-      exp: 3,
+      exp: 10,
       gold: 30,
       hpRecovery: 2,
       mpRecovery: 2
@@ -99,7 +99,7 @@ export const monsterDatas: MonsterDatas = {
       attackRange: 2,
       attack: 3,
       armor: 1,
-      exp: 6,
+      exp: 15,
       gold: 60,
       hpRecovery: 3,
       mpRecovery: 3
@@ -111,7 +111,7 @@ export const monsterDatas: MonsterDatas = {
       attackRange: 2,
       attack: 5,
       armor: 2,
-      exp: 10,
+      exp: 20,
       gold: 100,
       hpRecovery: 4,
       mpRecovery: 4
@@ -123,7 +123,7 @@ export const monsterDatas: MonsterDatas = {
       attackRange: 2,
       attack: 8,
       armor: 2,
-      exp: 15,
+      exp: 25,
       gold: 150,
       hpRecovery: 5,
       mpRecovery: 5
@@ -137,7 +137,7 @@ export const monsterDatas: MonsterDatas = {
       attackRange: 2.5,
       attack: 1,
       armor: 0,
-      exp: 1,
+      exp: 5,
       gold: 10,
       hpRecovery: 1,
       mpRecovery: 1
@@ -149,7 +149,7 @@ export const monsterDatas: MonsterDatas = {
       attackRange: 2.5,
       attack: 2,
       armor: 1,
-      exp: 3,
+      exp: 10,
       gold: 30,
       hpRecovery: 2,
       mpRecovery: 2
@@ -161,7 +161,7 @@ export const monsterDatas: MonsterDatas = {
       attackRange: 2.5,
       attack: 3,
       armor: 1,
-      exp: 6,
+      exp: 15,
       gold: 60,
       hpRecovery: 3,
       mpRecovery: 3
@@ -173,7 +173,7 @@ export const monsterDatas: MonsterDatas = {
       attackRange: 2.5,
       attack: 5,
       armor: 2,
-      exp: 10,
+      exp: 20,
       gold: 100,
       hpRecovery: 4,
       mpRecovery: 4
@@ -185,7 +185,7 @@ export const monsterDatas: MonsterDatas = {
       attackRange: 2.5,
       attack: 7,
       armor: 2,
-      exp: 15,
+      exp: 25,
       gold: 150,
       hpRecovery: 5,
       mpRecovery: 5
@@ -272,11 +272,13 @@ export const monsterSpawn = async (roomId: number, level: number) => {
   const monsterData = monsterDatas[type];
   const monster: User = {
     id: ++monsterNumber,
+    email: '',
     nickname: monsterData[level].nickname,
     character: {
       characterType: type,
       roleType: RoleType.WEAK_MONSTER,
       aliveState: true,
+      coolDown: 0,
       level: level,
       exp: monsterData[level].exp,
       gold: monsterData[level].gold,

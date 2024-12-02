@@ -75,11 +75,13 @@ export const loginHandler = async (socket: CustomSocket, payload: Object): Promi
     responseData.token = accessToken;
     responseData.myInfo = {
       id: userByEmailPw.id as number,
+      email: userByEmailPw.email as string,
       nickname: userByEmailPw.nickname as string,
       character: {
         characterType: 0,
         roleType: RoleType.SUR5VAL,
         aliveState: true,
+        coolDown: 0,
         level: 1,
         exp: 0,
         gold: 20,

@@ -96,9 +96,8 @@ const setRewards = (attacker: User, target: User): boolean => {
       let maxExp: number = 0;
       do {
         // 최대 경험치 = 유저의 초기 경험치 * 유저의 레벨
-        maxExp = attacker.character.exp * attacker.character.level;
-        // 현재 경험치 = 현재 경험치 + 초기 값으로 설정된 몬스터가 주는 경험치
-        attacker.character.exp += target.character.exp;
+        maxExp = userCharacterData[attacker.character.characterType].exp * attacker.character.level;
+        console.log(maxExp, attacker.character.exp);
 
         // 현재 경험치 >= 최대 경험치
         if (attacker.character.exp >= maxExp) {
@@ -106,6 +105,7 @@ const setRewards = (attacker: User, target: User): boolean => {
           attacker.character.exp -= maxExp;
           // 레벨업
           attacker.character.level += 1;
+          maxExp = userCharacterData[attacker.character.characterType].exp * attacker.character.level;
           // 레벨업시 직업별 스탯 증가
           if (!setStatRewards(attacker)) {
             console.error('setStatRewards 실패');
@@ -118,7 +118,7 @@ const setRewards = (attacker: User, target: User): boolean => {
           }
         }
         // 여전히 현재 경험치가 최대 경험치보다 크다면 반복
-      } while (attacker.character.exp > maxExp);
+      } while (attacker.character.exp >= maxExp);
 
       // 골드 보상 ---------------------------------------------------------------
       // 타겟이 WEAK_MONSTER일 경우
@@ -255,7 +255,7 @@ export const setStatRewards = (attacker: User): boolean => {
     attacker.character.maxHp += 2;
     // 궁수
   } else if (attacker.character.characterType == UserCharacterType.SWIM_GLASSES) {
-    attacker.character.attack += 1;
+    attacker.character.attack += 2;
     attacker.character.armor += 1;
     attacker.character.maxHp += 6;
     // 전사
@@ -273,8 +273,8 @@ export const setStatRewards = (attacker: User): boolean => {
     return false;
   }
   // 레벨업시 체력과 마나 최대로 회복
-  attacker.character.hp = attacker.character.maxHp;
-  attacker.character.mp = userCharacterData[attacker.character.characterType].mp;
+  // attacker.character.hp = attacker.character.maxHp;
+  // attacker.character.mp = userCharacterData[attacker.character.characterType].mp;
   return true;
 };
 
@@ -292,45 +292,35 @@ export const setCardRewards = (attacker: User) => {
     case 3: // 3레벨일 경우
       if (attacker.character.characterType == UserCharacterType.MASK) {
         attacker.character.handCards.push({ type: CardType.MAGICIAN_EXTENDED_SKILL, count: 1 });
+        attacker.character.handCards.sort((a, b) => a.type - b.type);
       } else if (attacker.character.characterType == UserCharacterType.SWIM_GLASSES) {
         attacker.character.handCards.push({ type: CardType.ARCHER_EXTENDED_SKILL, count: 1 });
+        attacker.character.handCards.sort((a, b) => a.type - b.type);
       } else if (attacker.character.characterType == UserCharacterType.FROGGY) {
         attacker.character.handCards.push({ type: CardType.ROGUE_EXTENDED_SKILL, count: 1 });
+        attacker.character.handCards.sort((a, b) => a.type - b.type);
       } else if (attacker.character.characterType == UserCharacterType.RED) {
         attacker.character.handCards.push({ type: CardType.WARRIOR_EXTENDED_SKILL, count: 1 });
+        attacker.character.handCards.sort((a, b) => a.type - b.type);
       } else {
         console.log('캐릭터 타입이 존재하지 않습니다.');
         return false;
       }
       break;
-    // case 5: // 5레벨일 경우 (스킬 추가 시 활성화)
-    //   if (attacker.character.characterType == UserCharacterType.MASK) {
-    //     attacker.character.handCards.push({ type: CardType.MAGICIAN_BASIC_SKILL, count: 1 });
-    //   } else if (attacker.character.characterType == UserCharacterType.SWIM_GLASSES) {
-    //     attacker.character.handCards.push({ type: CardType.MAGICIAN_BASIC_SKILL, count: 1 });
-    //   } else if (attacker.character.characterType == UserCharacterType.FROGGY) {
-    //     attacker.character.handCards.push({ type: CardType.MAGICIAN_BASIC_SKILL, count: 1 });
-    //   } else if (attacker.character.characterType == UserCharacterType.RED) {
-    //     attacker.character.handCards.push({ type: CardType.MAGICIAN_BASIC_SKILL, count: 1 });
-    //   } else {
-    //     console.log('캐릭터 타입이 존재하지 않습니다.');
-    //     return false;
-    //   }
-    //   break;
-    // case 7: // 7레벨일 경우 (스킬 추가 시 활성화)
-    //   if (attacker.character.characterType == UserCharacterType.MASK) {
-    //     attacker.character.handCards.push({ type: CardType.MAGICIAN_BASIC_SKILL, count: 1 });
-    //   } else if (attacker.character.characterType == UserCharacterType.SWIM_GLASSES) {
-    //     attacker.character.handCards.push({ type: CardType.MAGICIAN_BASIC_SKILL, count: 1 });
-    //   } else if (attacker.character.characterType == UserCharacterType.FROGGY) {
-    //     attacker.character.handCards.push({ type: CardType.MAGICIAN_BASIC_SKILL, count: 1 });
-    //   } else if (attacker.character.characterType == UserCharacterType.RED) {
-    //     attacker.character.handCards.push({ type: CardType.MAGICIAN_BASIC_SKILL, count: 1 });
-    //   } else {
-    //     console.log('캐릭터 타입이 존재하지 않습니다.');
-    //     return false;
-    //   }
-    //   break;
+    case 5: // 5레벨일 경우 (스킬 추가 시 활성화)
+      if (attacker.character.characterType == UserCharacterType.MASK) {
+        attacker.character.handCards.push({ type: CardType.MAGICIAN_FINAL_SKILL, count: 1 });
+      } else if (attacker.character.characterType == UserCharacterType.SWIM_GLASSES) {
+        attacker.character.handCards.push({ type: CardType.MAGICIAN_FINAL_SKILL, count: 1 });
+      } else if (attacker.character.characterType == UserCharacterType.FROGGY) {
+        attacker.character.handCards.push({ type: CardType.MAGICIAN_FINAL_SKILL, count: 1 });
+      } else if (attacker.character.characterType == UserCharacterType.RED) {
+        attacker.character.handCards.push({ type: CardType.MAGICIAN_FINAL_SKILL, count: 1 });
+      } else {
+        console.log('캐릭터 타입이 존재하지 않습니다.');
+        return false;
+      }
+      break;
     default: // 카드 보상을 받을 수 있는 레벨이 아닐 경우
       console.log('카드 보상을 받을 수 레벨이 아닙니다.');
       break;

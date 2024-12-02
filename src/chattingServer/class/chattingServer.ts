@@ -167,6 +167,14 @@ class ChattingServer {
         return this.rooms;
     }
 
+    getRoomByOwnerEmail(email: string) {
+        return this.rooms.find((room: ChattingRoom) => room.getRoomOwnerEmail() === email);
+    }
+
+    getRoomByRoomId(roomId: number) {
+        return this.rooms.find((room: ChattingRoom) => room.getRoomId() === roomId);
+    }
+
     getRoomId() {
         return this.roomId;
     }
