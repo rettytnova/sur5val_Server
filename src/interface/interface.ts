@@ -18,6 +18,7 @@ export interface UserCharacterInitData {
   roleType: number;
   exp: number;
   gold: number;
+  coolDown: number;
   hp: number;
   mp: number;
   attack: number;

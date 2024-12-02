@@ -1,5 +1,5 @@
-import { CharacterPositionData, CustomSocket, RedisUserData, Room } from '../../interface/interface.js';
-import { GlobalFailCode, PhaseType, RoleType, CardType, RoomStateType } from '../enumTyps.js';
+import { CharacterPositionData, CustomSocket, Room } from '../../interface/interface.js';
+import { GlobalFailCode, PhaseType, RoleType, CardType, RoomStateType, UserCharacterType } from '../enumTyps.js';
 import { sendPacket } from '../../packet/createPacket.js';
 import { config, spawnPoint, inGameTime, normalRound, bossGameTime } from '../../config/config.js';
 import { getRedisData, getUserIdBySocket, nonSameRandom, setRedisData } from '../handlerMethod.js';
@@ -11,6 +11,8 @@ import { gameEndNotification } from '../notification/gameEnd.js';
 import { fleaMarketCardCreate } from '../coreMethod/fleaMarketCardCreate.js';
 import { fleaMarketOpenHandler } from '../market/fleaMarketOpenHandler.js';
 import { shoppingUserIdSessions } from '../../session/shoppingSession.js';
+import { userUpdateNotification } from '../notification/userUpdate.js';
+import { userCharacterData } from './gamePrepareHandler.js';
 
 export const gameStartHandler = async (socket: CustomSocket, payload: Object) => {
   // 핸들러가 호출되면 success. response 만들어서 보냄
@@ -153,6 +155,24 @@ export const normalPhaseNotification = async (level: number, roomId: number, sen
     }
 
     await monsterMoveStart(roomId, inGameTime);
+
+    // 라운드 초기화 시 일정량의 mp 회복
+    for (let i = 0; i < room.users.length; i++) {
+      switch (room.users[i].character.roleType) {
+        case RoleType.BOSS_MONSTER:
+          room.users[i].character.mp = userCharacterData[room.users[i].character.characterType].mp;
+          break;
+        case RoleType.SUR5VAL:
+          const maxMp = userCharacterData[room.users[i].character.characterType].mp;
+          if (Math.floor(maxMp * 0.5) + room.users[i].character.mp < maxMp) {
+            room.users[i].character.mp += Math.floor(maxMp * 0.2);
+          } else {
+            room.users[i].character.mp = maxMp;
+          }
+          break;
+      }
+    }
+    await userUpdateNotification(room);
   }, sendTime);
 };
 
@@ -206,73 +226,19 @@ export const setBossStat = async (room: Room, level: number) => {
 
       switch (level) {
         case 1: // 일반 라운드
-          room.users[i].character.handCards = [
-            { type: CardType.MAGICIAN_BASIC_SKILL, count: 1 },
-            { type: CardType.MAGICIAN_EXTENDED_SKILL, count: 1 },
-            { type: CardType.BASIC_HP_POTION, count: 1 },
-            { type: CardType.BASIC_MP_POTION, count: 1 },
-            { type: CardType.ADVANCED_HP_POTION, count: 1 },
-            { type: CardType.ADVANCED_MP_POTION, count: 1 },
-            { type: CardType.MASTER_HP_POTION, count: 1 },
-            { type: CardType.MASTER_MP_POTION, count: 1 },
-            { type: CardType.BASIC_EXP_POTION, count: 1 },
-            { type: CardType.MASTER_EXP_POTION, count: 1 },
-            { type: CardType.EXPLORER_WEAPON, count: 1 },
-            { type: CardType.EXPLORER_HEAD, count: 1 },
-            { type: CardType.EXPLORER_ARMOR, count: 1 },
-            { type: CardType.EXPLORER_CLOAK, count: 1 },
-            { type: CardType.EXPLORER_GLOVE, count: 1 },
-            { type: CardType.HERO_WEAPON, count: 1 },
-            { type: CardType.HERO_HEAD, count: 1 },
-            { type: CardType.HERO_ARMOR, count: 1 },
-            { type: CardType.HERO_CLOAK, count: 1 },
-            { type: CardType.HERO_GLOVE, count: 1 },
-            { type: CardType.LEGENDARY_WEAPON, count: 1 },
-            { type: CardType.LEGENDARY_HEAD, count: 1 },
-            { type: CardType.LEGENDARY_ARMOR, count: 1 },
-            { type: CardType.LEGENDARY_CLOAK, count: 1 },
-            { type: CardType.LEGENDARY_GLOVE, count: 1 }
-          ];
+          room.users[i].character.handCards = [];
           break;
         case 2: // 일반 라운드
-          room.users[i].character.handCards = [
-            { type: CardType.WARRIOR_BASIC_SKILL, count: 1 },
-            { type: CardType.ARCHER_BASIC_SKILL, count: 1 },
-            { type: CardType.MAGICIAN_BASIC_SKILL, count: 1 },
-            { type: CardType.BASIC_HP_POTION, count: 3 * level }
-          ];
+          room.users[i].character.handCards = [];
           break;
         case 3: // 일반 라운드
-          room.users[i].character.handCards = [
-            { type: CardType.WARRIOR_BASIC_SKILL, count: 1 },
-            { type: CardType.ARCHER_BASIC_SKILL, count: 1 },
-            { type: CardType.MAGICIAN_BASIC_SKILL, count: 1 },
-            { type: CardType.WARRIOR_EXTENDED_SKILL, count: 1 },
-            { type: CardType.ARCHER_EXTENDED_SKILL, count: 1 },
-            { type: CardType.BASIC_HP_POTION, count: 3 * level }
-          ];
+          room.users[i].character.handCards = [];
           break;
         case 4: // 일반 라운드
-          room.users[i].character.handCards = [
-            { type: CardType.WARRIOR_BASIC_SKILL, count: 1 },
-            { type: CardType.ARCHER_BASIC_SKILL, count: 1 },
-            { type: CardType.MAGICIAN_BASIC_SKILL, count: 1 },
-            { type: CardType.WARRIOR_EXTENDED_SKILL, count: 1 },
-            { type: CardType.ARCHER_EXTENDED_SKILL, count: 1 },
-            { type: CardType.MAGICIAN_EXTENDED_SKILL, count: 1 },
-            { type: CardType.BASIC_HP_POTION, count: 3 * level }
-          ];
+          room.users[i].character.handCards = [];
           break;
         case 5: // 보스 라운드
-          room.users[i].character.handCards = [
-            { type: CardType.WARRIOR_BASIC_SKILL, count: 1 },
-            { type: CardType.ARCHER_BASIC_SKILL, count: 1 },
-            { type: CardType.MAGICIAN_BASIC_SKILL, count: 1 },
-            { type: CardType.WARRIOR_EXTENDED_SKILL, count: 1 },
-            { type: CardType.ARCHER_EXTENDED_SKILL, count: 1 },
-            { type: CardType.MAGICIAN_EXTENDED_SKILL, count: 1 },
-            { type: CardType.BASIC_HP_POTION, count: 5 * level }
-          ];
+          room.users[i].character.handCards = [];
           break;
         default:
           console.log('보스 스텟 설정을 위한 라운드(level)의 값이 잘못되었습니다.:', level);

@@ -9,7 +9,7 @@ import { getRedisData, setRedisData } from '../handlerMethod.js';
 import { addgRoomId, getgRoomId } from '../room/createRoomHandler.js';
 
 // 시간 안에 탈출하지 못했을 경우
-export const gameEndNotification = async (roomId: number, winRoleType: number) => {
+export const gameEndNotification = async (roomId: number, winRType: number) => {
   const rooms: Room[] = await getRedisData('roomData');
   let room: Room | null = null;
   for (let i = 0; i < rooms.length; i++) {
@@ -29,9 +29,10 @@ export const gameEndNotification = async (roomId: number, winRoleType: number) =
   room.state = RoomStateType.WAIT;
 
   // 승리한 팀의 유저 Id 찾기
+  const winnerRoleType = winRType === 4 ? 4 : 2;
   const winnersUserId: number[] = [];
   for (let i = 0; i < room.users.length; i++) {
-    if (room.users[i].character.roleType === winRoleType) {
+    if (room.users[i].character.roleType === winnerRoleType) {
       winnersUserId.push(room.users[i].id);
     }
   }
@@ -42,7 +43,7 @@ export const gameEndNotification = async (roomId: number, winRoleType: number) =
     if (userSocket) {
       sendPacket(userSocket, config.packetType.GAME_END_NOTIFICATION, {
         winners: winnersUserId,
-        winType: winRoleType / 2
+        winType: winRType - 2
       });
     }
   }
