@@ -102,14 +102,14 @@ export const gameStartHandler = async (socket: CustomSocket, payload: Object) =>
         inGameTime * normalRound + bossGameTime
       );
 
-      for (let i = 0; i < room.users.length; i++) {
-        if (room.users[i].character.roleType !== RoleType.WEAK_MONSTER) {
-          const roomUserSocket = socketSessions[room.users[i].id];
-          setTimeout(async () => {
-            await fleaMarketOpenHandler(roomUserSocket);
-          }, 5000);
-        }
-      }
+      // for (let i = 0; i < room.users.length; i++) {
+      //   if (room.users[i].character.roleType !== RoleType.WEAK_MONSTER) {
+      //     const roomUserSocket = socketSessions[room.users[i].id];
+      //     setTimeout(async () => {
+      //       await fleaMarketOpenHandler(roomUserSocket);
+      //     }, 5000);
+      //   }
+      // }
     }
   } catch (err) {
     const responseData = {
