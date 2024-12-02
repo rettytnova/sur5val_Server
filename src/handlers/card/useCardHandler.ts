@@ -8,6 +8,8 @@ import { socketSessions } from '../../session/socketSession.js';
 import { monsterAiDatas } from '../coreMethod/monsterMove.js';
 import { monsterReward, setCardRewards, setStatRewards } from '../coreMethod/monsterReward.js';
 import { userCharacterData } from '../game/gamePrepareHandler.js';
+import { gameEndHandler } from '../game/gameEndHandler.js';
+import { gameEndNotification } from '../notification/gameEnd.js';
 
 // DB에 들어갈 내용
 const DBEquip: { [cardType: number]: { attack: number; armor: number; hp: number } } = {
@@ -133,6 +135,12 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
           if (index) monsterAiDatas[room.id][index].animationDelay = 5;
           sendAnimation(user, target, 1);
         }, 800);
+
+        // 보스를 죽였는지 검사
+        if (target.character.roleType === RoleType.BOSS_MONSTER && target.character.hp <= 0) {
+          await gameEndNotification(room.id, 3);
+          return;
+        }
 
         // 마나 소모
         user.character.mp -= 2;
@@ -594,11 +602,16 @@ const attackTarget = async (attacker: User, rooms: Room[], room: Room, skillCoef
   // 공격 스킬 실행
   const damage = Math.round(attacker.character.attack * skillCoeffcient - target.character.armor);
   target.character.hp -= Math.max(damage, 0);
-
   if (target.character.aliveState && target.character.hp <= 0) {
     target.character.hp = 0;
     attacker.character.exp += target.character.exp;
     await monsterReward(room, attacker, target);
+  }
+
+  // 보스를 죽였는지 검사
+  if (target.character.roleType === RoleType.BOSS_MONSTER && target.character.hp <= 0) {
+    await gameEndNotification(room.id, 3);
+    return;
   }
 
   await setRedisData('roomData', rooms);
