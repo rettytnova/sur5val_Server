@@ -1,4 +1,4 @@
-import { config } from '../../config/config.js';
+import { attackCool, config } from '../../config/config.js';
 import { CustomSocket, UseCardRequest, UseCardResponse, Room, User } from '../../interface/interface.js';
 import { CardType, GlobalFailCode, RoleType } from '../enumTyps.js';
 import { sendPacket } from '../../packet/createPacket.js';
@@ -8,6 +8,7 @@ import { socketSessions } from '../../session/socketSession.js';
 import { monsterAiDatas } from '../coreMethod/monsterMove.js';
 import { monsterReward, setCardRewards, setStatRewards } from '../coreMethod/monsterReward.js';
 import { userCharacterData } from '../game/gamePrepareHandler.js';
+import { gameEndNotification } from '../notification/gameEnd.js';
 
 // DB에 들어갈 내용
 const DBEquip: { [cardType: number]: { attack: number; armor: number; hp: number } } = {
@@ -105,18 +106,38 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
     switch (cardType) {
       // 스킬 1 ~ 100 // 스킬 1 ~ 100 // 스킬 1 ~ 100 // 스킬 1 ~ 100 // 스킬 1 ~ 100 // 스킬 1 ~ 100 // 스킬 1 ~ 100 // 스킬 1 ~ 100 //
 
+      // 이름: 기본 공격
+      // 설명: 그냥 기본 공격 입니다.
+      case CardType.SUR5VER_BASIC_SKILL: {
+        // 공격 유효성 검증
+        if (!target) return;
+        if (attackPossible(user, target, 0)) return;
+
+        // 공격 실행
+        attackTarget(user, rooms, room, 1, target);
+        sendAnimation(user, target, 2);
+        for (let i = 0; i < monsterAiDatas[room.id].length; i++) {
+          if (monsterAiDatas[room.id][i].id === target.id) {
+            monsterAiDatas[room.id][i].animationDelay = 5;
+            break;
+          }
+        }
+
+        // 공격 완료 처리
+        user.character.coolDown = Date.now();
+        await setRedisData('roomData', rooms);
+        await userUpdateNotification(room);
+        break;
+      }
       // 이름: 쌍둥이 폭팔
       // 설명: 신비로운 마법의 에너지가 두 번 적을 빠르게 베어낸다. 두 번째 타격은 마법의 폭발로 적을 더 강하게 공격한다.
       case CardType.MAGICIAN_BASIC_SKILL: {
-        // 유효성 검사
+        // 공격 유효성 검증
         if (!target) return;
-        if (user.character.mp < 2) {
-          console.log('마나가 부족합니다.');
-          return;
-        }
+        if (attackPossible(user, target, 2)) return;
 
         // 스킬 실행1
-        if (await attackTarget(user, rooms, room, 1, target)) return;
+        await attackTarget(user, rooms, room, 1, target);
         let index: number | null = null;
         for (let i = 0; i < monsterAiDatas[room.id].length; i++) {
           if (monsterAiDatas[room.id][i].id === target.id) {
@@ -125,19 +146,26 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
             break;
           }
         }
-        if (index === null) return;
         sendAnimation(user, target, 1);
 
         // 스킬 실행2
         setTimeout(async () => {
           await attackTarget(user, rooms, room, 1.5, target);
-          monsterAiDatas[room.id][index].animationDelay = 5;
+          if (index) monsterAiDatas[room.id][index].animationDelay = 5;
           sendAnimation(user, target, 1);
         }, 800);
 
-        // 마나 소모
+        // 보스를 죽였는지 검사
+        if (target.character.roleType === RoleType.BOSS_MONSTER && target.character.hp <= 0) {
+          await gameEndNotification(room.id, 3);
+          return;
+        }
+
+        // 공격 완료 처리
+        user.character.coolDown = Date.now();
         user.character.mp -= 2;
         await setRedisData('roomData', rooms);
+        await userUpdateNotification(room);
         break;
       }
 
@@ -162,15 +190,12 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
       // 이름: 삼중 타격
       // 설명: 푸른빛, 보랏빛, 붉은 폭발로 적을 강타한다. 타격마다 에너지가 증폭되어 최종 타격은 압도적인 파괴력을 발휘한다.
       case CardType.MAGICIAN_EXTENDED_SKILL: {
-        // 유효성 검사
+        // 공격 유효성 검증
         if (!target) return;
-        if (user.character.mp < 3) {
-          console.log('마나가 부족합니다.');
-          return;
-        }
+        if (attackPossible(user, target, 3)) return;
 
         // 스킬 실행1
-        if (await attackTarget(user, rooms, room, 1.2, target)) return;
+        await attackTarget(user, rooms, room, 1.2, target);
         let index: number | null = null;
         for (let i = 0; i < monsterAiDatas[room.id].length; i++) {
           if (monsterAiDatas[room.id][i].id === target.id) {
@@ -179,26 +204,27 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
             break;
           }
         }
-        if (index === null) return;
         sendAnimation(user, target, 1);
 
         // 스킬 실행2
         setTimeout(async () => {
           await attackTarget(user, rooms, room, 1.8, target);
-          monsterAiDatas[room.id][index].animationDelay = 4;
+          if (index) monsterAiDatas[room.id][index].animationDelay = 4;
           sendAnimation(user, target, 1);
         }, 600);
 
         // 스킬 실행3
         setTimeout(async () => {
           await attackTarget(user, rooms, room, 2.7, target);
-          monsterAiDatas[room.id][index].animationDelay = 4;
+          if (index) monsterAiDatas[room.id][index].animationDelay = 4;
           sendAnimation(user, target, 1);
         }, 1200);
 
-        // 마나 소모
+        // 공격 완료 처리
         user.character.mp -= 3;
+        user.character.coolDown = Date.now();
         await setRedisData('roomData', rooms);
+        await userUpdateNotification(room);
         break;
       }
       // 이름: 궁수 강화 스킬
@@ -223,9 +249,32 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
         }, 10000);
         break;
 
-      // 이름:
-      // 설명:
-      case CardType.NONE:
+      // 이름: 불멸의 폭풍
+      // 설명: 강력한 마법 폭풍이 적을 덮친다. 번개와 화염이 뒤엉켜 적에게 치명적인 피해를 입힌다.
+      case CardType.MAGICIAN_FINAL_SKILL:
+        // 공격 유효성 검증
+        if (!target) return;
+        if (attackPossible(user, target, 4)) return;
+
+        // 스킬 실행
+        await attackTarget(user, rooms, room, 7, target);
+        let index: number | null = null;
+        for (let i = 0; i < monsterAiDatas[room.id].length; i++) {
+          if (monsterAiDatas[room.id][i].id === target.id) {
+            monsterAiDatas[room.id][i].animationDelay = 6;
+            index = i;
+            break;
+          }
+        }
+        // sendAnimation(user, target, 1);
+        // sendAnimation(user, target, 2);
+        sendAnimation(user, target, 3);
+
+        // 마나 소모
+        user.character.coolDown = Date.now();
+        user.character.mp -= 4;
+        await setRedisData('roomData', rooms);
+        await userUpdateNotification(room);
         break;
 
       // 이름:
@@ -270,9 +319,9 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
         break;
 
       // 이름: 마력의 이슬
-      // 설명: 맑고 순수한 이슬 한 방울이 마력을 3 회복해준다! 고갈된 마법 에너지를 되살려 새로운 주문을 준비하자.
+      // 설명: 맑고 순수한 이슬 한 방울이 마력을 1 회복해준다! 고갈된 마법 에너지를 되살려 새로운 주문을 준비하자.
       case CardType.BASIC_MP_POTION:
-        usePotion(user, 0, 2, 0, rooms, room, CardType.BASIC_MP_POTION);
+        usePotion(user, 0, 1, 0, rooms, room, CardType.BASIC_MP_POTION);
         break;
 
       // 이름: 치유의 빛
@@ -282,9 +331,9 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
         break;
 
       // 이름: 마력의 빛
-      // 설명: 은은한 마나의 빛이 마력을 6 회복해준다! 흐릿했던 마법의 기운을 선명하게 채워주는 신비한 물약.
+      // 설명: 은은한 마나의 빛이 마력을 2 회복해준다! 흐릿했던 마법의 기운을 선명하게 채워주는 신비한 물약.
       case CardType.ADVANCED_MP_POTION:
-        usePotion(user, 0, 4, 0, rooms, room, CardType.ADVANCED_MP_POTION);
+        usePotion(user, 0, 2, 0, rooms, room, CardType.ADVANCED_MP_POTION);
 
       // 이름: 생명의 숨결
       // 설명: 신비로운 생명의 기운이 체력을 10 회복해준다! 생명의 근원이 담긴 이 물약은 가장 극한의 상황에서도 새로운 힘을 불어넣는다.
@@ -293,19 +342,21 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
         break;
 
       // 이름: 마력의 숨결
-      // 설명: 신비로운 마력의 기운이 마력을 10 회복해준다! 극한의 상황에서도 강력한 주문을 사용할 수 있는 힘을 불어넣는다.
+      // 설명: 신비로운 마력의 기운이 마력을 4 회복해준다! 극한의 상황에서도 강력한 주문을 사용할 수 있는 힘을 불어넣는다.
       case CardType.MASTER_MP_POTION:
-        usePotion(user, 0, 8, 0, rooms, room, CardType.MASTER_MP_POTION);
+        usePotion(user, 0, 4, 0, rooms, room, CardType.MASTER_MP_POTION);
         break;
 
-      // 이름: 경험치 물약1
-      // 설명: 경험치 + 10
-      case CardType.NONE:
+      // 이름: 성장의 작은 불꽃
+      // 설명: 작은 불꽃이 당신의 성장을 돕습니다. 경험치 +10
+      case CardType.BASIC_EXP_POTION:
+        usePotion(user, 0, 0, 10, rooms, room, CardType.MASTER_MP_POTION);
         break;
 
-      // 이름: 경험치 물약2
-      // 설명: 경험치 + 30
-      case CardType.NONE:
+      // 이름: 무한 성장의 불길
+      // 설명: 끝없는 불길로 압도적인 성장을 경험하세요. 경험치 +30
+      case CardType.MASTER_EXP_POTION:
+        usePotion(user, 0, 0, 30, rooms, room, CardType.MASTER_MP_POTION);
         break;
 
       // 이름:
@@ -539,19 +590,30 @@ const partyBuff = async (
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
+// 공격 유효성 검증
+const attackPossible = (attacker: User, target: User, needMp: number) => {
+  if (Date.now() - attacker.character.coolDown < attackCool) {
+    console.log('공격 쿨타임 중입니다.');
+    return true;
+  }
+  if (attacker.character.mp < needMp) {
+    console.log('마나가 부족합니다.');
+    return true;
+  }
+  if (target.character.roleType === RoleType.SUR5VAL) {
+    console.log('아군을 공격할 수는 없습니다.');
+    return true;
+  }
+  if (target.character.hp <= 0) {
+    console.log('살아있는 적에게만 공격할 수 있습니다.');
+    return true;
+  }
+
+  return false;
+};
+
 // 타겟이 된 적 공격 (적군 체력 감소)
 const attackTarget = async (attacker: User, rooms: Room[], room: Room, skillCoeffcient: number, target: User) => {
-  // 적군이 선택되었는지 검사
-  if (target.character.roleType === RoleType.SUR5VAL) {
-    console.error('적군에게만 사용할 수 있는 스킬입니다.');
-    return true;
-  }
-
-  // 살아있는 적이 맞는지 검사
-  if (target.character.hp <= 0) {
-    return true;
-  }
-
   // 공격 실행 중 라운드가 바뀌지 않았는지 검사
   let isChanged: boolean = true;
   const roomNow = await getRoomByUserId(attacker.id);
@@ -567,10 +629,16 @@ const attackTarget = async (attacker: User, rooms: Room[], room: Room, skillCoef
   // 공격 스킬 실행
   const damage = Math.round(attacker.character.attack * skillCoeffcient - target.character.armor);
   target.character.hp -= Math.max(damage, 0);
-
   if (target.character.aliveState && target.character.hp <= 0) {
     target.character.hp = 0;
-    monsterReward(room, attacker, target);
+    attacker.character.exp += target.character.exp;
+    await monsterReward(room, attacker, target);
+  }
+
+  // 보스를 죽였는지 검사
+  if (target.character.roleType === RoleType.BOSS_MONSTER && target.character.hp <= 0) {
+    await gameEndNotification(room.id, 3);
+    return;
   }
 
   await setRedisData('roomData', rooms);
@@ -601,9 +669,10 @@ const usePotion = async (
 
   // 회복 실행
   user.character.hp = Math.min(user.character.hp + restoreHp, user.character.maxHp);
-  user.character.mp += Math.min(user.character.mp + restoreMp, userCharacterData[user.character.characterType].mp);
+  user.character.mp = Math.min(user.character.mp + restoreMp, userCharacterData[user.character.characterType].mp);
   user.character.exp += getExp;
 
+  // 레벨업 확인
   let maxExp = userCharacterData[user.character.characterType].exp * user.character.level;
   while (user.character.exp >= maxExp) {
     user.character.exp -= maxExp;

@@ -26,7 +26,6 @@ export const leaveRoomHandler = async (socket: net.Socket) => {
       success: false,
       failCode: GlobalFailCode.LEAVE_ROOM_FAILED
     });
-    console.log('비정상적인 접근입니다. => 방을 찾을 수 없습니다.');
     return;
   }
 

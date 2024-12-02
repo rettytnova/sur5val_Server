@@ -21,6 +21,7 @@ const PAYLOAD_LENGTH = 4;
 export const bossGameTime = 60000;
 export const inGameTime = 30000;
 export const normalRound = 4;
+export const attackCool = 2000;
 
 const USER_DB_NAME = process.env.DB_NAME;
 const USER_DB_USER = process.env.DB_USER;
@@ -41,7 +42,8 @@ export const config = {
   jobType: {
     CHATTING_LOGIN_REQUEST_JOB: 1,
     CHATTING_CREATE_ROOM_REQUEST_JOB: 2,
-    CHATTING_JOIN_ROOM_REQUEST_JOB: 3
+    CHATTING_JOIN_ROOM_REQUEST_JOB: 3,
+    CHATTING_LEAVE_ROOM_REQUEST_JOB: 4
   },
   databases: {
     userDB: {
@@ -121,7 +123,8 @@ export const config = {
     CHATTING_LOGIN_RESPONSE: 2,
     CHATTING_CREATE_ROOM_REQUEST: 3,
     CHATTING_CREATE_ROOM_RESPONSE: 4,
-    CHATTING_JOIN_ROOM_REQUEST: 5
+    CHATTING_JOIN_ROOM_REQUEST: 5,
+    CHATTING_LEAVE_ROOM_REQUEST: 6
   }
 };
 
@@ -196,7 +199,7 @@ export const packetMaps = {
   [config.packetType.ANIMATION_NOTIFICATION]: 'animationNotification',
 
   [config.packetType.MONSTER_REWARD_REQUEST]: 'monsterDeathRewardRequest',
-  [config.packetType.MONSTER_REWARD_RESPONSE]: 'monsterDeathRewardResponse',
+  [config.packetType.MONSTER_REWARD_RESPONSE]: 'monsterDeathRewardResponse'
 };
 
 export const chattingPacketMaps = {
@@ -205,7 +208,7 @@ export const chattingPacketMaps = {
   [config.chattingPacketType.CHATTING_CREATE_ROOM_REQUEST]: 'chattingServerCreateRoomRequest',
   [config.chattingPacketType.CHATTING_CREATE_ROOM_RESPONSE]: 'chattingServerCreateRoomResponse',
   [config.chattingPacketType.CHATTING_JOIN_ROOM_REQUEST]: 'chattingServerJoinRoomRequest'
-}
+};
 /**
  * x: 11 , y : -8
 x: 5 , y : -8

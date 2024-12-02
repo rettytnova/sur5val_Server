@@ -1,13 +1,16 @@
 import { CustomSocket } from "../../interface/interface.js";
+import { v4 as uuidv4 } from 'uuid';
 
 class ChattingUser {
     private userSocket: CustomSocket;
-    private id: number;
+    private id: string;
     private email: string;
-    constructor(userSocket: CustomSocket, id: number, email: string) {
+    private joinRoomId: number;
+    constructor(userSocket: CustomSocket, email: string) {
         this.userSocket = userSocket;
-        this.id = id;
+        this.id = uuidv4();
         this.email = email;
+        this.joinRoomId = 0;
     }
 
     getUserSocket() {
@@ -20,6 +23,14 @@ class ChattingUser {
 
     getEmail() {
         return this.email;
+    }
+
+    getJoinRoomId() {
+        return this.joinRoomId;
+    }
+
+    setJoinRoomId(roomId: number) {
+        this.joinRoomId = roomId;
     }
 }
 

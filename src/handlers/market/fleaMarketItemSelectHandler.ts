@@ -68,7 +68,6 @@ export const fleaMarketItemSelectHandler = async (socket: net.Socket, payload: O
     return;
   }
 
-  console.log('index: ', fleaMarketItemSelectPayload.pickIndex);
   const fleMarketPickCard = cards[fleaMarketItemSelectPayload.pickIndex];
   if (!fleMarketPickCard) {
     console.error('fleaMarketItemSelect PickCard empty');
@@ -114,19 +113,13 @@ export const fleaMarketItemSelectHandler = async (socket: net.Socket, payload: O
   cardPickUser.character.handCards.sort((a, b) => a.type - b.type);
   cardPickUser.character.gold -= pickeCardPrice;
 
-  // 상점 목록에서 해당 상품 삭제, 쇼핑 유저 목록에서 삭제
+  // 상점 목록에서 해당 상품 삭제
   const removedCardIndex = cards.indexOf(fleMarketPickCard);
   if (removedCardIndex !== -1) {
     cards.splice(removedCardIndex, 1);
   }
   redisFleaMarketCards[room.id] = cards;
   await setRedisData('fleaMarketCards', redisFleaMarketCards);
-  for (let i = 0; i < shoppingUserIdSessions[room.id].length; i++) {
-    if (shoppingUserIdSessions[room.id][i] === userId) {
-      shoppingUserIdSessions[room.id].splice(i, 1);
-      break;
-    }
-  }
   await userUpdateNotification(room);
   await setRedisData('roomData', rooms);
   sendPacket(socket, config.packetType.FLEA_MARKET_CARD_PICK_RESPONSE, {

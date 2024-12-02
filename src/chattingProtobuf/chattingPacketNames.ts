@@ -5,7 +5,8 @@ export const chattingPacketNames = {
     request: {
         C2SChattingServerLoginRequest: 'request.C2SChattingServerLoginRequest',
         C2SChattingServerCreateRoomRequest: 'request.C2SChattingServerCreateRoomRequest',
-        C2SChattingServerJoinRoomRequest: 'request.C2SChattingServerJoinRoomRequest'
+        C2SChattingServerJoinRoomRequest: 'request.C2SChattingServerJoinRoomRequest',
+        C2SChattingServerLeaveRoomRequest: 'request.C2SChattingServerLeaveRoomRequest'
     },
     response: {
         S2CChattingServerLoginResponse: 'response.S2CChattingServerLoginResponse',

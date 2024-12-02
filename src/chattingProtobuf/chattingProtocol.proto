@@ -12,40 +12,44 @@ message C2SChattingServerLoginRequest{
     string email = 1;
 }
 
-//------------------------------------
+//-----------------------------------------
 // 방 생성
-//------------------------------------
+//-----------------------------------------
 message C2SChattingServerCreateRoomRequest{    
 }
 
-//------------------------------------
-// 방 생성
-// roomId : 참가할 방 아이디
-// email : 참가하는 유저 email
-//------------------------------------
-message C2SChattingServerJoinRoomRequest{
-    int32 chattingRoomId = 1;
-    string email = 2;
+//---------------------------------------
+// 방 들어가기
+// ownerEmail : 참가하는 채팅방 ownerEmail
+//---------------------------------------
+message C2SChattingServerJoinRoomRequest{    
+    string ownerEmail = 2;
+}
+
+//----------------------------------------
+// 방 나가기
+//----------------------------------------
+message C2SChattingServerLeaveRoomRequest{
 }
 
 /*
     응답 패킷 명세
 */
 
-//------------------------------------
+//-------------------------------------
 // 로그인 응답
 // success : 로그인 성공 여부
 // message : 성공 여부에 따른 메세지
-//------------------------------------
+//-------------------------------------
 message S2CChattingServerLoginResponse{
     bool success = 1;
     string message = 2;
 }
 
-//-----------------------------------------
+//------------------------------------------
 // 방 생성 응답
 // roomId : 방 번호
-//-----------------------------------------
+//------------------------------------------
 message S2CChattingServerCreateRoomResponse{
     int32 chattingRoomId = 1;
 }
@@ -53,15 +57,14 @@ message S2CChattingServerCreateRoomResponse{
 /*
     최상위 ChattingPacket 메세지
 */
-
 message ChattingPacket{
-    oneof chattingPayload{
-        // 로그인
+    oneof chattingPayload{        
         C2SChattingServerLoginRequest chattingServerLoginRequest = 1;
-        S2CChattingServerLoginResponse chattingServerLoginResponse = 2;    
+        S2CChattingServerLoginResponse chattingServerLoginResponse = 2;  
         C2SChattingServerCreateRoomRequest chattingServerCreateRoomRequest = 3;
         S2CChattingServerCreateRoomResponse chattingServerCreateRoomResponse = 4; 
-        C2SChattingServerJoinRoomRequest chattingServerJoinRoomRequest = 5;       
+        C2SChattingServerJoinRoomRequest chattingServerJoinRoomRequest = 5; 
+        C2SChattingServerLeaveRoomRequest chattingServerLeaveRoomRequest = 6;   
     }
 }
 

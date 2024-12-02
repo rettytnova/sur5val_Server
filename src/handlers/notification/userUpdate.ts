@@ -32,7 +32,6 @@ export const userUpdateNotification = async (room: Room | null) => {
     sendPacket(shoppingUserSocket, config.packetType.FLEA_MARKET_PICK_RESPONSE, {
       fleaMarketCardTypes: redisFleaMarketCards[room.id]
     });
-    console.log(`유저ID: ${shoppingUserIdSessions[room.id][i]}에게 플리마켓 보냄`);
   }
 
   return;
