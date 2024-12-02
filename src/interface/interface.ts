@@ -18,7 +18,6 @@ export interface UserCharacterInitData {
   roleType: number;
   exp: number;
   gold: number;
-  coolDown: number;
   hp: number;
   mp: number;
   attack: number;
@@ -85,6 +84,7 @@ export interface Character {
   characterType: number;
   roleType: number;
   aliveState: boolean;
+  coolDown: number;
   level: number;
   exp: number;
   gold: number;
