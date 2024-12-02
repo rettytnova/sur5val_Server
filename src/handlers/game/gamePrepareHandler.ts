@@ -282,6 +282,7 @@ export const setCharacterInfoInit = (users: User[]) => {
   for (let i = 0; i < selectedTypes.length; i++) {
     users[i].character.characterType = selectedTypes[i];
     users[i].character.roleType = userCharacterData[selectedTypes[i]].roleType;
+    users[i].character.coolDown = 0; // 현재 스킬 사용 시간
     users[i].character.level = 1;
     users[i].character.exp = 0;
     users[i].character.gold = userCharacterData[selectedTypes[i]].gold;

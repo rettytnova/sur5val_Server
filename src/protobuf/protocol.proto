@@ -30,19 +30,20 @@ message CharacterData {
     int32 level = 4;
     int32 exp = 5;
     int32 gold = 6;
-    int32 maxHp = 7;
-    int32 hp = 8;
-    int32 mp = 9;
-    int32 attack = 10;
-    int32 armor = 11;
-    int32 weapon = 12;
-    int32 potion = 13;
-    CharacterStateInfoData stateInfo = 14;
-    repeated int32 equips = 15;
-    repeated int32 debuffs = 16;
-    repeated CardData handCards = 17;
-    int32 handCardsCount = 18;
-    int32 bbangCount = 19;
+    int32 coolDown = 7;
+    int32 maxHp = 8;
+    int32 hp = 9;
+    int32 mp = 10;
+    int32 attack = 11;
+    int32 armor = 12;
+    int32 weapon = 13;
+    int32 potion = 14;
+    CharacterStateInfoData stateInfo = 15;
+    repeated int32 equips = 16;
+    repeated int32 debuffs = 17;
+    repeated CardData handCards = 18;
+    int32 handCardsCount = 19;
+    int32 bbangCount = 20;
 }
 
 message CharacterPositionData {

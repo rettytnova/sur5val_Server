@@ -84,6 +84,7 @@ export interface Character {
   characterType: number;
   roleType: number;
   aliveState: boolean;
+  coolDown: number;
   level: number;
   exp: number;
   gold: number;

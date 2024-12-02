@@ -278,6 +278,7 @@ export const monsterSpawn = async (roomId: number, level: number) => {
       characterType: type,
       roleType: RoleType.WEAK_MONSTER,
       aliveState: true,
+      coolDown: 0,
       level: level,
       exp: monsterData[level].exp,
       gold: monsterData[level].gold,
