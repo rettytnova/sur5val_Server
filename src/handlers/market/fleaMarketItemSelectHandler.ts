@@ -68,7 +68,6 @@ export const fleaMarketItemSelectHandler = async (socket: net.Socket, payload: O
     return;
   }
 
-  console.log('index: ', fleaMarketItemSelectPayload.pickIndex);
   const fleMarketPickCard = cards[fleaMarketItemSelectPayload.pickIndex];
   if (!fleMarketPickCard) {
     console.error('fleaMarketItemSelect PickCard empty');
