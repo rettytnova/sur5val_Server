@@ -1,5 +1,5 @@
 import { UserCharacterType, RoleType, CardType } from '../enumTyps.js';
-import { UserCharacterData, Room, User } from '../../interface/interface.js';
+import { Room, User } from '../../interface/interface.js';
 import { userCharacterData } from '../../handlers/game/gamePrepareHandler.js';
 import { monsterDatas } from '../../handlers/coreMethod/monsterSpawn.js';
 
