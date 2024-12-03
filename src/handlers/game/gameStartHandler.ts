@@ -13,6 +13,7 @@ import { fleaMarketOpenHandler } from '../market/fleaMarketOpenHandler.js';
 import { shoppingUserIdSessions } from '../../session/shoppingSession.js';
 import { userUpdateNotification } from '../notification/userUpdate.js';
 import { userCharacterData } from './gamePrepareHandler.js';
+import { useCardHandler } from '../card/useCardHandler.js';
 
 export const gameStartHandler = async (socket: CustomSocket, payload: Object) => {
   // 핸들러가 호출되면 success. response 만들어서 보냄
@@ -102,14 +103,23 @@ export const gameStartHandler = async (socket: CustomSocket, payload: Object) =>
         inGameTime * normalRound + bossGameTime
       );
 
-      // for (let i = 0; i < room.users.length; i++) {
-      //   if (room.users[i].character.roleType !== RoleType.WEAK_MONSTER) {
-      //     const roomUserSocket = socketSessions[room.users[i].id];
-      //     setTimeout(async () => {
-      //       await fleaMarketOpenHandler(roomUserSocket);
-      //     }, 5000);
-      //   }
-      // }
+      let bossSocket: CustomSocket | null = null;
+      for (let i = 0; i < room.users.length; i++) {
+        if (room.users[i].character.roleType === RoleType.BOSS_MONSTER) {
+          bossSocket = socketSessions[room.users[i].id];
+          break;
+        }
+      }
+      if (!bossSocket) {
+        console.log('보스 없는데?');
+        return;
+      }
+      const bossAttack = setInterval(async () => {
+        await useCardHandler(bossSocket, { cardType: CardType.BOSS_RANGE_SKILL, targetUserId: null });
+      }, 2000);
+      setTimeout(() => {
+        clearInterval(bossAttack);
+      }, 100000);
     }
   } catch (err) {
     const responseData = {
