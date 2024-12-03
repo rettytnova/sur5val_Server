@@ -5,12 +5,14 @@ class ChattingUser {
     private userSocket: CustomSocket;
     private id: string;
     private email: string;
+    private nickName: string;
     private joinRoomId: number;
-    constructor(userSocket: CustomSocket, email: string) {
+    constructor(userSocket: CustomSocket, email: string, nickName: string) {
         this.userSocket = userSocket;
         this.id = uuidv4();
         this.email = email;
         this.joinRoomId = 0;
+        this.nickName = nickName;
     }
 
     getUserSocket() {
@@ -23,6 +25,10 @@ class ChattingUser {
 
     getEmail() {
         return this.email;
+    }
+
+    getNickName() {
+        return this.nickName;
     }
 
     getJoinRoomId() {
