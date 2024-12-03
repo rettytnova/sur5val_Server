@@ -1,5 +1,13 @@
 import { attackCool, config } from '../../config/config.js';
-import { CustomSocket, UseCardRequest, UseCardResponse, Room, User } from '../../interface/interface.js';
+import {
+  CustomSocket,
+  UseCardRequest,
+  UseCardResponse,
+  Room,
+  User,
+  CharacterPositionData,
+  positionUpdatePayload
+} from '../../interface/interface.js';
 import { CardType, GlobalFailCode, RoleType } from '../enumTyps.js';
 import { sendPacket } from '../../packet/createPacket.js';
 import { getRedisData, getRoomByUserId, getUserIdBySocket, setRedisData } from '../../handlers/handlerMethod.js';
@@ -293,7 +301,8 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
 
       // 이름:
       // 설명:
-      case CardType.NONE:
+      case CardType.BOSS_RANGE_SKILL:
+        attackRagne(user, user, rooms, room, 0.8, 5, 2);
         break;
 
       // 이름:
@@ -515,6 +524,15 @@ const sendAnimation = (user: User, animationTarget: User, animationType: number)
     userId: animationTarget.id,
     animationType: animationType
   });
+  if (
+    animationTarget.character.roleType === RoleType.BOSS_MONSTER ||
+    animationTarget.character.roleType === RoleType.SUR5VAL
+  ) {
+    sendPacket(socketSessions[animationTarget.id], config.packetType.ANIMATION_NOTIFICATION, {
+      userId: animationTarget.id,
+      animationType: animationType
+    });
+  }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -639,6 +657,72 @@ const attackTarget = async (attacker: User, rooms: Room[], room: Room, skillCoef
   if (target.character.roleType === RoleType.BOSS_MONSTER && target.character.hp <= 0) {
     await gameEndNotification(room.id, 3);
     return;
+  }
+
+  await setRedisData('roomData', rooms);
+  await userUpdateNotification(room);
+};
+
+// 보스스킬: 범위 적 공격
+const attackRagne = async (
+  attacker: User,
+  center: User,
+  rooms: Room[],
+  room: Room,
+  skillCoeffcient: number,
+  range: number,
+  maxTarget: number
+) => {
+  // 살아있는 플레이어 추출
+  const alivePlayers: [User, number][] = [];
+  for (let i = 0; i < room.users.length; i++) {
+    if (room.users[i].character.roleType === RoleType.SUR5VAL && room.users[i].character.hp > 0) {
+      alivePlayers.push([room.users[i], 0]);
+    }
+  }
+
+  // 중심 위치 조회
+  const characterPositions: { [roomId: number]: CharacterPositionData[] | undefined } | undefined =
+    await getRedisData('characterPositionDatas');
+  if (characterPositions === undefined) return;
+  const positionDatas: CharacterPositionData[] | undefined = characterPositions[room.id];
+  if (positionDatas === undefined) return;
+  let bossPosition: positionUpdatePayload | null = null;
+  for (let i = 0; i < positionDatas.length; i++) {
+    if (center.id === positionDatas[i].id) {
+      bossPosition = { x: positionDatas[i].x, y: positionDatas[i].y };
+      break;
+    }
+  }
+  if (!bossPosition) return;
+
+  // 보스와의 거리가 너무 먼 alivePlayer를 splice 처리
+  for (let i = 0; i < alivePlayers.length; i++) {
+    for (let j = 0; j < positionDatas.length; j++) {
+      if (alivePlayers[i][0].id === positionDatas[j].id) {
+        const distance = (bossPosition.x - positionDatas[j].x) ** 2 + (bossPosition.y - positionDatas[j].y) ** 2;
+        if (distance > range ** 2) {
+          alivePlayers.splice(i, 1);
+          i--;
+        } else {
+          alivePlayers[i][1] = distance;
+        }
+        break;
+      }
+    }
+  }
+
+  // 타겟 수 제한을 넘었을 경우 거리가 먼 순서대로 삭제
+  if (alivePlayers.length > maxTarget) {
+    alivePlayers.sort((a, b) => a[1] - b[1]);
+    alivePlayers.splice(maxTarget);
+  }
+
+  // 남아있는 alivePlayer 공격 및 애니메이션 재생
+  for (let i = 0; i < alivePlayers.length; i++) {
+    const damage = Math.max(attacker.character.attack * skillCoeffcient - alivePlayers[i][0].character.armor, 0);
+    alivePlayers[i][0].character.hp -= Math.round(damage);
+    sendAnimation(attacker, alivePlayers[i][0], 1);
   }
 
   await setRedisData('roomData', rooms);
