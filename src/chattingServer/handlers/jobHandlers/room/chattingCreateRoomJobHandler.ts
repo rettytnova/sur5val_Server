@@ -15,5 +15,7 @@ export const chattingCreateRoomJobHandler = (job: Job): void => {
     const newChattingRoom = new ChattingRoom(roomId, chattingUser.getEmail(), CHATTING_ROOM_MAX);
     ChattingServer.getInstance().getRooms().push(newChattingRoom);
 
+    chattingUser.setJoinRoomId(newChattingRoom.getRoomId());
+
     newChattingRoom.roomUserAdd(chattingUser);
 }
