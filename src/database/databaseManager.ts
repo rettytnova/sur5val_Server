@@ -44,11 +44,11 @@ class DatabaseManager {
       sql: any,
       params?: any,
     ): Promise<[T, FieldPacket[]]> => {
-      // 쿼리 실행시 로그
+      //쿼리 실행시 로그
       // const date = new Date();
       // console.log(
-      //     `[${FormatDate(date)}] Executing query: ${sql} ${params ? `, ${JSON.stringify(params)}` : ``
-      //     }`,
+      //   `Executing query: ${sql} ${params ? `, ${JSON.stringify(params)}` : ``
+      //   }`,
       // );
 
       const result = await originalQuery.call(pool, sql, params);
@@ -227,6 +227,41 @@ class DatabaseManager {
 
     return result as ResultSetHeader;
   };
+
+  async characterInitStatInfo() {
+    const [rows] = await this.pools['USER_DB'].query(SQL_QUERIES.FIND_CHARACTER_INIT_STAT_INFO);
+    return rows;
+  }
+
+  async characterLevelUpStatInfo() {
+    const [rows] = await this.pools['USER_DB'].query(SQL_QUERIES.FIND_CHARACTER_LEVEL_UP_STAT_INFO);
+    return rows;
+  }
+
+  async consumableItemInfo() {
+    const [rows] = await this.pools['USER_DB'].query(SQL_QUERIES.FIND_CONSUMABLE_ITEM_INFO);
+    return rows;
+  }
+
+  async equipItemInfo() {
+    const [rows] = await this.pools['USER_DB'].query(SQL_QUERIES.FIND_EQUIP_ITEM_INFO);
+    return rows;
+  }
+
+  async monsterInfo() {
+    const [rows] = await this.pools['USER_DB'].query(SQL_QUERIES.FIND_MONSTER_INFO);
+    return rows;
+  }
+
+  async shopListInfo() {
+    const [rows] = await this.pools['USER_DB'].query(SQL_QUERIES.FIND_SHOPLIST_INFO);
+    return rows;
+  }
+
+  async initGameInfo() {
+    const [rows] = await this.pools['USER_DB'].query(SQL_QUERIES.FIND_INIT_GAME_INFO);
+    return rows;
+  }
 }
 
 export default DatabaseManager;
