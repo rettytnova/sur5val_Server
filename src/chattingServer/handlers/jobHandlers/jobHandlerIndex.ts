@@ -1,4 +1,5 @@
 import { config } from "../../../config/config.js";
+import { chattingChatSendJobHandler } from "./chatting/chattingChatSendJobHandler.js";
 import { chattingCreateRoomJobHandler } from "./room/chattingCreateRoomJobHandler.js";
 import { chattingJoinRoomJobHandler } from "./room/chattingJoinRoomJobHandler.js";
 import { chattingLeaveRoomJobHandler } from "./room/chattingLeaveRoomJobHandler.js";
@@ -16,6 +17,9 @@ const chattingJobHandlers = {
     },
     [config.jobType.CHATTING_LEAVE_ROOM_REQUEST_JOB]: {
         jobHandler: chattingLeaveRoomJobHandler
+    },
+    [config.jobType.CHATTING_CHAT_SEND_REQUEST_JOB]: {
+        jobHandler: chattingChatSendJobHandler
     }
 }
 
