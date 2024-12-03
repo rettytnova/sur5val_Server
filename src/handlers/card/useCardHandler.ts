@@ -5,8 +5,7 @@ import {
   UseCardResponse,
   Room,
   User,
-  CharacterPositionData,
-  positionUpdatePayload
+  CharacterPositionData
 } from '../../interface/interface.js';
 import { CardType, GlobalFailCode, RoleType } from '../enumTyps.js';
 import { sendPacket } from '../../packet/createPacket.js';
@@ -143,7 +142,7 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
         // 공격 유효성 검증
         if (!target) return;
         if (attackPossible(user, target, 2)) return;
-
+        //await movePosition(user, target, room);
         // 스킬 실행1
         await attackTarget(user, rooms, room, 1, target);
         let index: number | null = null;
@@ -177,25 +176,65 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
         break;
       }
 
-      // 이름: 궁수 기본 스킬
-      // 설명: 파티원의 방어력과 공격력을 올려주는 버프를 시전한다.
+      // 이름: 차지 샷 (궁수 기본 스킬) , 애니메이션 번호 : 4번
+      // 설명: 활시위에 집중하여 강력한 화살을 한 방 쏘아낸다.
       case CardType.ARCHER_BASIC_SKILL:
-        console.log('궁수 기본 스킬 사용!!!!');
+        if (!target) return;
+        if (!attackPossible(user, target, 1)) return;
+        await attackTarget(user, rooms, room, 1, target);
+        for (let i = 0; i < monsterAiDatas[room.id].length; i++) {
+          if (monsterAiDatas[room.id][i].id === target.id) {
+            monsterAiDatas[room.id][i].animationDelay = 4;
+            break;
+          }
+        }
+        user.character.coolDown = Date.now();
+        user.character.mp -= 1;
+        sendAnimation(user, target, 4);
         break;
 
-      // 이름: 도적 기본 스킬
-      // 설명:
+      // 이름: 급습 (도적 기본 스킬) , 애니메이션 번호 : 10번
+      // 설명: 급소에 강력한 공격을 가한다.
       case CardType.ROGUE_BASIC_SKILL:
-        console.log('도적 기본 스킬 사용!!!!');
+        if (!target) return;
+        if (!attackPossible(user, target, 3)) return;
+        //await movePosition(user, target, room);
+        await attackTarget(user, rooms, room, 3, target);
+        for (let i = 0; i < monsterAiDatas[room.id].length; i++) {
+          if (monsterAiDatas[room.id][i].id === target.id) {
+            monsterAiDatas[room.id][i].animationDelay = 6;
+            break;
+          }
+        }
+        user.character.coolDown = Date.now();
+        user.character.mp -= 3;
+        sendAnimation(user, target, 10);
+
+        await setRedisData('roomData', rooms);
+        userUpdateNotification(room);
+
         break;
 
-      // 이름: 전사 기본 스킬
-      // 설명:
+      // 이름: 워 드럼 (전사 기본 스킬), 애니메이션 번호 : 7
+      // 설명: 전투를 준비하기 위해 파티원들의 사기를 북돋는다. 파티원들의 능력치 20초간 소폭 증가
       case CardType.WARRIOR_BASIC_SKILL:
-        await partyBuff(1, user, rooms, room, 0, 2, 1);
-        break;
+        await partyBuff(2, user, rooms, room, 0, 2, 2);
 
-      // 이름: 삼중 타격
+        user.character.coolDown = Date.now();
+
+        for (let i = 0; i < room.users.length; i++) {
+          if (room.users[i].character.roleType === RoleType.SUR5VAL) {
+            sendAnimation(room.users[i], room.users[i], 7);
+          }
+        }
+
+        setTimeout(async () => {
+          await partyBuff(0, user, rooms, room, 0, -2, -2);
+        }, 20000);
+
+        break;        
+
+      // 이름: 삼중 타격 (마법사 강화 스킬), 애니메이션 번호 : 1
       // 설명: 푸른빛, 보랏빛, 붉은 폭발로 적을 강타한다. 타격마다 에너지가 증폭되어 최종 타격은 압도적인 파괴력을 발휘한다.
       case CardType.MAGICIAN_EXTENDED_SKILL: {
         // 공격 유효성 검증
@@ -262,7 +301,7 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
       case CardType.MAGICIAN_FINAL_SKILL:
         // 공격 유효성 검증
         if (!target) return;
-        if (attackPossible(user, target, 4)) return;
+        if (!attackPossible(user, target, 4)) return;
 
         // 스킬 실행
         await attackTarget(user, rooms, room, 7, target);
@@ -301,8 +340,7 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
 
       // 이름:
       // 설명:
-      case CardType.BOSS_RANGE_SKILL:
-        attackRagne(user, user, rooms, room, 0.8, 5, 2);
+      case CardType.NONE:
         break;
 
       // 이름:
@@ -524,15 +562,6 @@ const sendAnimation = (user: User, animationTarget: User, animationType: number)
     userId: animationTarget.id,
     animationType: animationType
   });
-  if (
-    animationTarget.character.roleType === RoleType.BOSS_MONSTER ||
-    animationTarget.character.roleType === RoleType.SUR5VAL
-  ) {
-    sendPacket(socketSessions[animationTarget.id], config.packetType.ANIMATION_NOTIFICATION, {
-      userId: animationTarget.id,
-      animationType: animationType
-    });
-  }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -612,22 +641,22 @@ const partyBuff = async (
 const attackPossible = (attacker: User, target: User, needMp: number) => {
   if (Date.now() - attacker.character.coolDown < attackCool) {
     console.log('공격 쿨타임 중입니다.');
-    return true;
+    return false;
   }
   if (attacker.character.mp < needMp) {
     console.log('마나가 부족합니다.');
-    return true;
+    return false;
   }
   if (target.character.roleType === RoleType.SUR5VAL) {
     console.log('아군을 공격할 수는 없습니다.');
-    return true;
+    return false;
   }
   if (target.character.hp <= 0) {
     console.log('살아있는 적에게만 공격할 수 있습니다.');
-    return true;
+    return false;
   }
 
-  return false;
+  return true;
 };
 
 // 타겟이 된 적 공격 (적군 체력 감소)
@@ -657,72 +686,6 @@ const attackTarget = async (attacker: User, rooms: Room[], room: Room, skillCoef
   if (target.character.roleType === RoleType.BOSS_MONSTER && target.character.hp <= 0) {
     await gameEndNotification(room.id, 3);
     return;
-  }
-
-  await setRedisData('roomData', rooms);
-  await userUpdateNotification(room);
-};
-
-// 보스스킬: 범위 적 공격
-const attackRagne = async (
-  attacker: User,
-  center: User,
-  rooms: Room[],
-  room: Room,
-  skillCoeffcient: number,
-  range: number,
-  maxTarget: number
-) => {
-  // 살아있는 플레이어 추출
-  const alivePlayers: [User, number][] = [];
-  for (let i = 0; i < room.users.length; i++) {
-    if (room.users[i].character.roleType === RoleType.SUR5VAL && room.users[i].character.hp > 0) {
-      alivePlayers.push([room.users[i], 0]);
-    }
-  }
-
-  // 중심 위치 조회
-  const characterPositions: { [roomId: number]: CharacterPositionData[] | undefined } | undefined =
-    await getRedisData('characterPositionDatas');
-  if (characterPositions === undefined) return;
-  const positionDatas: CharacterPositionData[] | undefined = characterPositions[room.id];
-  if (positionDatas === undefined) return;
-  let bossPosition: positionUpdatePayload | null = null;
-  for (let i = 0; i < positionDatas.length; i++) {
-    if (center.id === positionDatas[i].id) {
-      bossPosition = { x: positionDatas[i].x, y: positionDatas[i].y };
-      break;
-    }
-  }
-  if (!bossPosition) return;
-
-  // 보스와의 거리가 너무 먼 alivePlayer를 splice 처리
-  for (let i = 0; i < alivePlayers.length; i++) {
-    for (let j = 0; j < positionDatas.length; j++) {
-      if (alivePlayers[i][0].id === positionDatas[j].id) {
-        const distance = (bossPosition.x - positionDatas[j].x) ** 2 + (bossPosition.y - positionDatas[j].y) ** 2;
-        if (distance > range ** 2) {
-          alivePlayers.splice(i, 1);
-          i--;
-        } else {
-          alivePlayers[i][1] = distance;
-        }
-        break;
-      }
-    }
-  }
-
-  // 타겟 수 제한을 넘었을 경우 거리가 먼 순서대로 삭제
-  if (alivePlayers.length > maxTarget) {
-    alivePlayers.sort((a, b) => a[1] - b[1]);
-    alivePlayers.splice(maxTarget);
-  }
-
-  // 남아있는 alivePlayer 공격 및 애니메이션 재생
-  for (let i = 0; i < alivePlayers.length; i++) {
-    const damage = Math.max(attacker.character.attack * skillCoeffcient - alivePlayers[i][0].character.armor, 0);
-    alivePlayers[i][0].character.hp -= Math.round(damage);
-    sendAnimation(attacker, alivePlayers[i][0], 1);
   }
 
   await setRedisData('roomData', rooms);
@@ -870,3 +833,22 @@ const equipWeapon = async (user: User, rooms: Room[], room: Room, cardsType: num
   await setRedisData('roomData', rooms);
   await userUpdateNotification(room);
 };
+
+// // 스킬 사용시 해당 타겟 근접이동하기
+// const movePosition = async (user: User, target: User, room: Room) => {
+//   if (!target) return;
+
+//   let positionDatas: CharacterPositionData[] = await getRedisData('chracterPositionDatas');
+
+//   if (positionDatas[user.id].x > positionDatas[target.id].x + 2) {
+//     positionDatas[user.id].x = positionDatas[target.id].x + 2;
+//   } else if (positionDatas[user.id].x < positionDatas[target.id].x - 2) {
+//     positionDatas[user.id].x = positionDatas[target.id].x - 2;
+//   }
+
+//   if (positionDatas[user.id].y > positionDatas[target.id].y + 2) {
+//     positionDatas[user.id].y = positionDatas[target.id].y + 2;
+//   } else if (positionDatas[user.id].y < positionDatas[target.id].y - 2) {
+//     positionDatas[user.id].y = positionDatas[target.id].y - 2;
+//   }
+// };
