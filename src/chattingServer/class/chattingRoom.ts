@@ -1,3 +1,6 @@
+import { config } from "../../config/config.js";
+import { sendChattingPacket } from "../../packet/createPacket.js";
+import { Job } from "../interface/chattingServerInterface.js";
 import ChattingUser from "./chattingUser.js";
 
 class ChattingRoom {
@@ -6,11 +9,15 @@ class ChattingRoom {
     private users: ChattingUser[];
     private maxUser: number;
 
+    public roomJobQue: Job[];
+
     constructor(id: number, ownerEmail: string, maxUser: number) {
         this.id = id;
         this.ownerEmail = ownerEmail;
         this.users = [];
         this.maxUser = maxUser;
+
+        this.roomJobQue = [];
     }
 
     getRoomId() {
@@ -19,6 +26,10 @@ class ChattingRoom {
 
     getRoomOwnerEmail() {
         return this.ownerEmail;
+    }
+
+    userFind(userId: string) {
+        return this.users.find((user: ChattingUser) => user.getId() === userId);
     }
 
     roomUserAdd(user: ChattingUser) {
@@ -40,9 +51,29 @@ class ChattingRoom {
     }
 
     update() {
-        this.users.forEach((user: ChattingUser) => {
-            //console.log(`roomOwnerId : ${this.ownerEmail} room User ${user.getEmail()}`);
-        });
+        while (this.roomJobQue.length > 0) {
+            const job = this.roomJobQue.shift();
+            if (!job) {
+                console.log("job이 없음");
+                break;
+            }
+
+            switch (job.jobType) {
+                case config.jobType.CHATTING_CHAT_SEND_REQUEST_JOB:
+                    const chattingSendUser = job.payload[0] as ChattingUser;
+                    const chatMessage = job.payload[1] as string;
+
+                    const chatSendResponse = {
+                        nickName: chattingSendUser.getNickName(),
+                        chatMessage
+                    }
+
+                    this.users.forEach((user: ChattingUser) => {
+                        sendChattingPacket(user.getUserSocket(), config.chattingPacketType.CHATTING_CHAT_SEND_RESPONSE, chatSendResponse);
+                    });
+                    break;
+            }
+        }
     }
 }
 

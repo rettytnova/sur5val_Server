@@ -1,4 +1,5 @@
 import { config } from "../../../config/config.js";
+import { chattingChatSendReqHandler } from "./chatting/chattingChatSendReqHandler.js";
 import { chattingCreateRoomReqHandler } from "./room/chattingCreateRoomReqHandler.js";
 import { chattingJoinRoomReqHandler } from "./room/chattingJoinRoomReqHandler.js";
 import { chattingLeaveRoomReqHandler } from "./room/chattingLeaveRoomReqHandler.js";
@@ -16,6 +17,9 @@ const chattingHandlers = {
     },
     [config.chattingPacketType.CHATTING_LEAVE_ROOM_REQUEST]: {
         handler: chattingLeaveRoomReqHandler
+    },
+    [config.chattingPacketType.CHATTING_CHAT_SEND_REQUEST]: {
+        handler: chattingChatSendReqHandler
     }
 }
 

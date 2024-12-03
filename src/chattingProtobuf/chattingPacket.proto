@@ -22,5 +22,7 @@ message ChattingPacket{
         S2CChattingServerCreateRoomResponse chattingServerCreateRoomResponse = 4; 
         C2SChattingServerJoinRoomRequest chattingServerJoinRoomRequest = 5; 
         C2SChattingServerLeaveRoomRequest chattingServerLeaveRoomRequest = 6;
+        C2SChattingServerChatSendRequest chattingServerChatSendRequest = 7;
+        S2CChattingServerChatSendResponse chattingServerChatSendResponse = 8;
     }
 }

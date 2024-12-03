@@ -15,3 +15,7 @@ message C2SChattingServerJoinRoomRequest{
 
 message C2SChattingServerLeaveRoomRequest{
 }
+
+message C2SChattingServerChatSendRequest{    
+    string chatMessage = 1;
+}

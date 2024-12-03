@@ -30,3 +30,7 @@ export interface ChattingLoginResponse {
 export interface ChattingJoinRoomRequestPayload {
     ownerEmail: string;
 }
+
+export interface ChattingChatSendRequestPayload {
+    chatMessage: string;
+}

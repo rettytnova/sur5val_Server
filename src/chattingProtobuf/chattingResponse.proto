@@ -10,3 +10,8 @@ message S2CChattingServerLoginResponse{
 message S2CChattingServerCreateRoomResponse{
     int32 chattingRoomId = 1;
 }
+
+message S2CChattingServerChatSendResponse{
+    string nickName = 1;
+    string chatMessage = 2;
+}
