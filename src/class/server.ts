@@ -18,6 +18,14 @@ class Server {
   private protoMessages: { [key: string]: any } = {};
   private server: net.Server;
 
+  public characterStatInfo: any;
+  public characterLevelUpStatInfo: any;
+  public consumableItemInfo: any;
+  public equipItemInfo: any;
+  public monsterInfo: any;
+  public shopListInfo: any;
+  public initGameInfo: any;
+
   private constructor() {
     this.server = net.createServer(this.clientConnection);
   }
@@ -114,12 +122,20 @@ class Server {
     });
   }
 
-  start() {
+  async start() {
     DatabaseManager.getInstance().testAllDBConnection();
 
     this.initializeProto();
 
     this.listen();
+
+    this.characterStatInfo = await DatabaseManager.getInstance().characterInitStatInfo();
+    this.characterLevelUpStatInfo = await DatabaseManager.getInstance().characterLevelUpStatInfo();
+    this.consumableItemInfo = await DatabaseManager.getInstance().consumableItemInfo();
+    this.equipItemInfo = await DatabaseManager.getInstance().equipItemInfo();
+    this.monsterInfo = await DatabaseManager.getInstance().monsterInfo();
+    this.shopListInfo = await DatabaseManager.getInstance().shopListInfo();
+    this.initGameInfo = await DatabaseManager.getInstance().initGameInfo();
   }
 }
 
