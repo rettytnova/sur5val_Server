@@ -21,6 +21,7 @@ const PAYLOAD_LENGTH = 4;
 export const bossGameTime = 60000;
 export const inGameTime = 30000;
 export const normalRound = 4;
+export const attackCool = 2000;
 
 const USER_DB_NAME = process.env.DB_NAME;
 const USER_DB_USER = process.env.DB_USER;
@@ -201,7 +202,7 @@ export const packetMaps = {
   [config.packetType.ANIMATION_NOTIFICATION]: 'animationNotification',
 
   [config.packetType.MONSTER_REWARD_REQUEST]: 'monsterDeathRewardRequest',
-  [config.packetType.MONSTER_REWARD_RESPONSE]: 'monsterDeathRewardResponse',
+  [config.packetType.MONSTER_REWARD_RESPONSE]: 'monsterDeathRewardResponse'
 };
 
 export const chattingPacketMaps = {

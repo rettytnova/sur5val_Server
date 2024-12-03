@@ -1,4 +1,4 @@
-import { config } from '../../config/config.js';
+import { attackCool, config } from '../../config/config.js';
 import { CustomSocket, UseCardRequest, UseCardResponse, Room, User } from '../../interface/interface.js';
 import { CardType, GlobalFailCode, RoleType } from '../enumTyps.js';
 import { sendPacket } from '../../packet/createPacket.js';
@@ -8,7 +8,6 @@ import { socketSessions } from '../../session/socketSession.js';
 import { monsterAiDatas } from '../coreMethod/monsterMove.js';
 import { monsterReward, setCardRewards, setStatRewards } from '../coreMethod/monsterReward.js';
 import { userCharacterData } from '../game/gamePrepareHandler.js';
-import { gameEndHandler } from '../game/gameEndHandler.js';
 import { gameEndNotification } from '../notification/gameEnd.js';
 
 // DB에 들어갈 내용
@@ -107,18 +106,38 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
     switch (cardType) {
       // 스킬 1 ~ 100 // 스킬 1 ~ 100 // 스킬 1 ~ 100 // 스킬 1 ~ 100 // 스킬 1 ~ 100 // 스킬 1 ~ 100 // 스킬 1 ~ 100 // 스킬 1 ~ 100 //
 
+      // 이름: 기본 공격
+      // 설명: 그냥 기본 공격 입니다.
+      case CardType.SUR5VER_BASIC_SKILL: {
+        // 공격 유효성 검증
+        if (!target) return;
+        if (attackPossible(user, target, 0)) return;
+
+        // 공격 실행
+        attackTarget(user, rooms, room, 1, target);
+        sendAnimation(user, target, 2);
+        for (let i = 0; i < monsterAiDatas[room.id].length; i++) {
+          if (monsterAiDatas[room.id][i].id === target.id) {
+            monsterAiDatas[room.id][i].animationDelay = 5;
+            break;
+          }
+        }
+
+        // 공격 완료 처리
+        user.character.coolDown = Date.now();
+        await setRedisData('roomData', rooms);
+        await userUpdateNotification(room);
+        break;
+      }
       // 이름: 쌍둥이 폭팔
       // 설명: 신비로운 마법의 에너지가 두 번 적을 빠르게 베어낸다. 두 번째 타격은 마법의 폭발로 적을 더 강하게 공격한다.
       case CardType.MAGICIAN_BASIC_SKILL: {
-        // 유효성 검사
+        // 공격 유효성 검증
         if (!target) return;
-        if (user.character.mp < 2) {
-          console.log('마나가 부족합니다.');
-          return;
-        }
+        if (attackPossible(user, target, 2)) return;
 
         // 스킬 실행1
-        if (await attackTarget(user, rooms, room, 1, target)) return;
+        await attackTarget(user, rooms, room, 1, target);
         let index: number | null = null;
         for (let i = 0; i < monsterAiDatas[room.id].length; i++) {
           if (monsterAiDatas[room.id][i].id === target.id) {
@@ -142,7 +161,8 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
           return;
         }
 
-        // 마나 소모
+        // 공격 완료 처리
+        user.character.coolDown = Date.now();
         user.character.mp -= 2;
         await setRedisData('roomData', rooms);
         await userUpdateNotification(room);
@@ -170,15 +190,12 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
       // 이름: 삼중 타격
       // 설명: 푸른빛, 보랏빛, 붉은 폭발로 적을 강타한다. 타격마다 에너지가 증폭되어 최종 타격은 압도적인 파괴력을 발휘한다.
       case CardType.MAGICIAN_EXTENDED_SKILL: {
-        // 유효성 검사
+        // 공격 유효성 검증
         if (!target) return;
-        if (user.character.mp < 3) {
-          console.log('마나가 부족합니다.');
-          return;
-        }
+        if (attackPossible(user, target, 3)) return;
 
         // 스킬 실행1
-        if (await attackTarget(user, rooms, room, 1.2, target)) return;
+        await attackTarget(user, rooms, room, 1.2, target);
         let index: number | null = null;
         for (let i = 0; i < monsterAiDatas[room.id].length; i++) {
           if (monsterAiDatas[room.id][i].id === target.id) {
@@ -203,8 +220,9 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
           sendAnimation(user, target, 1);
         }, 1200);
 
-        // 마나 소모
+        // 공격 완료 처리
         user.character.mp -= 3;
+        user.character.coolDown = Date.now();
         await setRedisData('roomData', rooms);
         await userUpdateNotification(room);
         break;
@@ -234,15 +252,12 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
       // 이름: 불멸의 폭풍
       // 설명: 강력한 마법 폭풍이 적을 덮친다. 번개와 화염이 뒤엉켜 적에게 치명적인 피해를 입힌다.
       case CardType.MAGICIAN_FINAL_SKILL:
-        // 유효성 검사
+        // 공격 유효성 검증
         if (!target) return;
-        if (user.character.mp < 4) {
-          console.log('마나가 부족합니다.');
-          return;
-        }
+        if (attackPossible(user, target, 4)) return;
 
         // 스킬 실행
-        if (await attackTarget(user, rooms, room, 7, target)) return;
+        await attackTarget(user, rooms, room, 7, target);
         let index: number | null = null;
         for (let i = 0; i < monsterAiDatas[room.id].length; i++) {
           if (monsterAiDatas[room.id][i].id === target.id) {
@@ -256,6 +271,7 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
         sendAnimation(user, target, 3);
 
         // 마나 소모
+        user.character.coolDown = Date.now();
         user.character.mp -= 4;
         await setRedisData('roomData', rooms);
         await userUpdateNotification(room);
@@ -574,19 +590,30 @@ const partyBuff = async (
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
+// 공격 유효성 검증
+const attackPossible = (attacker: User, target: User, needMp: number) => {
+  if (Date.now() - attacker.character.coolDown < attackCool) {
+    console.log('공격 쿨타임 중입니다.');
+    return true;
+  }
+  if (attacker.character.mp < needMp) {
+    console.log('마나가 부족합니다.');
+    return true;
+  }
+  if (target.character.roleType === RoleType.SUR5VAL) {
+    console.log('아군을 공격할 수는 없습니다.');
+    return true;
+  }
+  if (target.character.hp <= 0) {
+    console.log('살아있는 적에게만 공격할 수 있습니다.');
+    return true;
+  }
+
+  return false;
+};
+
 // 타겟이 된 적 공격 (적군 체력 감소)
 const attackTarget = async (attacker: User, rooms: Room[], room: Room, skillCoeffcient: number, target: User) => {
-  // 적군이 선택되었는지 검사
-  if (target.character.roleType === RoleType.SUR5VAL) {
-    console.error('적군에게만 사용할 수 있는 스킬입니다.');
-    return true;
-  }
-
-  // 살아있는 적이 맞는지 검사
-  if (target.character.hp <= 0) {
-    return true;
-  }
-
   // 공격 실행 중 라운드가 바뀌지 않았는지 검사
   let isChanged: boolean = true;
   const roomNow = await getRoomByUserId(attacker.id);
