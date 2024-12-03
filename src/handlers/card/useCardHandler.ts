@@ -193,6 +193,13 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
         user.character.coolDown = Date.now();
         user.character.mp -= 1;
         sendAnimation(user, target, 4);
+        if (target.character.roleType === RoleType.BOSS_MONSTER && target.character.hp <= 0) {
+          await gameEndNotification(room.id, 3);
+          return;
+        }
+        await setRedisData('roomData', rooms);
+        await userUpdateNotification(room);
+
         break;
 
       // 이름: 급습 (도적 기본 스킬) , 애니메이션 번호 : 10번
@@ -211,7 +218,10 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
         user.character.coolDown = Date.now();
         user.character.mp -= 3;
         sendAnimation(user, target, 10);
-
+        if (target.character.roleType === RoleType.BOSS_MONSTER && target.character.hp <= 0) {
+          await gameEndNotification(room.id, 3);
+          return;
+        }
         await setRedisData('roomData', rooms);
         userUpdateNotification(room);
 
