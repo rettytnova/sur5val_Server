@@ -1,5 +1,6 @@
 import { UserCharacterType, RoleType, CardType } from '../enumTyps.js';
 import { Room, User } from '../../interface/interface.js';
+import { setRedisData } from '../handlerMethod.js';
 import { userCharacterData } from '../../handlers/game/gamePrepareHandler.js';
 import { monsterDatas } from '../../handlers/coreMethod/monsterSpawn.js';
 
@@ -13,7 +14,7 @@ import { monsterDatas } from '../../handlers/coreMethod/monsterSpawn.js';
  * @param {User} target - 몬스터
  * @returns {Promise<void>} 별도의 반환 값은 없으며, 성공 여부와 메시지를 클라이언트에게 전송.
  */
-export const monsterReward = async (room: Room, attacker: User, target: User): Promise<void> => {
+export const monsterReward = async (rooms: Room[], room: Room, attacker: User, target: User): Promise<void> => {
   // 데이터 초기화 ----------------------------------------------------------------------
   let logMessage: string = '';
   let rewardSuccess: boolean = true;
@@ -50,8 +51,9 @@ export const monsterReward = async (room: Room, attacker: User, target: User): P
     // 에러 발생시 로그 출력
     console.error(`monsterRewardHandler ${error as Error}`);
   } finally {
-    // 보상 실패 로그 출력
+    // 보상 성공 여부에 따라 로그 출력 및 데이터 저장
     if (rewardSuccess === false) console.error('monsterRewardHandler', logMessage);
+    else await setRedisData('roomData', rooms);
   }
 };
 
@@ -93,19 +95,14 @@ const setRewards = (attacker: User, target: User): boolean => {
     // 경험치 보상 ---------------------------------------------------------------
     // 공격자가 SUR5VAL일 경우
     if (attacker.character.roleType == RoleType.SUR5VAL) {
-      let maxExp: number = 0;
       do {
-        // 최대 경험치 = 유저의 초기 경험치 * 유저의 레벨
-        maxExp = userCharacterData[attacker.character.characterType].exp * attacker.character.level;
-        console.log(maxExp, attacker.character.exp);
-
         // 현재 경험치 >= 최대 경험치
-        if (attacker.character.exp >= maxExp) {
-          // 현재 경험치 = 현재 경험치 - 최대 경험치
-          attacker.character.exp -= maxExp;
+        if (attacker.character.exp >= attacker.character.maxExp) {
           // 레벨업
-          attacker.character.level += 1;
-          maxExp = userCharacterData[attacker.character.characterType].exp * attacker.character.level;
+          attacker.character.exp -= attacker.character.maxExp;
+          attacker.character.level++;
+          attacker.character.maxExp = 10 * attacker.character.level;
+
           // 레벨업시 직업별 스탯 증가
           if (!setStatRewards(attacker)) {
             console.error('setStatRewards 실패');
@@ -118,7 +115,7 @@ const setRewards = (attacker: User, target: User): boolean => {
           }
         }
         // 여전히 현재 경험치가 최대 경험치보다 크다면 반복
-      } while (attacker.character.exp >= maxExp);
+      } while (attacker.character.exp >= attacker.character.maxExp);
 
       // 골드 보상 ---------------------------------------------------------------
       // 타겟이 WEAK_MONSTER일 경우

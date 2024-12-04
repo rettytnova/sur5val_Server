@@ -11,7 +11,8 @@ export const userCharacterData: UserCharacterData = {
   // 핑크슬라임 - 보스
   [UserCharacterType.PINK_SLIME]: {
     roleType: RoleType.BOSS_MONSTER,
-    exp: 10,
+    maxExp: 10,
+    exp: 0,
     gold: 0,
     hp: 1000,
     mp: 30,
@@ -26,7 +27,8 @@ export const userCharacterData: UserCharacterData = {
   // 가면군 - 마법사
   [UserCharacterType.MASK]: {
     roleType: RoleType.SUR5VAL,
-    exp: 10,
+    maxExp: 10,
+    exp: 0,
     gold: 0,
     hp: 9,
     mp: 14,
@@ -64,7 +66,8 @@ export const userCharacterData: UserCharacterData = {
   // 물안경군 - 궁수
   [UserCharacterType.SWIM_GLASSES]: {
     roleType: RoleType.SUR5VAL,
-    exp: 10,
+    maxExp: 10,
+    exp: 0,
     gold: 0,
     hp: 11,
     mp: 12,
@@ -102,7 +105,8 @@ export const userCharacterData: UserCharacterData = {
   // 개굴군 - 도적
   [UserCharacterType.FROGGY]: {
     roleType: RoleType.SUR5VAL,
-    exp: 10,
+    maxExp: 10,
+    exp: 0,
     gold: 0,
     hp: 12,
     mp: 13,
@@ -141,7 +145,8 @@ export const userCharacterData: UserCharacterData = {
   // 빨강이 - 전사
   [UserCharacterType.RED]: {
     roleType: RoleType.SUR5VAL,
-    exp: 10,
+    maxExp: 10,
+    exp: 0,
     gold: 0,
     hp: 14,
     mp: 10,
@@ -284,6 +289,7 @@ export const setCharacterInfoInit = (users: User[]) => {
     users[i].character.roleType = userCharacterData[selectedTypes[i]].roleType;
     users[i].character.coolDown = 0; // 현재 스킬 사용 시간
     users[i].character.level = 1;
+    users[i].character.maxExp = userCharacterData[selectedTypes[i]].maxExp;
     users[i].character.exp = 0;
     users[i].character.gold = userCharacterData[selectedTypes[i]].gold;
     users[i].character.maxHp = userCharacterData[selectedTypes[i]].hp;
