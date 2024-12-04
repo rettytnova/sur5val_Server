@@ -280,6 +280,7 @@ export const monsterSpawn = async (roomId: number, level: number) => {
       aliveState: true,
       coolDown: 0,
       level: level,
+      maxExp: 0,
       exp: monsterData[level].exp,
       gold: monsterData[level].gold,
       maxHp: monsterData[level].hp,

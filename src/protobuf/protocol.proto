@@ -28,22 +28,23 @@ message CharacterData {
     RoleType roleType = 2;
     bool aliveState = 3;
     int32 level = 4;
-    int32 exp = 5;
-    int32 gold = 6;
-    int32 coolDown = 7;
-    int32 maxHp = 8;
-    int32 hp = 9;
-    int32 mp = 10;
-    int32 attack = 11;
-    int32 armor = 12;
-    int32 weapon = 13;
-    int32 potion = 14;
-    CharacterStateInfoData stateInfo = 15;
-    repeated int32 equips = 16;
-    repeated int32 debuffs = 17;
-    repeated CardData handCards = 18;
-    int32 handCardsCount = 19;
-    int32 bbangCount = 20;
+    int32 maxExp = 5;
+    int32 exp = 6;
+    int32 gold = 7;
+    int32 coolDown = 8;
+    int32 maxHp = 9;
+    int32 hp = 10;
+    int32 mp = 11;
+    int32 attack = 12;
+    int32 armor = 13;
+    int32 weapon = 14;
+    int32 potion = 15;
+    CharacterStateInfoData stateInfo = 16;
+    repeated int32 equips = 17;
+    repeated int32 debuffs = 18;
+    repeated CardData handCards = 19;
+    int32 handCardsCount = 20;
+    int32 bbangCount = 21;
 }
 
 message CharacterPositionData {

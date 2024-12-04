@@ -93,19 +93,16 @@ const setRewards = (attacker: User, target: User): boolean => {
     // 경험치 보상 ---------------------------------------------------------------
     // 공격자가 SUR5VAL일 경우
     if (attacker.character.roleType == RoleType.SUR5VAL) {
-      let maxExp: number = 0;
+      let maxExp: number = userCharacterData[attacker.character.characterType].maxExp;
       do {
-        // 최대 경험치 = 유저의 초기 경험치 * 유저의 레벨
-        maxExp = userCharacterData[attacker.character.characterType].exp * attacker.character.level;
-        console.log(maxExp, attacker.character.exp);
-
         // 현재 경험치 >= 최대 경험치
         if (attacker.character.exp >= maxExp) {
-          // 현재 경험치 = 현재 경험치 - 최대 경험치
-          attacker.character.exp -= maxExp;
           // 레벨업
+          attacker.character.exp -= maxExp;
           attacker.character.level += 1;
-          maxExp = userCharacterData[attacker.character.characterType].exp * attacker.character.level;
+          userCharacterData[attacker.character.characterType].maxExp *= attacker.character.level;
+          maxExp = userCharacterData[attacker.character.characterType].maxExp;
+
           // 레벨업시 직업별 스탯 증가
           if (!setStatRewards(attacker)) {
             console.error('setStatRewards 실패');

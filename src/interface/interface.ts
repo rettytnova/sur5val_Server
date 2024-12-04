@@ -16,6 +16,7 @@ export interface UserCharacterData {
 /* UserCharacterInitData 타입 정의 */
 export interface UserCharacterInitData {
   roleType: number;
+  maxExp: number;
   exp: number;
   gold: number;
   hp: number;
@@ -86,6 +87,7 @@ export interface Character {
   aliveState: boolean;
   coolDown: number;
   level: number;
+  maxExp: number;
   exp: number;
   gold: number;
   maxHp: number;
