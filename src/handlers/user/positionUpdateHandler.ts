@@ -48,7 +48,7 @@ export const positionUpdateHandler = async (socket: net.Socket, payload: Object)
         //   }
         // }
 
-        setRedisData('characterPositionDatas', positionDatas); // 모든 방에 있는 위치데이터 값
+        await setRedisData('characterPositionDatas', positionDatas); // 모든 방에 있는 위치데이터 값
       }
     }
   }
