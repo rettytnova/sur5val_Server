@@ -1,5 +1,5 @@
 import { CharacterPositionData, CustomSocket, Room } from '../../interface/interface.js';
-import { GlobalFailCode, PhaseType, RoleType, CardType, RoomStateType, UserCharacterType } from '../enumTyps.js';
+import { GlobalFailCode, PhaseType, RoleType, RoomStateType } from '../enumTyps.js';
 import { sendPacket } from '../../packet/createPacket.js';
 import { config, spawnPoint, inGameTime, normalRound, bossGameTime } from '../../config/config.js';
 import { getRedisData, getUserIdBySocket, nonSameRandom, setRedisData } from '../handlerMethod.js';
@@ -9,11 +9,9 @@ import { socketSessions } from '../../session/socketSession.js';
 import { inGameTimeSessions } from '../../session/inGameTimeSession.js';
 import { gameEndNotification } from '../notification/gameEnd.js';
 import { fleaMarketCardCreate } from '../coreMethod/fleaMarketCardCreate.js';
-import { fleaMarketOpenHandler } from '../market/fleaMarketOpenHandler.js';
 import { shoppingUserIdSessions } from '../../session/shoppingSession.js';
 import { userUpdateNotification } from '../notification/userUpdate.js';
 import { userCharacterData } from './gamePrepareHandler.js';
-import { useCardHandler } from '../card/useCardHandler.js';
 
 export const gameStartHandler = async (socket: CustomSocket, payload: Object) => {
   // 핸들러가 호출되면 success. response 만들어서 보냄
@@ -102,24 +100,6 @@ export const gameStartHandler = async (socket: CustomSocket, payload: Object) =>
         },
         inGameTime * normalRound + bossGameTime
       );
-
-      let bossSocket: CustomSocket | null = null;
-      for (let i = 0; i < room.users.length; i++) {
-        if (room.users[i].character.roleType === RoleType.BOSS_MONSTER) {
-          bossSocket = socketSessions[room.users[i].id];
-          break;
-        }
-      }
-      if (!bossSocket) {
-        console.log('보스 없는데?');
-        return;
-      }
-      const bossAttack = setInterval(async () => {
-        await useCardHandler(bossSocket, { cardType: CardType.BOSS_RANGE_SKILL, targetUserId: null });
-      }, 2000);
-      setTimeout(() => {
-        clearInterval(bossAttack);
-      }, 100000);
     }
   } catch (err) {
     const responseData = {

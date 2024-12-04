@@ -229,6 +229,7 @@ export const monsterSpawnStart = async (roomId: number, level: number) => {
     if (roomData.users[i].character.roleType === RoleType.SUR5VAL) {
       roomData.users[i].character.hp = roomData.users[i].character.maxHp;
       roomData.users[i].character.stateInfo.state = 0;
+      roomData.users[i].character.aliveState = true;
     }
   }
 
