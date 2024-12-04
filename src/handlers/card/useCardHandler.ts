@@ -5,7 +5,8 @@ import {
   UseCardResponse,
   Room,
   User,
-  CharacterPositionData
+  CharacterPositionData,
+  positionUpdatePayload
 } from '../../interface/interface.js';
 import { CardType, GlobalFailCode, RoleType } from '../enumTyps.js';
 import { sendPacket } from '../../packet/createPacket.js';
@@ -52,6 +53,7 @@ const { packetType } = config;
  * @returns {Promise<void>} 별도의 반환 값은 없으며, 성공 여부와 메시지를 클라이언트에게 전송.
  */
 export const useCardHandler = async (socket: CustomSocket, payload: Object): Promise<void> => {
+  console.log(payload);
   // response 데이터 초기화 ----------------------------------------------------------------------
   const { cardType, targetUserId: targetUserIdRaw } = payload as UseCardRequest;
   const targetUserId = Number(targetUserIdRaw);
@@ -118,7 +120,7 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
       case CardType.SUR5VER_BASIC_SKILL: {
         // 공격 유효성 검증
         if (!target) return;
-        if (attackPossible(user, target, 0)) return;
+        if (!attackPossible(user, target, 0)) return;
 
         // 공격 실행
         attackTarget(user, rooms, room, 1, target);
@@ -141,8 +143,8 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
       case CardType.MAGICIAN_BASIC_SKILL: {
         // 공격 유효성 검증
         if (!target) return;
-        if (attackPossible(user, target, 2)) return;
-        //await movePosition(user, target, room);
+        if (!attackPossible(user, target, 2)) return;
+
         // 스킬 실행1
         await attackTarget(user, rooms, room, 1, target);
         let index: number | null = null;
@@ -181,7 +183,7 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
       case CardType.ARCHER_BASIC_SKILL:
         if (!target) return;
         if (!attackPossible(user, target, 1)) return;
-        await attackTarget(user, rooms, room, 1, target);
+        await attackTarget(user, rooms, room, 1.5, target);
         for (let i = 0; i < monsterAiDatas[room.id].length; i++) {
           if (monsterAiDatas[room.id][i].id === target.id) {
             monsterAiDatas[room.id][i].animationDelay = 4;
@@ -191,6 +193,13 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
         user.character.coolDown = Date.now();
         user.character.mp -= 1;
         sendAnimation(user, target, 4);
+        if (target.character.roleType === RoleType.BOSS_MONSTER && target.character.hp <= 0) {
+          await gameEndNotification(room.id, 3);
+          return;
+        }
+        await setRedisData('roomData', rooms);
+        await userUpdateNotification(room);
+
         break;
 
       // 이름: 급습 (도적 기본 스킬) , 애니메이션 번호 : 10번
@@ -209,7 +218,10 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
         user.character.coolDown = Date.now();
         user.character.mp -= 3;
         sendAnimation(user, target, 10);
-
+        if (target.character.roleType === RoleType.BOSS_MONSTER && target.character.hp <= 0) {
+          await gameEndNotification(room.id, 3);
+          return;
+        }
         await setRedisData('roomData', rooms);
         userUpdateNotification(room);
 
@@ -232,14 +244,14 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
           await partyBuff(0, user, rooms, room, 0, -2, -2);
         }, 20000);
 
-        break;        
+        break;
 
       // 이름: 삼중 타격 (마법사 강화 스킬), 애니메이션 번호 : 1
       // 설명: 푸른빛, 보랏빛, 붉은 폭발로 적을 강타한다. 타격마다 에너지가 증폭되어 최종 타격은 압도적인 파괴력을 발휘한다.
       case CardType.MAGICIAN_EXTENDED_SKILL: {
         // 공격 유효성 검증
         if (!target) return;
-        if (attackPossible(user, target, 3)) return;
+        if (!attackPossible(user, target, 3)) return;
 
         // 스킬 실행1
         await attackTarget(user, rooms, room, 1.2, target);
@@ -340,7 +352,8 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
 
       // 이름:
       // 설명:
-      case CardType.NONE:
+      case CardType.BOSS_RANGE_SKILL:
+        attackRagne(user, user, rooms, room, 1, 5, 3);
         break;
 
       // 이름:
@@ -659,6 +672,77 @@ const attackPossible = (attacker: User, target: User, needMp: number) => {
   return true;
 };
 
+// 보스스킬: 범위 적 공격
+const attackRagne = async (
+  attacker: User,
+  center: User,
+  rooms: Room[],
+  room: Room,
+  skillCoeffcient: number,
+  range: number,
+  maxTarget: number
+) => {
+  // 살아있는 플레이어 추출
+  const alivePlayers: [User, number][] = [];
+  for (let i = 0; i < room.users.length; i++) {
+    if (room.users[i].character.roleType === RoleType.SUR5VAL && room.users[i].character.hp > 0) {
+      alivePlayers.push([room.users[i], 0]);
+    }
+  }
+
+  // 중심 위치 조회
+  const characterPositions: { [roomId: number]: CharacterPositionData[] | undefined } | undefined =
+    await getRedisData('characterPositionDatas');
+  if (characterPositions === undefined) return;
+  const positionDatas: CharacterPositionData[] | undefined = characterPositions[room.id];
+  if (positionDatas === undefined) return;
+  let bossPosition: positionUpdatePayload | null = null;
+  for (let i = 0; i < positionDatas.length; i++) {
+    if (center.id === positionDatas[i].id) {
+      bossPosition = { x: positionDatas[i].x, y: positionDatas[i].y };
+      break;
+    }
+  }
+  if (!bossPosition) return;
+
+  // 보스와의 거리가 너무 먼 alivePlayer를 splice 처리
+  for (let i = 0; i < alivePlayers.length; i++) {
+    for (let j = 0; j < positionDatas.length; j++) {
+      if (alivePlayers[i][0].id === positionDatas[j].id) {
+        const distance = (bossPosition.x - positionDatas[j].x) ** 2 + (bossPosition.y - positionDatas[j].y) ** 2;
+        if (distance > range ** 2) {
+          alivePlayers.splice(i, 1);
+          i--;
+        } else {
+          alivePlayers[i][1] = distance;
+        }
+        break;
+      }
+    }
+  }
+
+  // 타겟 수 제한을 넘었을 경우 거리가 먼 순서대로 삭제
+  if (alivePlayers.length > maxTarget) {
+    alivePlayers.sort((a, b) => a[1] - b[1]);
+    alivePlayers.splice(maxTarget);
+  }
+
+  // 남아있는 alivePlayer 공격 및 애니메이션 재생
+  for (let i = 0; i < alivePlayers.length; i++) {
+    const damage = Math.max(attacker.character.attack * skillCoeffcient - alivePlayers[i][0].character.armor, 0);
+    alivePlayers[i][0].character.hp -= Math.round(damage);
+    if (alivePlayers[i][0].character.hp <= 0) {
+      alivePlayers[i][0].character.aliveState = false;
+      alivePlayers[i][0].character.stateInfo.state = 15;
+      alivePlayers[i][0].character.hp = 0;
+    }
+    sendAnimation(attacker, alivePlayers[i][0], 1);
+  }
+
+  await setRedisData('roomData', rooms);
+  await userUpdateNotification(room);
+};
+
 // 타겟이 된 적 공격 (적군 체력 감소)
 const attackTarget = async (attacker: User, rooms: Room[], room: Room, skillCoeffcient: number, target: User) => {
   // 공격 실행 중 라운드가 바뀌지 않았는지 검사
@@ -675,9 +759,8 @@ const attackTarget = async (attacker: User, rooms: Room[], room: Room, skillCoef
 
   // 공격 스킬 실행
   const damage = Math.round(attacker.character.attack * skillCoeffcient - target.character.armor);
-  target.character.hp -= Math.max(damage, 0);
+  target.character.hp = Math.max(target.character.hp - damage, 0);
   if (target.character.aliveState && target.character.hp <= 0) {
-    target.character.hp = 0;
     attacker.character.exp += target.character.exp;
     await monsterReward(room, attacker, target);
   }
