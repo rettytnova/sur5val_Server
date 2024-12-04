@@ -762,7 +762,7 @@ const attackTarget = async (attacker: User, rooms: Room[], room: Room, skillCoef
   target.character.hp = Math.max(target.character.hp - damage, 0);
   if (target.character.aliveState && target.character.hp <= 0) {
     attacker.character.exp += target.character.exp;
-    await monsterReward(room, attacker, target);
+    await monsterReward(rooms, room, attacker, target);
   }
 
   // 보스를 죽였는지 검사

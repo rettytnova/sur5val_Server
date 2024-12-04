@@ -129,7 +129,6 @@ export const normalPhaseNotification = async (level: number, roomId: number, sen
     }
     if (!room) return;
     await setBossStat(room, level);
-    setRedisData('roomData', roomData);
 
     const gameStateData = { phaseType: PhaseType.DAY, nextPhaseAt: Date.now() + inGameTime };
     const notifiData = {
@@ -163,6 +162,7 @@ export const normalPhaseNotification = async (level: number, roomId: number, sen
       }
     }
     await userUpdateNotification(room);
+    setRedisData('roomData', roomData);
   }, sendTime);
 };
 

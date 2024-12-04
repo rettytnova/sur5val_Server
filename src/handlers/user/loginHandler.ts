@@ -83,6 +83,7 @@ export const loginHandler = async (socket: CustomSocket, payload: Object): Promi
         aliveState: true,
         coolDown: 0,
         level: 1,
+        maxExp: 0,
         exp: 0,
         gold: 20,
         maxHp: 0,
