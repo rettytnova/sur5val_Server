@@ -101,7 +101,7 @@ const setRewards = (attacker: User, target: User): boolean => {
           // 레벨업
           attacker.character.exp -= attacker.character.maxExp;
           attacker.character.level++;
-          attacker.character.maxExp *= attacker.character.level;
+          attacker.character.maxExp = 10 * attacker.character.level;
 
           // 레벨업시 직업별 스탯 증가
           if (!setStatRewards(attacker)) {
