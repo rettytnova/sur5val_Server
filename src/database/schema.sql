@@ -15,7 +15,8 @@ CREATE TABLE IF NOT EXISTS CharacterInitStat (
     attack INT,
     armor INT,
     hp INT,
-    mp INT
+    mp INT,
+    handCards INT
 );
 
 CREATE TABLE IF NOT EXISTS CharacterLevelUpStat (

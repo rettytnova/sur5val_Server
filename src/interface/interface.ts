@@ -1,5 +1,5 @@
 import net from 'net';
-import { PhaseType, RoomStateType } from '../handlers/enumTyps.js';
+import { CardType, PhaseType, RoomStateType } from '../handlers/enumTyps.js';
 //#region 레디스 인터페이스
 
 //#endregion
@@ -8,22 +8,38 @@ export interface CustomSocket extends net.Socket {
   id: string;
 }
 
-/* UserCharacterData 타입 정의 */
-export interface UserCharacterData {
-  [types: number]: UserCharacterInitData;
-}
+// /* UserCharacterData 타입 정의 */
+// export interface UserCharacterData {
+//   [types: number]: UserCharacterInitData;
+// }
 
-/* UserCharacterInitData 타입 정의 */
-export interface UserCharacterInitData {
-  roleType: number;
-  maxExp: number;
-  exp: number;
-  gold: number;
-  hp: number;
-  mp: number;
+// /* UserCharacterInitData 타입 정의 */
+// export interface UserCharacterInitData {
+//   roleType: number;
+//   maxExp: number;
+//   exp: number;
+//   gold: number;
+//   hp: number;
+//   mp: number;
+//   attack: number;
+//   armor: number;
+//   handCards: Card[];
+// }
+
+export interface CharacterInitStatDBData {
+  characterType: number;
   attack: number;
   armor: number;
-  handCards: Card[];
+  hp: number;
+  mp: number;
+  handCards: number;
+}
+
+export interface CharacterLevelUpStatDBData {
+  characterType: number;
+  attack: number;
+  armor: number;
+  hp: number;
 }
 
 /* MonsterDatas 타입 정의 */
@@ -49,6 +65,51 @@ export interface MonsterInitData {
   hpRecovery: number;
   mpRecovery: number;
   //cardRewards: Card[];
+}
+
+export interface MonsterDBData {
+  monsterType: number;
+  nickname: string;
+  level: number;
+  hp: number;
+  attack: number;
+  attackCool: number;
+  attackRange: number;
+  armor: number;
+  exp: number;
+  gold: number;
+  hpRecovery: number;
+}
+
+export interface equipItemDBData {
+  cardType: number;
+  price: number;
+  attack: number;
+  armor: number;
+  hp: number;
+}
+
+export interface consumableItemDBData {
+  cardType: number;
+  price: number;
+  attack: number;
+  hp: number;
+  mp: number;
+  exp: number;
+}
+
+export interface initGameDBData {
+  roundInitMonster: number;
+  normalRoundTime: number;
+  normalRoundNumber: number;
+  bossRoundTime: number;
+  attackCool: number;
+  mpRestoreRate: number;
+}
+
+export interface shopListDBData {
+  round: number;
+  itemList: CardType[];
 }
 
 export interface joinRoomPayload {

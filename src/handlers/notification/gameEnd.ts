@@ -51,8 +51,8 @@ export const gameEndNotification = async (roomId: number, winRType: number) => {
   // characterPositions, fleaMarketCards, monsterAi, shoppingUserIdSessions 삭제하기, 방Id 변경하기
   const characterPositions = await getRedisData('characterPositionDatas');
   delete characterPositions[roomId];
-
   await setRedisData('characterPositionDatas', characterPositions);
+
   const fleaMarketCards = await getRedisData('fleaMarketCards');
   delete fleaMarketCards[roomId];
   await setRedisData('fleaMarketCards', fleaMarketCards);

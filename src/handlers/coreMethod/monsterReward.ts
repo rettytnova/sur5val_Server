@@ -1,8 +1,7 @@
 import { UserCharacterType, RoleType, CardType } from '../enumTyps.js';
 import { Room, User } from '../../interface/interface.js';
 import { setRedisData } from '../handlerMethod.js';
-import { userCharacterData } from '../../handlers/game/gamePrepareHandler.js';
-import { monsterDatas } from '../../handlers/coreMethod/monsterSpawn.js';
+import Server from '../../class/server.js';
 
 /***
  * - 몬스터 처치 보상 처리 함수
@@ -93,6 +92,9 @@ const removeMonsterFromRoom = (monsterId: number, room: Room): boolean => {
 const setRewards = (attacker: User, target: User): boolean => {
   try {
     // 경험치 보상 ---------------------------------------------------------------
+    const monsterDBInfo = Server.getInstance().monsterInfo;
+    if (!monsterDBInfo) throw new Error('monsterInfo 정보를 불러오는데 실패하였습니다.');
+
     // 공격자가 SUR5VAL일 경우
     if (attacker.character.roleType == RoleType.SUR5VAL) {
       do {
@@ -140,10 +142,11 @@ const setRewards = (attacker: User, target: User): boolean => {
     if ((target.character.roleType as RoleType) !== RoleType.WEAK_MONSTER) {
       // 체력 및 마나 회복 보상 ---------------------------------------------------------------
       // 필요 데이터 선언 및 초기화
-      let attackerMaxHp: number = userCharacterData[attacker.character.characterType].hp;
-      let attackerMaxMp: number = userCharacterData[attacker.character.characterType].mp;
-      let monsterHpRecovery: number = monsterDatas[target.character.characterType][target.character.level].hpRecovery;
-      let monsterMpRecovery: number = monsterDatas[target.character.characterType][target.character.level].mpRecovery;
+      const attackerMaxHp: number = attacker.character.maxHp;
+      const monsterHpRecovery: number =
+        monsterDBInfo.find(
+          (data) => data.monsterType === target.character.characterType && data.level === target.character.level
+        )?.hpRecovery ?? 0;
 
       // 공격자가 SUR5VAL일 경우
       if (attacker.character.roleType === RoleType.SUR5VAL) {
@@ -157,71 +160,39 @@ const setRewards = (attacker: User, target: User): boolean => {
             console.error('생존자가 몬스터를 죽인 뒤 얻는 체력 회복 보상 실패');
             return false;
           }
-
-          // 몬스터 죽일시 마나 회복
-          if (attackerMaxMp >= attacker.character.mp + monsterMpRecovery) attacker.character.mp += monsterMpRecovery;
-          // 마나 회복시 마나 값이 최대 마나를 넘어가지 않도록 설정
-          else if (attackerMaxMp < attacker.character.mp + monsterMpRecovery) attacker.character.mp = attackerMaxMp;
-          else {
-            console.error('생존자가 몬스터를 죽인 뒤 얻는 마나 회복 보상 실패');
-            return false;
-          }
-        }
-        // 타겟이 BOSS_MONSTER일 경우
-        else if (target.character.roleType === RoleType.BOSS_MONSTER) {
-          // 인터페이스에 없는 값이므로 임의로 설정
-          const HP_RECOVERY: number = 100;
-          const MP_RECOVERY: number = 10;
-
-          // 보스 죽일시 체력 회복
-          if (attackerMaxHp >= attacker.character.hp + HP_RECOVERY) attacker.character.hp += HP_RECOVERY;
-          // 체력 회복시 체력 값이 최대 체력을 넘어가지 않도록 설정
-          else if (attackerMaxHp < attacker.character.hp + HP_RECOVERY) attacker.character.hp = attackerMaxHp;
-          else {
-            console.error('생존자가 보스를 죽인 뒤 얻는 체력 회복 보상 실패');
-            return false;
-          }
-
-          // 보스 죽일시 마나 회복
-          if (attackerMaxMp >= attacker.character.mp + MP_RECOVERY) attacker.character.mp += MP_RECOVERY;
-          // 마나 회복시 마나 값이 최대 마나를 넘어가지 않도록 설정
-          else if (attackerMaxMp < attacker.character.mp + MP_RECOVERY) attacker.character.mp = attackerMaxMp;
-          else {
-            console.error('생존자가 보스를 죽인 뒤 얻는 마나 회복 보상 실패');
-            return false;
-          }
         } else {
           console.error('생존자의 체력 및 마나 회복 보상 실패');
           return false;
         }
       }
       // 공격자가 BOSS_MONSTER이고 타겟이 SUR5VAL일 경우
-      else if (
-        attacker.character.roleType === RoleType.BOSS_MONSTER &&
-        target.character.roleType === RoleType.SUR5VAL
-      ) {
-        // 인터페이스에 없는 값이므로 임의로 설정
-        const HP_RECOVERY: number = 100;
-        const MP_RECOVERY: number = 10;
+      // else if (
+      //   attacker.character.roleType === RoleType.BOSS_MONSTER &&
+      //   target.character.roleType === RoleType.SUR5VAL
+      // ) {
+      //   // 인터페이스에 없는 값이므로 임의로 설정
+      //   const HP_RECOVERY: number = 100;
+      //   const MP_RECOVERY: number = 10;
 
-        // 유저 죽일시 체력 회복
-        if (attackerMaxHp >= attacker.character.hp + HP_RECOVERY) attacker.character.hp += HP_RECOVERY;
-        // 체력 회복시 체력 값이 최대 체력을 넘어가지 않도록 설정
-        else if (attackerMaxHp < attacker.character.hp + HP_RECOVERY) attacker.character.hp = attackerMaxHp;
-        else {
-          console.error('보스가 생존자를 죽인 뒤 얻는 체력 회복 보상 실패');
-          return false;
-        }
+      //   // 유저 죽일시 체력 회복
+      //   if (attackerMaxHp >= attacker.character.hp + HP_RECOVERY) attacker.character.hp += HP_RECOVERY;
+      //   // 체력 회복시 체력 값이 최대 체력을 넘어가지 않도록 설정
+      //   else if (attackerMaxHp < attacker.character.hp + HP_RECOVERY) attacker.character.hp = attackerMaxHp;
+      //   else {
+      //     console.error('보스가 생존자를 죽인 뒤 얻는 체력 회복 보상 실패');
+      //     return false;
+      //   }
 
-        // 유저 죽일시 마나 회복
-        if (attackerMaxMp >= attacker.character.mp + MP_RECOVERY) attacker.character.mp += MP_RECOVERY;
-        // 마나 회복시 마나 값이 최대 마나를 넘어가지 않도록 설정
-        else if (attackerMaxMp < attacker.character.mp + MP_RECOVERY) attacker.character.mp = attackerMaxMp;
-        else {
-          console.error('보스가 생존자를 죽인 뒤 얻는 마나 회복 보상 실패');
-          return false;
-        }
-      } else {
+      //   // 유저 죽일시 마나 회복
+      //   if (attackerMaxMp >= attacker.character.mp + MP_RECOVERY) attacker.character.mp += MP_RECOVERY;
+      //   // 마나 회복시 마나 값이 최대 마나를 넘어가지 않도록 설정
+      //   else if (attackerMaxMp < attacker.character.mp + MP_RECOVERY) attacker.character.mp = attackerMaxMp;
+      //   else {
+      //     console.error('보스가 생존자를 죽인 뒤 얻는 마나 회복 보상 실패');
+      //     return false;
+      //   }
+      // }
+      else {
         console.error('체력 및 마나 회복 보상 실패');
         return false;
       }
@@ -250,28 +221,30 @@ export const setStatRewards = (attacker: User): boolean => {
     attacker.character.attack += 2;
     attacker.character.armor += 2;
     attacker.character.maxHp += 2;
+    attacker.character.hp += 2;
     // 궁수
   } else if (attacker.character.characterType == UserCharacterType.SWIM_GLASSES) {
     attacker.character.attack += 2;
     attacker.character.armor += 1;
     attacker.character.maxHp += 6;
+    attacker.character.hp += 6;
     // 전사
   } else if (attacker.character.characterType == UserCharacterType.FROGGY) {
     attacker.character.attack += 1;
     attacker.character.armor += 3;
     attacker.character.maxHp += 8;
+    attacker.character.hp += 8;
     // 성기사
   } else if (attacker.character.characterType == UserCharacterType.RED) {
     attacker.character.attack += 1;
     attacker.character.armor += 2;
     attacker.character.maxHp += 12;
+    attacker.character.hp += 12;
   } else {
     console.log('캐릭터 타입이 존재하지 않습니다.');
     return false;
   }
-  // 레벨업시 체력과 마나 최대로 회복
-  // attacker.character.hp = attacker.character.maxHp;
-  // attacker.character.mp = userCharacterData[attacker.character.characterType].mp;
+
   return true;
 };
 
@@ -304,22 +277,26 @@ export const setCardRewards = (attacker: User) => {
         return false;
       }
       break;
-    case 5: // 5레벨일 경우 (스킬 추가 시 활성화)
+    case 5: // 5레벨일 경우
       if (attacker.character.characterType == UserCharacterType.MASK) {
         attacker.character.handCards.push({ type: CardType.MAGICIAN_FINAL_SKILL, count: 1 });
+        attacker.character.handCards.sort((a, b) => a.type - b.type);
       } else if (attacker.character.characterType == UserCharacterType.SWIM_GLASSES) {
         attacker.character.handCards.push({ type: CardType.MAGICIAN_FINAL_SKILL, count: 1 });
+        attacker.character.handCards.sort((a, b) => a.type - b.type);
       } else if (attacker.character.characterType == UserCharacterType.FROGGY) {
         attacker.character.handCards.push({ type: CardType.MAGICIAN_FINAL_SKILL, count: 1 });
+        attacker.character.handCards.sort((a, b) => a.type - b.type);
       } else if (attacker.character.characterType == UserCharacterType.RED) {
         attacker.character.handCards.push({ type: CardType.MAGICIAN_FINAL_SKILL, count: 1 });
+        attacker.character.handCards.sort((a, b) => a.type - b.type);
       } else {
         console.log('캐릭터 타입이 존재하지 않습니다.');
         return false;
       }
       break;
     default: // 카드 보상을 받을 수 있는 레벨이 아닐 경우
-      console.log('카드 보상을 받을 수 레벨이 아닙니다.');
+      // console.log('카드 보상을 받을 수 레벨이 아닙니다.');
       break;
   }
   return true;

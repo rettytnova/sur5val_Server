@@ -5,23 +5,20 @@ import { sendPacket } from '../../packet/createPacket.js';
 import { config } from '../../config/config.js';
 import { shoppingUserIdSessions } from '../../session/shoppingSession.js';
 import { userUpdateNotification } from '../notification/userUpdate.js';
-
-// DB에 들어갈 내용
-const cardPrice: { [cardId: number]: number } = {
-  201: 10,
-  306: 100,
-  307: 100,
-  308: 100,
-  309: 100,
-  310: 100,
-  311: 300,
-  312: 300,
-  313: 300,
-  314: 300,
-  315: 300
-};
+import Server from '../../class/server.js';
 
 export const fleaMarketItemSelectHandler = async (socket: net.Socket, payload: Object) => {
+  const equipCardDBInfo = Server.getInstance().equipItemInfo;
+  if (!equipCardDBInfo) {
+    console.error('장비아이템 데이터가 없습니다.');
+    return;
+  }
+  const consumableItemInfo = Server.getInstance().consumableItemInfo;
+  if (!consumableItemInfo) {
+    console.error('소비아이템 데이터가 없습니다.');
+    return;
+  }
+
   const fleaMarketItemSelectPayload = payload as FleaMarketItemSelectPayload;
 
   const userId: number | null = await getUserIdBySocket(socket as CustomSocket);
@@ -74,9 +71,8 @@ export const fleaMarketItemSelectHandler = async (socket: net.Socket, payload: O
     return;
   }
 
-  // 돈이 부족하거나 Exit 버튼 눌렀을 경우
-  const pickeCardPrice = cardPrice[fleMarketPickCard];
-  if (fleMarketPickCard === 1000 || cardPickUser.character.gold < pickeCardPrice) {
+  // Exit 버튼 눌렀을 경우
+  if (fleMarketPickCard === 1000) {
     sendPacket(socket, config.packetType.FLEA_MARKET_CARD_PICK_RESPONSE, {
       userId: cardPickUser.id,
       handCards: cardPickUser.character.handCards
@@ -89,8 +85,26 @@ export const fleaMarketItemSelectHandler = async (socket: net.Socket, payload: O
     }
     return;
   }
-  if (!pickeCardPrice) {
-    console.error('판매하지 않는 아이템 선택');
+
+  // 돈이 부족할 경우
+  const equipCardPrice = equipCardDBInfo.find((data) => data.cardType === fleMarketPickCard)?.price;
+  const consumeCardPrice = consumableItemInfo.find((data) => data.cardType === fleMarketPickCard)?.price;
+  const pickedCardPrice = equipCardPrice ? equipCardPrice : consumeCardPrice;
+  if (!pickedCardPrice) {
+    console.error('카드 가격을 알 수 없습니다.(해당 카드가 데이터에 존재하지 않습니다.');
+    return;
+  }
+  if (cardPickUser.character.gold < pickedCardPrice) {
+    sendPacket(socket, config.packetType.FLEA_MARKET_CARD_PICK_RESPONSE, {
+      userId: cardPickUser.id,
+      handCards: cardPickUser.character.handCards
+    });
+    for (let i = 0; i < shoppingUserIdSessions[room.id].length; i++) {
+      if (shoppingUserIdSessions[room.id][i] === userId) {
+        shoppingUserIdSessions[room.id].splice(i, 1);
+        break;
+      }
+    }
     return;
   }
 
@@ -111,7 +125,7 @@ export const fleaMarketItemSelectHandler = async (socket: net.Socket, payload: O
 
   // cardType 순서대로 인벤토리 정렬
   cardPickUser.character.handCards.sort((a, b) => a.type - b.type);
-  cardPickUser.character.gold -= pickeCardPrice;
+  cardPickUser.character.gold -= pickedCardPrice;
 
   // 상점 목록에서 해당 상품 삭제
   const removedCardIndex = cards.indexOf(fleMarketPickCard);
