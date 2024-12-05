@@ -18,7 +18,8 @@ import { monsterReward, setCardRewards, setStatRewards } from '../coreMethod/mon
 import { gameEndNotification } from '../notification/gameEnd.js';
 import Server from '../../class/server.js';
 
-const { packetType } = config;
+const characterBuffStatus: { [characterId: number]: number[] } = {};
+
 /***
  * - 카드 사용 요청(request) 함수
  *
@@ -167,7 +168,7 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
         }
         user.character.coolDown = Date.now();
         user.character.mp -= 1;
-        sendAnimation(user, target, 4);
+        // sendAnimation(user, target, 4);
         if (target.character.roleType === RoleType.BOSS_MONSTER && target.character.hp <= 0) {
           await gameEndNotification(room.id, 3);
           return;
@@ -192,7 +193,7 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
         }
         user.character.coolDown = Date.now();
         user.character.mp -= 3;
-        sendAnimation(user, target, 10);
+        // sendAnimation(user, target, 10);
         if (target.character.roleType === RoleType.BOSS_MONSTER && target.character.hp <= 0) {
           await gameEndNotification(room.id, 3);
           return;
@@ -205,19 +206,14 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
       // 이름: 워 드럼 (전사 기본 스킬), 애니메이션 번호 : 7
       // 설명: 전투를 준비하기 위해 파티원들의 사기를 북돋는다. 파티원들의 능력치 20초간 소폭 증가
       case CardType.WARRIOR_BASIC_SKILL:
-        await partyBuff(2, user, rooms, room, 0, 2, 2);
-
         user.character.coolDown = Date.now();
+        await partyBuff(2, user, rooms, room, 0, 1, 1, 10000, CardType.WARRIOR_BASIC_SKILL);
 
         for (let i = 0; i < room.users.length; i++) {
           if (room.users[i].character.roleType === RoleType.SUR5VAL) {
-            sendAnimation(room.users[i], room.users[i], 7);
+            // sendAnimation(room.users[i], room.users[i], 7);
           }
         }
-
-        setTimeout(async () => {
-          await partyBuff(0, user, rooms, room, 0, -2, -2);
-        }, 20000);
 
         break;
 
@@ -277,9 +273,9 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
       // 설명:
       case CardType.WARRIOR_EXTENDED_SKILL:
         if (!user) return;
-        await changeStatus(1, user, rooms, room, 0, 8, -2);
+        await changeStatus(2, user, rooms, room, 0, 8, -2);
         setTimeout(async () => {
-          await changeStatus(1, user, rooms, room, 0, -8, 2);
+          await changeStatus(0, user, rooms, room, 0, -8, 2);
         }, 10000);
         break;
 
@@ -311,16 +307,16 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
         await userUpdateNotification(room);
         break;
 
-      // 이름:
+      // 이름: 궁수 최종 스킬
       // 설명:
       case CardType.NONE:
         break;
 
-      // 이름:
+      // 이름: 도적 최종 스킬
       // 설명:
       case CardType.NONE:
 
-      // 이름:
+      // 이름: 전사 최종 스킬
       // 설명:
       case CardType.NONE:
         break;
@@ -540,17 +536,21 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
   } catch (error) {
     console.error(`useCardHandler ${error as Error}`);
   }
-
-  // 클라이언트(자기 자신)에 데이터 보내기
-  //sendPacket(socket, packetType.USE_CARD_RESPONSE, responseData);
 };
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
 // 스킬 애니메이션 패킷 보내기
 const sendAnimation = (user: User, animationTarget: User, animationType: number) => {
   sendPacket(socketSessions[user.id], config.packetType.ANIMATION_NOTIFICATION, {
     userId: animationTarget.id,
     animationType: animationType
   });
+  if (animationTarget.character.roleType !== RoleType.WEAK_MONSTER) {
+    sendPacket(socketSessions[animationTarget.id], config.packetType.ANIMATION_NOTIFICATION, {
+      userId: animationTarget.id,
+      animationType: animationType
+    });
+  }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -599,30 +599,90 @@ const partyBuff = async (
   room: Room,
   hp: number,
   armor: number,
-  attack: number
+  attack: number,
+  buffTime: number,
+  cardType: number
 ) => {
-  // 캐릭터 / 유저 정보 검사
   // 마나가 충분한지 검사
   if (user.character.mp < manaCost) {
     console.log('마나가 부족합니다.');
     return;
   }
 
+  // 이미 버프 상태인지 검사
+  if (characterBuffStatus[user.id]) {
+    for (let i = 0; i < characterBuffStatus[user.id].length; i++) {
+      if (characterBuffStatus[user.id][i] === cardType) {
+        console.log('이미 warDrum 버프 상태입니다.');
+        return;
+      }
+    }
+  } else {
+    characterBuffStatus[user.id] = [];
+  }
+
   // 버프 스킬 실행
+  characterBuffStatus[user.id].push(cardType);
   user.character.mp -= manaCost;
   for (let i = 0; i < room.users.length; i++) {
     if (room.users[i].character.roleType === RoleType.SUR5VAL) {
-      if (user.character.hp + hp <= user.character.maxHp) {
-        user.character.hp += hp;
-      } else {
-        user.character.hp = user.character.maxHp;
-      }
-      user.character.armor += armor;
-      user.character.attack += attack;
+      room.users[i].character.maxHp += hp;
+      room.users[i].character.armor += armor;
+      room.users[i].character.attack += attack;
     }
   }
+  console.log('버프 사용 후: ', characterBuffStatus);
   await setRedisData('roomData', rooms);
   await userUpdateNotification(room);
+
+  // 버프 해제
+  setTimeout(async () => {
+    // 버프 사용자 목록에서 제거
+    for (let i = 0; i < characterBuffStatus[user.id].length; i++) {
+      if (characterBuffStatus[user.id][i] === cardType) {
+        characterBuffStatus[user.id].splice(i, 1);
+      }
+    }
+
+    // 버프 끝나는 시점의 room 정보 찾기
+    const nowRooms: Room[] | undefined = await getRedisData('roomData');
+    if (nowRooms === undefined) {
+      console.error('서버에 Rooms정보가 존재하지 않습니다.');
+      return;
+    }
+    let nowRoom: Room | undefined;
+    for (let i = 0; i < nowRooms.length; i++) {
+      for (let j = 0; j < nowRooms[i].users.length; j++) {
+        if (nowRooms[i].users[j].id === user.id) {
+          nowRoom = nowRooms[i];
+        }
+      }
+    }
+    if (!nowRoom) {
+      console.error('카드 사용자가 속한 room 정보를 찾을 수 없습니다.');
+      return;
+    }
+
+    // 버프 해제 시점에 기존 게임이 종료된 상태일 경우
+    if (nowRoom.id !== room.id) {
+      console.error('게임이 이미 종료되었습니다.');
+      return;
+    }
+
+    // 버프 해제 실행
+    for (let i = 0; i < room.users.length; i++) {
+      if (room.users[i].character.roleType === RoleType.SUR5VAL) {
+        room.users[i].character.maxHp -= hp;
+        room.users[i].character.armor -= armor;
+        room.users[i].character.attack -= attack;
+        room.users[i].character.hp = Math.min(room.users[i].character.hp, room.users[i].character.maxHp);
+      }
+    }
+    console.log('버프 해제 성공');
+    console.log('버프 해제 후: ', characterBuffStatus);
+    await setRedisData('roomData', rooms);
+    await userUpdateNotification(room);
+  }, buffTime);
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -651,6 +711,7 @@ const attackPossible = (attacker: User, target: User, needMp: number) => {
   return true;
 };
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
 // 보스스킬: 범위 적 공격
 const attackRagne = async (
   attacker: User,
@@ -722,6 +783,7 @@ const attackRagne = async (
   await userUpdateNotification(room);
 };
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
 // 타겟이 된 적 공격 (적군 체력 감소)
 const attackTarget = async (attacker: User, rooms: Room[], room: Room, skillCoeffcient: number, target: User) => {
   // 공격 실행 중 라운드가 바뀌지 않았는지 검사
@@ -935,22 +997,3 @@ const equipWeapon = async (user: User, rooms: Room[], room: Room, cardsType: num
   await setRedisData('roomData', rooms);
   await userUpdateNotification(room);
 };
-
-// // 스킬 사용시 해당 타겟 근접이동하기
-// const movePosition = async (user: User, target: User, room: Room) => {
-//   if (!target) return;
-
-//   let positionDatas: CharacterPositionData[] = await getRedisData('chracterPositionDatas');
-
-//   if (positionDatas[user.id].x > positionDatas[target.id].x + 2) {
-//     positionDatas[user.id].x = positionDatas[target.id].x + 2;
-//   } else if (positionDatas[user.id].x < positionDatas[target.id].x - 2) {
-//     positionDatas[user.id].x = positionDatas[target.id].x - 2;
-//   }
-
-//   if (positionDatas[user.id].y > positionDatas[target.id].y + 2) {
-//     positionDatas[user.id].y = positionDatas[target.id].y + 2;
-//   } else if (positionDatas[user.id].y < positionDatas[target.id].y - 2) {
-//     positionDatas[user.id].y = positionDatas[target.id].y - 2;
-//   }
-// };
