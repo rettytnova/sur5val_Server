@@ -323,7 +323,7 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
 
       // 이름:
       // 설명:
-      case CardType.BOSS_RANGE_SKILL:
+      case CardType.BOSS_BASIC_SKILL:
         attackRagne(user, user, rooms, room, 1, 5, 3);
         break;
 
