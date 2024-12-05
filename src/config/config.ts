@@ -18,10 +18,6 @@ const VERSION_LENGTH = 1;
 export const CLIENT_VERSION = '1.0.0';
 const SEQUENCE_LENGTH = 4;
 const PAYLOAD_LENGTH = 4;
-export const bossGameTime = 60000;
-export const inGameTime = 30000;
-export const normalRound = 4;
-export const attackCool = 2000;
 
 const USER_DB_NAME = process.env.DB_NAME;
 const USER_DB_USER = process.env.DB_USER;
@@ -213,7 +209,7 @@ export const chattingPacketMaps = {
   [config.chattingPacketType.CHATTING_JOIN_ROOM_REQUEST]: 'chattingServerJoinRoomRequest',
   [config.chattingPacketType.CHATTING_CHAT_SEND_REQUEST]: 'chattingServerChatSendRequest',
   [config.chattingPacketType.CHATTING_CHAT_SEND_RESPONSE]: 'chattingServerChatSendResponse'
-}
+};
 /**
  * x: 11 , y : -8
 x: 5 , y : -8

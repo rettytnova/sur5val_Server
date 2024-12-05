@@ -1,4 +1,4 @@
-import { attackCool, config } from '../../config/config.js';
+import { config } from '../../config/config.js';
 import {
   CustomSocket,
   UseCardRequest,
@@ -15,32 +15,8 @@ import { userUpdateNotification } from '../notification/userUpdate.js';
 import { socketSessions } from '../../session/socketSession.js';
 import { monsterAiDatas } from '../coreMethod/monsterMove.js';
 import { monsterReward, setCardRewards, setStatRewards } from '../coreMethod/monsterReward.js';
-import { userCharacterData } from '../game/gamePrepareHandler.js';
 import { gameEndNotification } from '../notification/gameEnd.js';
-
-// DB에 들어갈 내용
-const DBEquip: { [cardType: number]: { attack: number; armor: number; hp: number } } = {
-  301: { attack: 0, armor: 0, hp: 0 },
-  302: { attack: 0, armor: 0, hp: 0 },
-  303: { attack: 0, armor: 0, hp: 0 },
-  304: { attack: 0, armor: 0, hp: 0 },
-  305: { attack: 0, armor: 0, hp: 0 },
-  306: { attack: 2, armor: 0, hp: 0 },
-  307: { attack: 0, armor: 0, hp: 16 },
-  308: { attack: 0, armor: 1, hp: 12 },
-  309: { attack: 0, armor: 2, hp: 8 },
-  310: { attack: 1, armor: 1, hp: 2 },
-  311: { attack: 4, armor: 0, hp: 0 },
-  312: { attack: 0, armor: 0, hp: 32 },
-  313: { attack: 0, armor: 2, hp: 24 },
-  314: { attack: 0, armor: 4, hp: 16 },
-  315: { attack: 2, armor: 2, hp: 4 },
-  316: { attack: 6, armor: 0, hp: 0 },
-  317: { attack: 0, armor: 0, hp: 48 },
-  318: { attack: 0, armor: 3, hp: 36 },
-  319: { attack: 0, armor: 6, hp: 24 },
-  320: { attack: 3, armor: 3, hp: 6 }
-};
+import Server from '../../class/server.js';
 
 const { packetType } = config;
 /***
@@ -53,7 +29,6 @@ const { packetType } = config;
  * @returns {Promise<void>} 별도의 반환 값은 없으며, 성공 여부와 메시지를 클라이언트에게 전송.
  */
 export const useCardHandler = async (socket: CustomSocket, payload: Object): Promise<void> => {
-  console.log(payload);
   // response 데이터 초기화 ----------------------------------------------------------------------
   const { cardType, targetUserId: targetUserIdRaw } = payload as UseCardRequest;
   const targetUserId = Number(targetUserIdRaw);
@@ -375,48 +350,49 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
       // 이름: 순수한 이슬
       // 설명: 맑고 순수한 이슬 한 방울이 체력을 3 회복해준다! 지친 몸에 활력을 더해 다시 전투에 나설 수 있도록 돕는다.
       case CardType.BASIC_HP_POTION:
-        usePotion(user, 3, 0, 0, rooms, room, CardType.BASIC_HP_POTION);
+        usePotion(user, rooms, room, CardType.BASIC_HP_POTION);
         break;
 
       // 이름: 마력의 이슬
       // 설명: 맑고 순수한 이슬 한 방울이 마력을 1 회복해준다! 고갈된 마법 에너지를 되살려 새로운 주문을 준비하자.
       case CardType.BASIC_MP_POTION:
-        usePotion(user, 0, 1, 0, rooms, room, CardType.BASIC_MP_POTION);
+        usePotion(user, rooms, room, CardType.BASIC_MP_POTION);
         break;
 
       // 이름: 치유의 빛
       // 설명: 은은한 치유의 빛이 체력을 6 회복해준다! 깊은 상처를 어루만지고 전투의 피로를 씻어내는 신비한 물약.
       case CardType.ADVANCED_HP_POTION:
-        usePotion(user, 6, 0, 0, rooms, room, CardType.ADVANCED_HP_POTION);
+        usePotion(user, rooms, room, CardType.ADVANCED_HP_POTION);
         break;
 
       // 이름: 마력의 빛
       // 설명: 은은한 마나의 빛이 마력을 2 회복해준다! 흐릿했던 마법의 기운을 선명하게 채워주는 신비한 물약.
       case CardType.ADVANCED_MP_POTION:
-        usePotion(user, 0, 2, 0, rooms, room, CardType.ADVANCED_MP_POTION);
+        usePotion(user, rooms, room, CardType.ADVANCED_MP_POTION);
+        break;
 
       // 이름: 생명의 숨결
       // 설명: 신비로운 생명의 기운이 체력을 10 회복해준다! 생명의 근원이 담긴 이 물약은 가장 극한의 상황에서도 새로운 힘을 불어넣는다.
       case CardType.MASTER_HP_POTION:
-        usePotion(user, 12, 0, 0, rooms, room, CardType.MASTER_HP_POTION);
+        usePotion(user, rooms, room, CardType.MASTER_HP_POTION);
         break;
 
       // 이름: 마력의 숨결
       // 설명: 신비로운 마력의 기운이 마력을 4 회복해준다! 극한의 상황에서도 강력한 주문을 사용할 수 있는 힘을 불어넣는다.
       case CardType.MASTER_MP_POTION:
-        usePotion(user, 0, 4, 0, rooms, room, CardType.MASTER_MP_POTION);
+        usePotion(user, rooms, room, CardType.MASTER_MP_POTION);
         break;
 
       // 이름: 성장의 작은 불꽃
       // 설명: 작은 불꽃이 당신의 성장을 돕습니다. 경험치 +10
       case CardType.BASIC_EXP_POTION:
-        usePotion(user, 0, 0, 10, rooms, room, CardType.MASTER_MP_POTION);
+        usePotion(user, rooms, room, CardType.BASIC_EXP_POTION);
         break;
 
       // 이름: 무한 성장의 불길
       // 설명: 끝없는 불길로 압도적인 성장을 경험하세요. 경험치 +30
       case CardType.MASTER_EXP_POTION:
-        usePotion(user, 0, 0, 30, rooms, room, CardType.MASTER_MP_POTION);
+        usePotion(user, rooms, room, CardType.MASTER_EXP_POTION);
         break;
 
       // 이름:
@@ -652,12 +628,15 @@ const partyBuff = async (
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // 공격 유효성 검증
 const attackPossible = (attacker: User, target: User, needMp: number) => {
+  const initGameInfo = Server.getInstance().initGameInfo;
+  if (!initGameInfo) return;
+  const attackCool = initGameInfo[0].attackCool;
   if (Date.now() - attacker.character.coolDown < attackCool) {
-    console.log('공격 쿨타임 중입니다.');
+    // console.log('공격 쿨타임 중입니다.');
     return false;
   }
   if (attacker.character.mp < needMp) {
-    console.log('마나가 부족합니다.');
+    // console.log('마나가 부족합니다.');
     return false;
   }
   if (target.character.roleType === RoleType.SUR5VAL) {
@@ -665,7 +644,7 @@ const attackPossible = (attacker: User, target: User, needMp: number) => {
     return false;
   }
   if (target.character.hp <= 0) {
-    console.log('살아있는 적에게만 공격할 수 있습니다.');
+    console.log('살아있는 적만 공격할 수 있습니다.');
     return false;
   }
 
@@ -777,15 +756,7 @@ const attackTarget = async (attacker: User, rooms: Room[], room: Room, skillCoef
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // 본인의 Hp, Mp 회복 / Exp 획득
-const usePotion = async (
-  user: User,
-  restoreHp: number,
-  restoreMp: number,
-  getExp: number,
-  rooms: Room[],
-  room: Room,
-  cardsType: number
-) => {
+const usePotion = async (user: User, rooms: Room[], room: Room, cardsType: number) => {
   // 해당 아이템 보유여부 검사
   let isOwned: boolean = false;
   for (let i = 0; i < user.character.handCards.length; i++) {
@@ -797,17 +768,37 @@ const usePotion = async (
   }
   if (isOwned === false) return;
 
+  const consumableItemInfo = Server.getInstance().consumableItemInfo;
+  if (!consumableItemInfo) {
+    console.error('소비아이템 데이터가 없습니다.');
+    return;
+  }
+  const potionData = consumableItemInfo.find((data) => data.cardType === cardsType);
+  if (!potionData) {
+    console.error('해당 소비아이템이 존재하지 않습니다.');
+    return;
+  }
+
   // 회복 실행
-  user.character.hp = Math.min(user.character.hp + restoreHp, user.character.maxHp);
-  user.character.mp = Math.min(user.character.mp + restoreMp, userCharacterData[user.character.characterType].mp);
-  user.character.exp += getExp;
+  const characterStatInfos = Server.getInstance().characterStatInfo;
+  if (!characterStatInfos) {
+    console.error('유저 캐릭터 초기 정보를 찾을 수 없습니다.');
+    return;
+  }
+  const characterStatInfo = characterStatInfos.find((data) => data.characterType === user.character.characterType);
+  if (!characterStatInfo) {
+    console.error('유저 캐릭터 초기 정보를 찾을 수 없습니다.');
+    return;
+  }
+  user.character.hp = Math.min(user.character.hp + potionData.hp, user.character.maxHp);
+  user.character.mp = Math.min(user.character.mp + potionData.mp, characterStatInfo.mp);
+  user.character.exp += potionData.exp;
 
   // 레벨업 확인
-  let maxExp = userCharacterData[user.character.characterType].exp * user.character.level;
-  while (user.character.exp >= maxExp) {
-    user.character.exp -= maxExp;
+  while (user.character.exp >= user.character.maxExp) {
+    user.character.exp -= user.character.maxExp;
     user.character.level += 1;
-    maxExp = userCharacterData[user.character.characterType].exp * user.character.level;
+    user.character.maxExp += 10;
     // 직업별 스탯 증가
     if (!setStatRewards(user)) {
       console.error('setStatRewards 실패');
@@ -827,6 +818,18 @@ const usePotion = async (
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // 방어구 장착 equipType (0: 투구, 1: 갑옷, 2: 망토, 3: 장갑)
 const equipItem = async (user: User, rooms: Room[], room: Room, equipIndex: number, cardsType: number) => {
+  // DB의 카드 생성 정보 가져오기
+  const equipCardDBInfo = Server.getInstance().equipItemInfo;
+  if (!equipCardDBInfo) {
+    console.error('장비아이템 데이터가 없습니다.');
+    return;
+  }
+  const equipCard = equipCardDBInfo.find((data) => data.cardType === cardsType);
+  if (!equipCard) {
+    console.error('해당 장비 카드의 정보를 찾을 수 없스니다.');
+    return;
+  }
+
   // 해당 아이템 보유여부 검사
   let isOwned: boolean = false;
   for (let i = 0; i < user.character.handCards.length; i++) {
@@ -856,18 +859,21 @@ const equipItem = async (user: User, rooms: Room[], room: Room, equipIndex: numb
     if (isInHandCards === false) user.character.handCards.push({ type: user.character.equips[equipIndex], count: 1 });
 
     // 능력치 하락
-    user.character.attack -= DBEquip[user.character.equips[equipIndex]].attack;
-    user.character.armor -= DBEquip[user.character.equips[equipIndex]].armor;
-    user.character.maxHp -= DBEquip[user.character.equips[equipIndex]].hp;
-    user.character.hp -= DBEquip[user.character.equips[equipIndex]].hp;
+    const prevEquipCard = equipCardDBInfo.find((data) => data.cardType === user.character.equips[equipIndex]);
+    if (prevEquipCard) {
+      user.character.attack -= prevEquipCard.attack;
+      user.character.armor -= prevEquipCard.armor;
+      user.character.maxHp -= prevEquipCard.hp;
+      user.character.hp -= prevEquipCard.hp;
+    }
   }
 
   // 새로운 방어구 장착 및 능력치 상승
   user.character.equips[equipIndex] = cardsType;
-  user.character.attack += DBEquip[cardsType].attack;
-  user.character.armor += DBEquip[cardsType].armor;
-  user.character.maxHp += DBEquip[cardsType].hp;
-  user.character.hp += DBEquip[cardsType].hp;
+  user.character.attack += equipCard.attack;
+  user.character.armor += equipCard.armor;
+  user.character.maxHp += equipCard.hp;
+  user.character.hp += equipCard.hp;
 
   await setRedisData('roomData', rooms);
   await userUpdateNotification(room);
@@ -877,6 +883,16 @@ const equipItem = async (user: User, rooms: Room[], room: Room, equipIndex: numb
 // 무기 장착
 const equipWeapon = async (user: User, rooms: Room[], room: Room, cardsType: number) => {
   // 해당 아이템 보유여부 검사
+  const equipCardDBInfo = Server.getInstance().equipItemInfo;
+  if (!equipCardDBInfo) {
+    console.error('무기카드 정보가 존재하지 않습니다.', equipCardDBInfo);
+    return;
+  }
+  const weaponCard = equipCardDBInfo.find((data) => data.cardType === cardsType);
+  if (!weaponCard) {
+    console.error('해당 카드가 존재하지 않습니다.');
+    return;
+  }
   let isOwned: boolean = false;
   for (let i = 0; i < user.character.handCards.length; i++) {
     if (user.character.handCards[i].type === cardsType && user.character.handCards[i].count > 0) {
@@ -900,18 +916,21 @@ const equipWeapon = async (user: User, rooms: Room[], room: Room, cardsType: num
     if (isInHandCards === false) user.character.handCards.push({ type: user.character.weapon, count: 1 });
 
     // 능력치 하락
-    user.character.attack -= DBEquip[user.character.weapon].attack;
-    user.character.armor -= DBEquip[user.character.weapon].armor;
-    user.character.maxHp -= DBEquip[user.character.weapon].hp;
-    user.character.hp -= DBEquip[user.character.weapon].hp;
+    const prevEquipCard = equipCardDBInfo.find((data) => data.cardType === user.character.weapon);
+    if (prevEquipCard) {
+      user.character.attack -= prevEquipCard.attack;
+      user.character.armor -= prevEquipCard.armor;
+      user.character.maxHp -= prevEquipCard.hp;
+      user.character.hp -= prevEquipCard.hp;
+    }
   }
 
   // 새로운 무기 장착 및 능력치 상승
   user.character.weapon = cardsType;
-  user.character.attack += DBEquip[cardsType].attack;
-  user.character.armor += DBEquip[cardsType].armor;
-  user.character.maxHp += DBEquip[cardsType].hp;
-  user.character.hp += DBEquip[cardsType].hp;
+  user.character.attack += weaponCard.attack;
+  user.character.armor += weaponCard.armor;
+  user.character.maxHp += weaponCard.hp;
+  user.character.hp += weaponCard.hp;
 
   await setRedisData('roomData', rooms);
   await userUpdateNotification(room);
