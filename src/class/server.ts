@@ -7,7 +7,7 @@ import { packetNames } from '../protobuf/packetNames.js';
 import protobuf from 'protobufjs';
 import { config } from '../config/config.js';
 import { onData } from '../events/onData.js';
-import { onEnd } from '../events/onEnd.js';
+
 import { onError } from '../events/onError.js';
 import {
   CustomSocket,
@@ -21,6 +21,8 @@ import {
 } from '../interface/interface.js';
 import DatabaseManager from '../database/databaseManager.js';
 import { connectRedis } from '../database/redis.js';
+import { onClose } from '../events/onClose.js';
+import { onEnd } from '../events/onEnd.js';
 
 class Server {
   private static gInstance: Server | null = null;
@@ -113,6 +115,7 @@ class Server {
 
     customSocket.on('data', onData(customSocket));
     customSocket.on('end', onEnd(customSocket));
+    customSocket.on('close', onClose(customSocket));
     customSocket.on('error', onError(customSocket));
   }
 
