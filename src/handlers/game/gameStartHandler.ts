@@ -1,7 +1,7 @@
 import { CharacterPositionData, CustomSocket, Room } from '../../interface/interface.js';
 import { GlobalFailCode, PhaseType, RoleType, RoomStateType } from '../enumTyps.js';
 import { sendPacket } from '../../packet/createPacket.js';
-import { config, spawnPoint, inGameTime, normalRound, bossGameTime } from '../../config/config.js';
+import { config, spawnPoint } from '../../config/config.js';
 import { getRedisData, getUserIdBySocket, nonSameRandom, setRedisData } from '../handlerMethod.js';
 import { monsterMoveStart } from '../coreMethod/monsterMove.js';
 import { monsterSpawnStart } from '../coreMethod/monsterSpawn.js';
@@ -11,8 +11,9 @@ import { gameEndNotification } from '../notification/gameEnd.js';
 import { fleaMarketCardCreate } from '../coreMethod/fleaMarketCardCreate.js';
 import { shoppingUserIdSessions } from '../../session/shoppingSession.js';
 import { userUpdateNotification } from '../notification/userUpdate.js';
-import { userCharacterData } from './gamePrepareHandler.js';
+import Server from '../../class/server.js';
 
+// 게임 시작 함수 호출
 export const gameStartHandler = async (socket: CustomSocket, payload: Object) => {
   // 핸들러가 호출되면 success. response 만들어서 보냄
   // responseData = { success: true, failCode: GlobalFailCode.value }
@@ -86,6 +87,11 @@ export const gameStartHandler = async (socket: CustomSocket, payload: Object) =>
 
       // 방에있는 유저들에게 게임 시작 notificationn 보내기, 게임 시작 시간 저장
       room.state = RoomStateType.INGAME;
+      const initGameInfo = Server.getInstance().initGameInfo;
+      if (!initGameInfo) return;
+      const inGameTime = initGameInfo[0].normalRoundTime;
+      const normalRound = initGameInfo[0].normalRoundNumber;
+      const bossGameTime = initGameInfo[0].bossRoundTime;
       await setRedisData('roomData', rooms);
       for (let i = 0; i < normalRound; i++) {
         await normalPhaseNotification(i + 1, room.id, inGameTime * i);
@@ -130,6 +136,9 @@ export const normalPhaseNotification = async (level: number, roomId: number, sen
     if (!room) return;
     await setBossStat(room, level);
 
+    const initGameInfo = Server.getInstance().initGameInfo;
+    if (!initGameInfo) return;
+    const inGameTime = initGameInfo[0].normalRoundTime;
     const gameStateData = { phaseType: PhaseType.DAY, nextPhaseAt: Date.now() + inGameTime };
     const notifiData = {
       gameState: gameStateData,
@@ -144,23 +153,6 @@ export const normalPhaseNotification = async (level: number, roomId: number, sen
     }
 
     await monsterMoveStart(roomId, inGameTime);
-
-    // 라운드 초기화 시 일정량의 mp 회복
-    for (let i = 0; i < room.users.length; i++) {
-      switch (room.users[i].character.roleType) {
-        case RoleType.BOSS_MONSTER:
-          room.users[i].character.mp = userCharacterData[room.users[i].character.characterType].mp;
-          break;
-        case RoleType.SUR5VAL:
-          const maxMp = userCharacterData[room.users[i].character.characterType].mp;
-          if (Math.floor(maxMp * 0.2) + room.users[i].character.mp < maxMp) {
-            room.users[i].character.mp += Math.floor(maxMp * 0.2);
-          } else {
-            room.users[i].character.mp = maxMp;
-          }
-          break;
-      }
-    }
     await userUpdateNotification(room);
     setRedisData('roomData', roomData);
   }, sendTime);
@@ -186,6 +178,9 @@ export const bossPhaseNotification = async (level: number, roomId: number, sendT
     await setBossStat(room, level);
     setRedisData('roomData', roomData);
 
+    const initGameInfo = Server.getInstance().initGameInfo;
+    if (!initGameInfo) return;
+    const bossGameTime = initGameInfo[0].bossRoundTime;
     const gameStateData = { phaseType: PhaseType.DAY, nextPhaseAt: Date.now() + bossGameTime };
     const notifiData = {
       gameState: gameStateData,
@@ -203,6 +198,7 @@ export const bossPhaseNotification = async (level: number, roomId: number, sendT
   }, sendTime);
 };
 
+// 보스 스탯 상승
 export const setBossStat = async (room: Room, level: number) => {
   for (let i = 0; i < room.users.length; i++) {
     if (room.users[i].character.roleType === RoleType.BOSS_MONSTER) {
@@ -234,9 +230,9 @@ export const setBossStat = async (room: Room, level: number) => {
           console.log('보스 스텟 설정을 위한 라운드(level)의 값이 잘못되었습니다.:', level);
           return;
       }
-      console.log(
-        `${level}라운드 보스 스펙 - hp:${room.users[i].character.hp}, mp:${room.users[i].character.mp}, atk:${room.users[i].character.attack}, armor:${room.users[i].character.armor}, wallet gold:${room.users[i].character.gold}`
-      );
+      // console.log(
+      //   `${level}라운드 보스 스펙 - hp:${room.users[i].character.hp}, mp:${room.users[i].character.mp}, atk:${room.users[i].character.attack}, armor:${room.users[i].character.armor}, wallet gold:${room.users[i].character.gold}`
+      // );
       return;
     }
   }

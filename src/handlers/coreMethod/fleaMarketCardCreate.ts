@@ -1,17 +1,22 @@
+import Server from '../../class/server.js';
 import { CardType } from '../enumTyps.js';
 import { getRedisData, nonSameRandom, setRedisData } from '../handlerMethod.js';
 
-// DB에 들어갈 내용
-const shopItems: { [level: number]: CardType[] } = {
-  1: [201, 201, 201, 201, 201, 201, 201, 201],
-  2: [201, 201, 201, 201, 307, 308, 309, 310],
-  3: [306, 307, 308, 309, 310, 306, 307, 308, 309, 310],
-  4: [306, 307, 308, 309, 310, 311, 312, 313, 314, 315],
-  5: [311, 312, 313, 314, 315, 311, 312, 313, 314, 315]
-};
 const shopListNumber = 7;
 
-export const fleaMarketCardCreate = async (level: number, roomId: number): Promise<void> => {
+export const fleaMarketCardCreate = async (round: number, roomId: number): Promise<void> => {
+  // DB의 shopList 정보 가져오기
+  const shopListDBInfo = Server.getInstance().shopListInfo;
+  if (!shopListDBInfo) {
+    console.error('shopListDBInfo 정보를 불러오는데 실패하였습니다.');
+    return;
+  }
+  const shopList = shopListDBInfo.find((data) => data.round === round);
+  if (!shopList) {
+    console.error('해당 라운드의 shopListDBInfo를 찾지 못하였습니다.');
+    return;
+  }
+
   const cards: CardType[] = [];
 
   let fleaMarketCards = await getRedisData('fleaMarketCards');
@@ -21,9 +26,9 @@ export const fleaMarketCardCreate = async (level: number, roomId: number): Promi
     fleaMarketCards[roomId] = [];
   }
 
-  const pickedIndex = nonSameRandom(0, shopItems[level].length - 1, shopListNumber);
+  const pickedIndex = nonSameRandom(0, shopList.itemList.length - 1, shopListNumber);
   for (let i = 0; i < shopListNumber; i++) {
-    cards.push(shopItems[level][pickedIndex[i]]);
+    cards.push(shopList.itemList[pickedIndex[i]]);
   }
   cards.push(1000);
 

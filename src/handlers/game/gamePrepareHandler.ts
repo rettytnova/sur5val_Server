@@ -1,187 +1,11 @@
 import { GlobalFailCode, RoomStateType, UserCharacterType } from '../enumTyps.js';
-import { CustomSocket, Room, User, UserCharacterData } from '../../interface/interface.js';
+import { CustomSocket, Room, User } from '../../interface/interface.js';
 import { config } from '../../config/config.js';
 import { sendPacket } from '../../packet/createPacket.js';
 import { getRedisData, getRoomByUserId, getUserIdBySocket, setRedisData } from '../handlerMethod.js';
 import { socketSessions } from '../../session/socketSession.js';
-import { CardType, RoleType } from '../enumTyps.js';
-
-// DB에 넣을 데이터
-export const userCharacterData: UserCharacterData = {
-  // 핑크슬라임 - 보스
-  [UserCharacterType.PINK_SLIME]: {
-    roleType: RoleType.BOSS_MONSTER,
-    maxExp: 10,
-    exp: 0,
-    gold: 0,
-    hp: 1000,
-    mp: 30,
-    attack: 10,
-    armor: 1,
-    handCards: [
-      { type: CardType.MAGICIAN_BASIC_SKILL, count: 1 },
-      { type: CardType.MAGICIAN_EXTENDED_SKILL, count: 1 },
-      { type: CardType.BASIC_HP_POTION, count: 3 }
-    ]
-  },
-  // 가면군 - 마법사
-  [UserCharacterType.MASK]: {
-    roleType: RoleType.SUR5VAL,
-    maxExp: 10,
-    exp: 0,
-    gold: 0,
-    hp: 9,
-    mp: 14,
-    attack: 3,
-    armor: 0,
-    handCards: [
-      { type: CardType.MAGICIAN_BASIC_SKILL, count: 1 },
-      { type: CardType.MAGICIAN_EXTENDED_SKILL, count: 1 },
-      { type: CardType.MAGICIAN_FINAL_SKILL, count: 1 },
-      { type: CardType.BASIC_HP_POTION, count: 1 },
-      { type: CardType.BASIC_MP_POTION, count: 1 },
-      { type: CardType.ADVANCED_HP_POTION, count: 1 },
-      { type: CardType.ADVANCED_MP_POTION, count: 1 },
-      { type: CardType.MASTER_HP_POTION, count: 1 },
-      { type: CardType.MASTER_MP_POTION, count: 1 },
-      { type: CardType.BASIC_EXP_POTION, count: 1 },
-      { type: CardType.MASTER_EXP_POTION, count: 1 },
-      { type: CardType.EXPLORER_WEAPON, count: 1 },
-      { type: CardType.EXPLORER_HEAD, count: 1 },
-      { type: CardType.EXPLORER_ARMOR, count: 1 },
-      { type: CardType.EXPLORER_CLOAK, count: 1 },
-      { type: CardType.EXPLORER_GLOVE, count: 1 },
-      { type: CardType.HERO_WEAPON, count: 1 },
-      { type: CardType.HERO_HEAD, count: 1 },
-      { type: CardType.HERO_ARMOR, count: 1 },
-      { type: CardType.HERO_CLOAK, count: 1 },
-      { type: CardType.HERO_GLOVE, count: 1 },
-      { type: CardType.LEGENDARY_WEAPON, count: 1 },
-      { type: CardType.LEGENDARY_HEAD, count: 1 },
-      { type: CardType.LEGENDARY_ARMOR, count: 1 },
-      { type: CardType.LEGENDARY_CLOAK, count: 1 },
-      { type: CardType.LEGENDARY_GLOVE, count: 1 }
-    ]
-  },
-  // 물안경군 - 궁수
-  [UserCharacterType.SWIM_GLASSES]: {
-    roleType: RoleType.SUR5VAL,
-    maxExp: 10,
-    exp: 0,
-    gold: 0,
-    hp: 11,
-    mp: 12,
-    attack: 3,
-    armor: 0,
-    handCards: [
-      { type: CardType.MAGICIAN_BASIC_SKILL, count: 1 },
-      { type: CardType.MAGICIAN_EXTENDED_SKILL, count: 1 },
-      { type: CardType.MAGICIAN_FINAL_SKILL, count: 1 },
-      { type: CardType.BASIC_HP_POTION, count: 1 },
-      { type: CardType.BASIC_MP_POTION, count: 1 },
-      { type: CardType.ADVANCED_HP_POTION, count: 1 },
-      { type: CardType.ADVANCED_MP_POTION, count: 1 },
-      { type: CardType.MASTER_HP_POTION, count: 1 },
-      { type: CardType.MASTER_MP_POTION, count: 1 },
-      { type: CardType.BASIC_EXP_POTION, count: 1 },
-      { type: CardType.MASTER_EXP_POTION, count: 1 },
-      { type: CardType.EXPLORER_WEAPON, count: 1 },
-      { type: CardType.EXPLORER_HEAD, count: 1 },
-      { type: CardType.EXPLORER_ARMOR, count: 1 },
-      { type: CardType.EXPLORER_CLOAK, count: 1 },
-      { type: CardType.EXPLORER_GLOVE, count: 1 },
-      { type: CardType.HERO_WEAPON, count: 1 },
-      { type: CardType.HERO_HEAD, count: 1 },
-      { type: CardType.HERO_ARMOR, count: 1 },
-      { type: CardType.HERO_CLOAK, count: 1 },
-      { type: CardType.HERO_GLOVE, count: 1 },
-      { type: CardType.LEGENDARY_WEAPON, count: 1 },
-      { type: CardType.LEGENDARY_HEAD, count: 1 },
-      { type: CardType.LEGENDARY_ARMOR, count: 1 },
-      { type: CardType.LEGENDARY_CLOAK, count: 1 },
-      { type: CardType.LEGENDARY_GLOVE, count: 1 }
-    ]
-  },
-  // 개굴군 - 도적
-  [UserCharacterType.FROGGY]: {
-    roleType: RoleType.SUR5VAL,
-    maxExp: 10,
-    exp: 0,
-    gold: 0,
-    hp: 12,
-    mp: 13,
-    attack: 3,
-    armor: 0,
-    handCards: [
-      { type: CardType.MAGICIAN_BASIC_SKILL, count: 1 },
-      { type: CardType.MAGICIAN_EXTENDED_SKILL, count: 1 },
-      { type: CardType.MAGICIAN_FINAL_SKILL, count: 1 },
-      { type: CardType.BASIC_HP_POTION, count: 1 },
-      { type: CardType.BASIC_MP_POTION, count: 1 },
-      { type: CardType.ADVANCED_HP_POTION, count: 1 },
-      { type: CardType.ADVANCED_MP_POTION, count: 1 },
-      { type: CardType.MASTER_HP_POTION, count: 1 },
-      { type: CardType.MASTER_MP_POTION, count: 1 },
-      { type: CardType.BASIC_EXP_POTION, count: 1 },
-      { type: CardType.MASTER_EXP_POTION, count: 1 },
-      { type: CardType.EXPLORER_WEAPON, count: 1 },
-      { type: CardType.EXPLORER_HEAD, count: 1 },
-      { type: CardType.EXPLORER_ARMOR, count: 1 },
-      { type: CardType.EXPLORER_CLOAK, count: 1 },
-      { type: CardType.EXPLORER_GLOVE, count: 1 },
-      { type: CardType.HERO_WEAPON, count: 1 },
-      { type: CardType.HERO_HEAD, count: 1 },
-      { type: CardType.HERO_ARMOR, count: 1 },
-      { type: CardType.HERO_CLOAK, count: 1 },
-      { type: CardType.HERO_GLOVE, count: 1 },
-      { type: CardType.LEGENDARY_WEAPON, count: 1 },
-      { type: CardType.LEGENDARY_HEAD, count: 1 },
-      { type: CardType.LEGENDARY_ARMOR, count: 1 },
-      { type: CardType.LEGENDARY_CLOAK, count: 1 },
-      { type: CardType.LEGENDARY_GLOVE, count: 1 }
-    ]
-  },
-
-  // 빨강이 - 전사
-  [UserCharacterType.RED]: {
-    roleType: RoleType.SUR5VAL,
-    maxExp: 10,
-    exp: 0,
-    gold: 0,
-    hp: 14,
-    mp: 10,
-    attack: 3,
-    armor: 0,
-    handCards: [
-      { type: CardType.MAGICIAN_BASIC_SKILL, count: 1 },
-      { type: CardType.MAGICIAN_EXTENDED_SKILL, count: 1 },
-      { type: CardType.MAGICIAN_FINAL_SKILL, count: 1 },
-      { type: CardType.BASIC_HP_POTION, count: 1 },
-      { type: CardType.BASIC_MP_POTION, count: 1 },
-      { type: CardType.ADVANCED_HP_POTION, count: 1 },
-      { type: CardType.ADVANCED_MP_POTION, count: 1 },
-      { type: CardType.MASTER_HP_POTION, count: 1 },
-      { type: CardType.MASTER_MP_POTION, count: 1 },
-      { type: CardType.BASIC_EXP_POTION, count: 1 },
-      { type: CardType.MASTER_EXP_POTION, count: 1 },
-      { type: CardType.EXPLORER_WEAPON, count: 1 },
-      { type: CardType.EXPLORER_HEAD, count: 1 },
-      { type: CardType.EXPLORER_ARMOR, count: 1 },
-      { type: CardType.EXPLORER_CLOAK, count: 1 },
-      { type: CardType.EXPLORER_GLOVE, count: 1 },
-      { type: CardType.HERO_WEAPON, count: 1 },
-      { type: CardType.HERO_HEAD, count: 1 },
-      { type: CardType.HERO_ARMOR, count: 1 },
-      { type: CardType.HERO_CLOAK, count: 1 },
-      { type: CardType.HERO_GLOVE, count: 1 },
-      { type: CardType.LEGENDARY_WEAPON, count: 1 },
-      { type: CardType.LEGENDARY_HEAD, count: 1 },
-      { type: CardType.LEGENDARY_ARMOR, count: 1 },
-      { type: CardType.LEGENDARY_CLOAK, count: 1 },
-      { type: CardType.LEGENDARY_GLOVE, count: 1 }
-    ]
-  }
-};
+import { CardType } from '../enumTyps.js';
+import Server from '../../class/server.js';
 
 // 게임 준비
 export const gamePrepareHandler = async (socket: CustomSocket, payload: Object) => {
@@ -212,7 +36,8 @@ export const gamePrepareHandler = async (socket: CustomSocket, payload: Object) 
 
         // 방에있는 유저들 캐릭터 랜덤 배정하기
         room.state = RoomStateType.PREPARE;
-        room.users = setCharacterInfoInit(room.users);
+        const data = setCharacterInfoInit(room.users);
+        if (data) room.users = data;
 
         const rooms: Room[] | null = await getRedisData('roomData');
         if (!rooms) {
@@ -284,23 +109,33 @@ export const setCharacterInfoInit = (users: User[]) => {
   }
 
   // 선택된 직업에 따라 초기화
+  const characterDB = Server.getInstance().characterStatInfo;
+  if (!characterDB) {
+    console.error('데이터베이스에 저장된 캐릭터정보가 없습니다.');
+    return;
+  }
+
   for (let i = 0; i < selectedTypes.length; i++) {
+    const character = characterDB.find((data) => data.characterType === selectedTypes[i]);
+    if (!character) {
+      console.error('캐릭터 정보를 찾지 못하였습니다.');
+      return;
+    }
     users[i].character.characterType = selectedTypes[i];
-    users[i].character.roleType = userCharacterData[selectedTypes[i]].roleType;
-    users[i].character.coolDown = 0; // 현재 스킬 사용 시간
+    users[i].character.roleType = character.characterType === UserCharacterType.PINK_SLIME ? 4 : 2;
     users[i].character.level = 1;
-    users[i].character.maxExp = userCharacterData[selectedTypes[i]].maxExp;
+    users[i].character.maxExp = 10;
     users[i].character.exp = 0;
-    users[i].character.gold = userCharacterData[selectedTypes[i]].gold;
-    users[i].character.maxHp = userCharacterData[selectedTypes[i]].hp;
-    users[i].character.hp = userCharacterData[selectedTypes[i]].hp;
-    users[i].character.mp = userCharacterData[selectedTypes[i]].mp;
-    users[i].character.attack = userCharacterData[selectedTypes[i]].attack;
-    users[i].character.armor = userCharacterData[selectedTypes[i]].armor;
+    users[i].character.gold = 0;
+    users[i].character.maxHp = character.hp;
+    users[i].character.hp = character.hp;
+    users[i].character.mp = character.mp;
+    users[i].character.attack = character.attack;
+    users[i].character.armor = character.armor;
     users[i].character.weapon = CardType.NONE_WEAPON;
     users[i].character.stateInfo.state = 0;
     users[i].character.equips = [CardType.NONE_HEAD, CardType.NONE_ARMOR, CardType.NONE_CLOAK, CardType.NONE_GLOVE];
-    users[i].character.handCards = userCharacterData[selectedTypes[i]].handCards;
+    users[i].character.handCards = [{ type: character.handCards, count: 1 }];
   }
 
   return users;

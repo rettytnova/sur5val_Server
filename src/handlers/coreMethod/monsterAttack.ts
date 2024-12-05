@@ -4,9 +4,9 @@ import { sendPacket } from '../../packet/createPacket.js';
 import { socketSessions } from '../../session/socketSession.js';
 import { getRedisData, setRedisData } from '../handlerMethod.js';
 import { animationDelay, monsterAiDatas } from './monsterMove.js';
-import { monsterDatas } from './monsterSpawn.js';
 import { userUpdateNotification } from '../notification/userUpdate.js';
 import { RoleType } from '../enumTyps.js';
+import Server from '../../class/server.js';
 
 // 몬스터와 유저의 조합 찾기
 export const monsterAttackCheck = async (room: Room, rooms: Room[]) => {
@@ -54,7 +54,7 @@ export const monsterAttackPlayer = async (player: User, monster: User, room: Roo
     }
   }
   if (!monsterData) {
-    console.error('존재하지 않는 monsterAiDatas를 찾고 있습니다.');
+    console.error('존재하지 않는 monsterAiDatas를 찾고 있습니다.', monsterAiDatas[room.id], monster);
     return;
   }
 
@@ -70,7 +70,7 @@ export const monsterAttackPlayer = async (player: User, monster: User, room: Roo
     }
   }
   if (!monsterPosition) {
-    console.error('존재하지 않는 monsterPosition를 찾고 있습니다.');
+    console.error('존재하지 않는 monsterPosition를 찾고 있습니다.', characterPositions[room.id], monster);
     return;
   }
 
@@ -92,7 +92,22 @@ export const monsterAttackPlayer = async (player: User, monster: User, room: Roo
     (monsterPosition.x - playerPosition.x) ** 2 + (monsterPosition.y - playerPosition.y) ** 2 <
     monsterData.attackRange ** 2
   ) {
-    monsterData.attackCool = monsterDatas[monster.character.characterType][monster.character.level].attackCool;
+    // DB의 몬스터 attackeCool 값 가져오기
+    const monsterDBInfo = Server.getInstance().monsterInfo;
+    if (!monsterDBInfo) {
+      console.error('monsterInfo 정보를 불러오는데 실패하였습니다.');
+      return;
+    }
+    const attackCool = monsterDBInfo.find(
+      (data) => data.monsterType === monster.character.characterType && data.level === monster.character.level
+    )?.attackCool;
+    if (!attackCool) {
+      console.error('몬스터의 attackeCool DB정보를 찾지 못하였습니다.');
+      return;
+    }
+    monsterData.attackCool = attackCool;
+
+    //
     for (let i = 0; i < rooms.length; i++) {
       for (let j = 0; j < rooms[i].users.length; j++) {
         if (rooms[i].users[j].id === player.id) {
