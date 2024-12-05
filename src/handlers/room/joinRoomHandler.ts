@@ -79,7 +79,7 @@ export const joinRoomHandler = async (socket: CustomSocket, payload: Object) => 
         }
         if (!user) return;
         rooms[i].users.push(user);
-        setRedisData('roomData', rooms);
+        await setRedisData('roomData', rooms);
 
         const sendData = {
           success: 1,
