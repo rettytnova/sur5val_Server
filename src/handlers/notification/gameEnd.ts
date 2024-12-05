@@ -1,5 +1,5 @@
 import { config } from '../../config/config.js';
-import { Room } from '../../interface/interface.js';
+import { Room, User } from '../../interface/interface.js';
 import { sendPacket } from '../../packet/createPacket.js';
 import { shoppingUserIdSessions } from '../../session/shoppingSession.js';
 import { socketSessions } from '../../session/socketSession.js';
@@ -59,6 +59,12 @@ export const gameEndNotification = async (roomId: number, winRType: number) => {
 
   delete monsterAiDatas[roomId];
   delete shoppingUserIdSessions[roomId];
+
+  const userDatas: User[] = await getRedisData('userData');
+  if (userDatas) {
+    const userIds = userDatas.map((user) => user.id);
+    room.users = room.users.filter((user) => userIds.includes(user.id));
+  }
 
   addgRoomId();
   room.id = getgRoomId();
