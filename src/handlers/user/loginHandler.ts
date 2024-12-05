@@ -8,6 +8,7 @@ import { GlobalFailCode, PhaseType, RoleType } from '../enumTyps.js';
 import { socketSessions } from '../../session/socketSession.js';
 import { inGameTimeSessions } from '../../session/inGameTimeSession.js';
 import Server from '../../class/server.js';
+import bcrypt from 'bcrypt';
 
 const { jwtToken, packetType } = config;
 
@@ -42,9 +43,9 @@ export const loginHandler = async (socket: CustomSocket, payload: Object): Promi
       throw new Error(responseData.message);
     }
 
-    // 비밀번호 유효성 검사
-    const userByEmailPw: any = await dbManager.findUserByEmailPw(email, password);
-    if (!userByEmailPw) {
+    // 비밀번호 유효성 검사 (bcrypt 비교)
+    const isPasswordValid = await bcrypt.compare(password, userByEmail.password);
+    if (!isPasswordValid) {
       responseData.success = false;
       responseData.message = '비밀번호를 틀렸습니다.';
       responseData.failCode = GlobalFailCode.AUTHENTICATION_FAILED;
@@ -54,7 +55,7 @@ export const loginHandler = async (socket: CustomSocket, payload: Object): Promi
     // 이미 로그인 했는지 Redis의 캐싱 기록 검사
     const userDatas: User[] | null = await getRedisData('userData');
     if (userDatas) {
-      const userData = userDatas.find((userData: User) => userData.id === userByEmailPw.id);
+      const userData = userDatas.find((userData: User) => userData.id === userByEmail.id);
       if (userData) {
         responseData.success = false;
         responseData.message = '이미 로그인한 유저입니다.';
@@ -67,16 +68,16 @@ export const loginHandler = async (socket: CustomSocket, payload: Object): Promi
     // 토큰 생성
     const options: SignOptions = { expiresIn: '30m', algorithm: 'HS256' };
     const refreshOptions: SignOptions = { expiresIn: '7d', algorithm: 'HS256' };
-    let accessToken = jwt.sign(userByEmailPw, jwtToken.secretKey as string, options);
-    let refreshToken = jwt.sign(userByEmailPw, jwtToken.secretKey as string, refreshOptions);
+    let accessToken = jwt.sign(userByEmail, jwtToken.secretKey as string, options);
+    let refreshToken = jwt.sign(userByEmail, jwtToken.secretKey as string, refreshOptions);
 
     // 클라이언트에 보낼 데이터 정리
     responseData.message = '로그인에 성공 했습니다.';
     responseData.token = accessToken;
     responseData.myInfo = {
-      id: userByEmailPw.id as number,
-      email: userByEmailPw.email as string,
-      nickname: userByEmailPw.nickname as string,
+      id: userByEmail.id as number,
+      email: userByEmail.email as string,
+      nickname: userByEmail.nickname as string,
       character: {
         characterType: 0,
         roleType: RoleType.SUR5VAL,
@@ -114,14 +115,14 @@ export const loginHandler = async (socket: CustomSocket, payload: Object): Promi
     }
 
     // socketSession에 socket 저장하기
-    socketSessions[userByEmailPw.id] = socket;
+    socketSessions[userByEmail.id] = socket;
 
     // 이미 게임 중인 상태일 경우 해당 게임으로 이동
     const rooms = await getRedisData('roomData');
     if (rooms) {
       for (let i = 0; i < rooms.length; i++) {
         for (let j = 0; j < rooms[i].users.length; j++) {
-          if (rooms[i].users[j].id === userByEmailPw.id) {
+          if (rooms[i].users[j].id === userByEmail.id) {
             const initGameInfo = Server.getInstance().initGameInfo;
             if (!initGameInfo) return;
             const inGameTime = initGameInfo[0].normalRoundTime;
@@ -148,7 +149,7 @@ export const loginHandler = async (socket: CustomSocket, payload: Object): Promi
     }
 
     // 로그 처리 ----------------------------------------------------------------------
-    console.info(`로그인 성공 : ${userByEmailPw.id}`);
+    console.info(`로그인 성공 : ${userByEmail.id}`);
   } catch (error) {
     console.error(`loginRequestHandler ${error as Error}`);
   }
@@ -156,6 +157,3 @@ export const loginHandler = async (socket: CustomSocket, payload: Object): Promi
   // 클라이언트에 데이터 보내기
   sendPacket(socket, packetType.LOGIN_RESPONSE, responseData);
 };
-// - 이후 다른 로직 구현시 특이사항
-// 게임 종료시 Redis에 있는 유저 정보 삭제
-// Access Token 및 Refresh Token 만료기간 갱신

@@ -3,10 +3,8 @@ import { sendPacket } from '../../packet/createPacket.js';
 import { config } from '../../config/config.js';
 import { dbManager } from '../../database/user/user.db.js';
 import { GlobalFailCode } from '../enumTyps.js';
-import {
-  RegisterRequest,
-  RegisterResponse,
-} from '../../interface/interface.js';
+import { RegisterRequest, RegisterResponse } from '../../interface/interface.js';
+import bcrypt from 'bcrypt';
 
 const { packetType } = config;
 
@@ -19,23 +17,19 @@ const { packetType } = config;
  * @param {Object} param.payload - 요청 데이터의 페이로드
  * @returns {Promise<void>} 별도의 반환 값은 없으며, 성공 여부와 메시지를 클라이언트에게 전송.
  */
-export const registerHandler = async (
-  socket: CustomSocket,
-  payload: Object,
-): Promise<void> => {
+export const registerHandler = async (socket: CustomSocket, payload: Object): Promise<void> => {
   // 데이터 초기화 ----------------------------------------------------------------------
   const { nickname, password, email } = payload as RegisterRequest;
   let responseData: RegisterResponse = {
     success: true,
     message: '',
-    failCode: GlobalFailCode.NONE,
+    failCode: GlobalFailCode.NONE
   };
 
   try {
     // 유효성 검사 ----------------------------------------------------------------------
     // 비밀번호 유효성 검사
-    const passwordRegex =
-      /^(?=.*[A-Z])(?=.*[!@#$%^&*])(?!.*[ㄱ-ㅎ가-힣]).{6,}$/;
+    const passwordRegex = /^(?=.*[A-Z])(?=.*[!@#$%^&*])(?!.*[ㄱ-ㅎ가-힣]).{6,}$/;
     if (!passwordRegex.test(password)) {
       responseData.success = false;
       responseData.message =
@@ -62,9 +56,12 @@ export const registerHandler = async (
       throw new Error(responseData.message);
     }
 
+    // 비밀번호 해싱 ----------------------------------------------------------------------
+    const hashedPassword = await bcrypt.hash(password, 10);
+
     // 회원가입 처리 ----------------------------------------------------------------------
     // AWS에 데이터 보내기
-    const newUser = await dbManager.createUser(nickname, email, password);
+    const newUser = await dbManager.createUser(nickname, email, hashedPassword);
 
     // 로그 처리 ----------------------------------------------------------------------
     responseData.message = '회원가입을 완료했습니다.';
