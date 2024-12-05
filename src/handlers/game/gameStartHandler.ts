@@ -154,7 +154,7 @@ export const normalPhaseNotification = async (level: number, roomId: number, sen
 
     await monsterMoveStart(roomId, inGameTime);
     await userUpdateNotification(room);
-    setRedisData('roomData', roomData);
+    await setRedisData('roomData', roomData);
   }, sendTime);
 };
 
@@ -176,7 +176,7 @@ export const bossPhaseNotification = async (level: number, roomId: number, sendT
     }
     if (!room) return;
     await setBossStat(room, level);
-    setRedisData('roomData', roomData);
+    await setRedisData('roomData', roomData);
 
     const initGameInfo = Server.getInstance().initGameInfo;
     if (!initGameInfo) return;
