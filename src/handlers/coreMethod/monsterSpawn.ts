@@ -1,7 +1,8 @@
 import Server from '../../class/server.js';
-import { Room, User } from '../../interface/interface.js';
+import { spawnPoint } from '../../config/config.js';
+import { CharacterPositionData, Room, User } from '../../interface/interface.js';
 import { RoleType } from '../enumTyps.js';
-import { getRedisData, monsterAI, setRedisData } from '../handlerMethod.js';
+import { getRedisData, monsterAI, nonSameRandom, setRedisData } from '../handlerMethod.js';
 import { monsterAiDatas } from './monsterMove.js';
 
 const position = [
@@ -44,18 +45,19 @@ export const monsterSpawnStart = async (roomId: number, level: number) => {
     }
   }
 
+  // 필요한 데이터 가져오기
   const initGameInfo = Server.getInstance().initGameInfo;
   if (!initGameInfo) {
     console.error('몬스터 스폰 중 initGameInfo를 찾을 수 없습니다.');
     return;
   }
-
   const characterDB = Server.getInstance().characterStatInfo;
   if (!characterDB) {
     console.error('몬스터 스폰 중 / 데이터베이스에서 캐릭터데이터를 찾을 수 없습니다.');
     return;
   }
 
+  // 공격팀 유저 마나 회복시키기
   for (let i = 0; i < room.users.length; i++) {
     const character = characterDB.find((data) => data.characterType === room.users[i].character.characterType);
     if (character) {
@@ -66,34 +68,54 @@ export const monsterSpawnStart = async (roomId: number, level: number) => {
     }
   }
 
-  // 이전 몬스터 모두 삭제 (roomData 삭제)
+  // 이전 몬스터의 roomData 삭제
   for (let i = 0; i < room.users.length; i++) {
     if (room.users[i].character.roleType === RoleType.WEAK_MONSTER) {
       room.users.splice(i, 1);
       i--;
     }
   }
-  // characterPositionDatas 삭제
-  const characterPositionDatas = await getRedisData('characterPositionDatas');
-  for (let i = 0; i < characterPositionDatas[roomId].length; i++) {
-    if (characterPositionDatas[roomId][i].id >= 1000000) characterPositionDatas[roomId].splice(i, 1), i--;
+
+  // 이전 몬스터의 characterPositionDatas 삭제
+  let characterPositionDatas = await getRedisData('characterPositionDatas');
+  if (!characterPositionDatas) characterPositionDatas = {};
+  characterPositionDatas[roomId] = [];
+
+  // 유저의 시작 위치 랜덤하게 지정
+  if (!characterPositionDatas) {
+    characterPositionDatas = { [room.id]: [] };
+  } else if (!characterPositionDatas[room.id]) {
+    characterPositionDatas[room.id] = [];
   }
-  // monsterAiDatas 삭제
+  const randomIndex = nonSameRandom(1, 10, room.users.length);
+  const userPositionDatas = [];
+  for (let i = 0; i < room.users.length; i++) {
+    const randomSpawnPoint = spawnPoint[randomIndex[i]];
+    const characterPositionData: CharacterPositionData = {
+      id: room.users[i].id,
+      x: randomSpawnPoint.x,
+      y: randomSpawnPoint.y
+    };
+    userPositionDatas.push(characterPositionData);
+  }
+  characterPositionDatas[room.id].unshift(...userPositionDatas);
+
+  // 이전 몬스터의 monsterAiDatas 삭제
   monsterAiDatas[roomId] = [];
   await setRedisData('roomData', rooms);
   await setRedisData('characterPositionDatas', characterPositionDatas);
 
-  // 몬스터 생성 함수 실행
-
+  // 다음 몬스터 생성 함수 실행
   const initMonster = initGameInfo[0].roundInitMonster;
   for (let k = 0; k < initMonster; k++) {
     await monsterSpawn(roomId, level);
   }
 };
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
 // 몬스터 생성 함수
 export const monsterSpawn = async (roomId: number, level: number) => {
-  // DB의 몬스터 생성 정보 가져오기
+  // 몬스터 초기 데이터 값 가져오기
   const monsterDBInfo = Server.getInstance().monsterInfo;
   if (!monsterDBInfo) {
     console.error('monsterInfo 정보를 불러오는데 실패하였습니다.');
