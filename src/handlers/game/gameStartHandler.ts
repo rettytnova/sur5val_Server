@@ -12,6 +12,7 @@ import { fleaMarketCardCreate } from '../coreMethod/fleaMarketCardCreate.js';
 import { shoppingUserIdSessions } from '../../session/shoppingSession.js';
 import { userUpdateNotification } from '../notification/userUpdate.js';
 import Server from '../../class/server.js';
+import { randomNumber } from '../../utils/utils.js';
 
 // 게임 시작 함수 호출
 export const gameStartHandler = async (socket: CustomSocket, payload: Object) => {
@@ -164,11 +165,12 @@ export const bossPhaseNotification = async (level: number, roomId: number, sendT
       users: room.users,
       characterPositions: characterPositionDatas[roomId]
     };
+    const idx: number = randomNumber(0, 3);
     for (let i = 0; i < room.users.length; i++) {
       const userSocket = socketSessions[room.users[i].id];
       if (userSocket) {
         sendPacket(userSocket, config.packetType.GAME_START_NOTIFICATION, notifiData);
-        sendPacket(userSocket, config.packetType.REACTION_RESPONSE, { success: 1, failCode: roomId });
+        sendPacket(userSocket, config.packetType.REACTION_RESPONSE, { success: 1, failCode: idx });
       }
     }
     await monsterMoveStart(roomId, bossGameTime);
