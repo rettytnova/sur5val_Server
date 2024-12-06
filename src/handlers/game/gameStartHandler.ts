@@ -1,8 +1,8 @@
-import { CharacterPositionData, CustomSocket, Room } from '../../interface/interface.js';
+import { CustomSocket, Room } from '../../interface/interface.js';
 import { GlobalFailCode, PhaseType, RoleType, RoomStateType } from '../enumTyps.js';
 import { sendPacket } from '../../packet/createPacket.js';
-import { config, spawnPoint } from '../../config/config.js';
-import { getRedisData, getUserIdBySocket, nonSameRandom, setRedisData } from '../handlerMethod.js';
+import { config } from '../../config/config.js';
+import { getRedisData, getUserIdBySocket, setRedisData } from '../handlerMethod.js';
 import { monsterMoveStart } from '../coreMethod/monsterMove.js';
 import { monsterSpawnStart } from '../coreMethod/monsterSpawn.js';
 import { socketSessions } from '../../session/socketSession.js';
@@ -61,29 +61,6 @@ export const gameStartHandler = async (socket: CustomSocket, payload: Object) =>
         failCode: GlobalFailCode.NONE
       };
       sendPacket(socket, config.packetType.GAME_START_RESPONSE, responseData);
-
-      let characterPositionDatas = await getRedisData('characterPositionDatas');
-      if (!characterPositionDatas) {
-        characterPositionDatas = { [room.id]: [] };
-      } else if (!characterPositionDatas[room.id]) {
-        characterPositionDatas[room.id] = [];
-      }
-
-      const randomIndex = nonSameRandom(1, 10, realUserNumber);
-      const userPositionDatas = [];
-      for (let i = 0; i < realUserNumber; i++) {
-        // 랜덤 스폰포인트
-        const randomSpawnPoint = spawnPoint[randomIndex[i]];
-        const characterPositionData: CharacterPositionData = {
-          id: room.users[i].id,
-          x: randomSpawnPoint.x,
-          y: randomSpawnPoint.y
-        };
-        userPositionDatas.push(characterPositionData);
-      }
-
-      characterPositionDatas[room.id].unshift(...userPositionDatas);
-      await setRedisData('characterPositionDatas', characterPositionDatas);
 
       // 방에있는 유저들에게 게임 시작 notificationn 보내기, 게임 시작 시간 저장
       room.state = RoomStateType.INGAME;

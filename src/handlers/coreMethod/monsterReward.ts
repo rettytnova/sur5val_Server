@@ -214,32 +214,64 @@ const setRewards = (attacker: User, target: User): boolean => {
  * @param {UserCharacterData} attacker - 스탯을 증가시킬 유저의 데이터
  * @returns {boolean} 반환 값을 통해 스텟 보상 성공 여부를 알 수 있다.
  */
+
+// 캐릭터 타입에 따라 스탯 증가
 export const setStatRewards = (attacker: User): boolean => {
-  // 캐릭터 타입에 따라 스탯 증가
+  const levelUpStatDBData = Server.getInstance().characterLevelUpStatInfo;
+  if (!levelUpStatDBData) {
+    console.error('CharacterLevelUpStatDBData 정보가 존재하지 않습니다.');
+    return false;
+  }
+
   // 마법사
   if (attacker.character.characterType == UserCharacterType.MASK) {
-    attacker.character.attack += 2;
-    attacker.character.armor += 2;
-    attacker.character.maxHp += 2;
-    attacker.character.hp += 2;
+    const MagicianLevelUpStat = levelUpStatDBData.find((data) => data.characterType === UserCharacterType.MASK);
+    if (!MagicianLevelUpStat) {
+      console.error('마법사의 레벨업 추가 스탯 정보가 존재하지 않습니다.');
+      return false;
+    }
+    attacker.character.attack += MagicianLevelUpStat.attack;
+    attacker.character.armor += MagicianLevelUpStat.armor;
+    attacker.character.maxHp += MagicianLevelUpStat.hp;
+    attacker.character.hp += MagicianLevelUpStat.hp;
+
     // 궁수
   } else if (attacker.character.characterType == UserCharacterType.SWIM_GLASSES) {
-    attacker.character.attack += 2;
-    attacker.character.armor += 1;
-    attacker.character.maxHp += 6;
-    attacker.character.hp += 6;
-    // 전사
+    const ArcherLevelUpStat = levelUpStatDBData.find((data) => data.characterType === UserCharacterType.SWIM_GLASSES);
+    if (!ArcherLevelUpStat) {
+      console.error('궁수의 레벨업 추가 스탯 정보가 존재하지 않습니다.');
+      return false;
+    }
+    attacker.character.attack += ArcherLevelUpStat.attack;
+    attacker.character.armor += ArcherLevelUpStat.armor;
+    attacker.character.maxHp += ArcherLevelUpStat.hp;
+    attacker.character.hp += ArcherLevelUpStat.hp;
+
+    // 도적
   } else if (attacker.character.characterType == UserCharacterType.FROGGY) {
-    attacker.character.attack += 1;
-    attacker.character.armor += 3;
-    attacker.character.maxHp += 8;
-    attacker.character.hp += 8;
-    // 성기사
+    const RougeLevelUpStat = levelUpStatDBData.find((data) => data.characterType === UserCharacterType.FROGGY);
+    if (!RougeLevelUpStat) {
+      console.error('궁수의 레벨업 추가 스탯 정보가 존재하지 않습니다.');
+      return false;
+    }
+    attacker.character.attack += RougeLevelUpStat.attack;
+    attacker.character.armor += RougeLevelUpStat.armor;
+    attacker.character.maxHp += RougeLevelUpStat.hp;
+    attacker.character.hp += RougeLevelUpStat.hp;
+
+    // 전사
   } else if (attacker.character.characterType == UserCharacterType.RED) {
-    attacker.character.attack += 1;
-    attacker.character.armor += 2;
-    attacker.character.maxHp += 12;
-    attacker.character.hp += 12;
+    const WarriorLevelUpStat = levelUpStatDBData.find((data) => data.characterType === UserCharacterType.RED);
+    if (!WarriorLevelUpStat) {
+      console.error('궁수의 레벨업 추가 스탯 정보가 존재하지 않습니다.');
+      return false;
+    }
+    attacker.character.attack += WarriorLevelUpStat.attack;
+    attacker.character.armor += WarriorLevelUpStat.armor;
+    attacker.character.maxHp += WarriorLevelUpStat.hp;
+    attacker.character.hp += WarriorLevelUpStat.hp;
+
+    // 예외
   } else {
     console.log('캐릭터 타입이 존재하지 않습니다.');
     return false;
@@ -282,20 +314,20 @@ export const setCardRewards = (attacker: User) => {
         attacker.character.handCards.push({ type: CardType.MAGICIAN_FINAL_SKILL, count: 1 });
         attacker.character.handCards.sort((a, b) => a.type - b.type);
       } else if (attacker.character.characterType == UserCharacterType.SWIM_GLASSES) {
-        attacker.character.handCards.push({ type: CardType.MAGICIAN_FINAL_SKILL, count: 1 });
+        attacker.character.handCards.push({ type: CardType.ARCHER_FINAL_SKILL, count: 1 });
         attacker.character.handCards.sort((a, b) => a.type - b.type);
       } else if (attacker.character.characterType == UserCharacterType.FROGGY) {
-        attacker.character.handCards.push({ type: CardType.MAGICIAN_FINAL_SKILL, count: 1 });
+        attacker.character.handCards.push({ type: CardType.ROGUE_FINAL_SKILL, count: 1 });
         attacker.character.handCards.sort((a, b) => a.type - b.type);
       } else if (attacker.character.characterType == UserCharacterType.RED) {
-        attacker.character.handCards.push({ type: CardType.MAGICIAN_FINAL_SKILL, count: 1 });
+        attacker.character.handCards.push({ type: CardType.WARRIOR_FINAL_SKILL, count: 1 });
         attacker.character.handCards.sort((a, b) => a.type - b.type);
       } else {
         console.log('캐릭터 타입이 존재하지 않습니다.');
         return false;
       }
       break;
-    default: // 카드 보상을 받을 수 있는 레벨이 아닐 경우
+    default:
       // console.log('카드 보상을 받을 수 레벨이 아닙니다.');
       break;
   }

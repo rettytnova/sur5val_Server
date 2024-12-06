@@ -1,5 +1,5 @@
 import { config } from '../../config/config.js';
-import { CharacterPositionData, Room } from '../../interface/interface.js';
+import { CharacterPositionData, Room, User } from '../../interface/interface.js';
 import { sendPacket } from '../../packet/createPacket.js';
 import { socketSessions } from '../../session/socketSession.js';
 import { getRedisData, monsterAI, setRedisData } from '../handlerMethod.js';
@@ -40,14 +40,14 @@ export const monsterMoveStart = async (roomId: number, totalTime: number) => {
       console.log('함수 실행 횟수:', callme, '함수 실행 시간:', Date.now() - time), clearInterval(monsterMove);
       return;
     }
-    let roomData: Room | null = null;
+    let room: Room | null = null;
     for (let i = 0; i < rooms.length; i++) {
       if (rooms[i].id === roomId) {
-        roomData = rooms[i];
+        room = rooms[i];
         break;
       }
     }
-    if (!roomData) {
+    if (!room) {
       console.log('함수 실행 횟수:', callme, '함수 실행 시간:', Date.now() - time), clearInterval(monsterMove);
       return;
     }
@@ -65,9 +65,24 @@ export const monsterMoveStart = async (roomId: number, totalTime: number) => {
     }
 
     // 몬스터 공격 실행
-    await monsterAttackCheck(roomData, rooms);
+    await monsterAttackCheck(room, rooms);
     callme++;
+
+    // 각 몬스터 별로 움직이기 작업 실행
     for (let i = 0; i < monsterAiDatas[roomId].length; i++) {
+      // 죽은 몬스터일 경우 움직이기 작업 생략
+      let monsterData: User | null = null;
+      for (let j = 0; j < room.users.length; j++) {
+        if (room.users[j].id === monsterAiDatas[roomId][i].id) {
+          monsterData = room.users[j];
+        }
+      }
+      if (!monsterData) {
+        console.error('움직이려는 몬스터의 정보를 찾을 수 없습니다.');
+        return;
+      }
+      if (monsterData.character.hp <= 0) continue;
+
       // 남은 거리가 없을 경우 새로운 경로 지정
       if (monsterAiDatas[roomId][i].distance <= 0) {
         const position: number[] = [];
@@ -138,8 +153,8 @@ export const monsterMoveStart = async (roomId: number, totalTime: number) => {
 
     // 이동 종료: redis에 위치 데이터 저장 및 notification 뿌리기
     await setRedisData('characterPositionDatas', characterPositions);
-    for (let i = 0; i < roomData.users.length; i++) {
-      const roomUserSocket = socketSessions[roomData.users[i].id];
+    for (let i = 0; i < room.users.length; i++) {
+      const roomUserSocket = socketSessions[room.users[i].id];
       if (roomUserSocket) {
         sendPacket(roomUserSocket, config.packetType.POSITION_UPDATE_NOTIFICATION, {
           characterPositions: characterPositions[roomId]

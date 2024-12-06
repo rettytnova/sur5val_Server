@@ -16,7 +16,8 @@ import {
   MonsterDBData,
   initGameDBData,
   shopListDBData,
-  CharacterInitStatDBData
+  CharacterInitStatDBData,
+  CharacterLevelUpStatDBData
 } from '../interface/interface.js';
 import DatabaseManager from '../database/databaseManager.js';
 import { connectRedis } from '../database/redis.js';
@@ -29,7 +30,7 @@ class Server {
   private server: net.Server;
 
   public characterStatInfo: CharacterInitStatDBData[] | undefined;
-  public characterLevelUpStatInfo: any;
+  public characterLevelUpStatInfo: CharacterLevelUpStatDBData[] | undefined;
   public consumableItemInfo: consumableItemDBData[] | undefined;
   public equipItemInfo: equipItemDBData[] | undefined;
   public monsterInfo: MonsterDBData[] | undefined;
