@@ -30,7 +30,6 @@ const characterBuffStatus: { [characterId: number]: number[] } = {};
  * @returns {Promise<void>} 별도의 반환 값은 없으며, 성공 여부와 메시지를 클라이언트에게 전송.
  */
 export const useCardHandler = async (socket: CustomSocket, payload: Object): Promise<void> => {
-  console.log(payload);
   // response 데이터 초기화 ----------------------------------------------------------------------
   const { cardType, targetUserId: targetUserIdRaw } = payload as UseCardRequest;
   const targetUserId = Number(targetUserIdRaw);
@@ -160,7 +159,7 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
       case CardType.ARCHER_BASIC_SKILL:
         if (!target) return;
         if (!attackPossible(user, target, 2)) return;
-        await attackTarget(user, rooms, room, 1.5, target);
+        await attackTarget(user, rooms, room, 2, target);
         for (let i = 0; i < monsterAiDatas[room.id].length; i++) {
           if (monsterAiDatas[room.id][i].id === target.id) {
             monsterAiDatas[room.id][i].animationDelay = 4;
@@ -179,7 +178,7 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
       // 설명: MP소모: 3, 적의 급소를 노려 치명적인 공격을 한 방 가한다.
       case CardType.ROGUE_BASIC_SKILL:
         if (!target) return;
-        if (!attackPossible(user, target, 3)) return;
+        if (!attackPossible(user, target, 2.5)) return;
         //await movePosition(user, target, room);
         await attackTarget(user, rooms, room, 3, target);
         for (let i = 0; i < monsterAiDatas[room.id].length; i++) {
@@ -230,14 +229,14 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
 
         // 스킬 실행2
         setTimeout(async () => {
-          await attackTarget(user, rooms, room, 1.8, target);
+          await attackTarget(user, rooms, room, 1.4, target);
           if (index) monsterAiDatas[room.id][index].animationDelay = 4;
           sendAnimation(user, target, 1);
         }, 600);
 
         // 스킬 실행3
         setTimeout(async () => {
-          await attackTarget(user, rooms, room, 2.7, target);
+          await attackTarget(user, rooms, room, 1.7, target);
           if (index) monsterAiDatas[room.id][index].animationDelay = 4;
           sendAnimation(user, target, 1);
         }, 1200);
@@ -249,6 +248,7 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
         await userUpdateNotification(room);
         break;
       }
+
       // 이름: 궁수 강화 스킬
       // 설명: 일시적(10초간)으로 방어력이 대폭 상승한다.
       case CardType.ARCHER_EXTENDED_SKILL:
@@ -413,91 +413,91 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
       // 장비 301 ~ 400 // 장비 301 ~ 400  / 장비 301 ~ 400 // 장비 301 ~ 400 // 장비 301 ~ 400 // 장비 301 ~ 400 // 장비 301 ~ 400 // 장비 301 ~ 400 //
 
       // 이름: 탐험가의 무기
-      // 설명: 야생에서 빛을 발하는 무기. 공격력+4
+      // 설명: 야생에서 빛을 발하는 무기. 공격력+2
       case CardType.EXPLORER_WEAPON:
         await equipWeapon(user, rooms, room, CardType.EXPLORER_WEAPON);
         break;
 
       // 이름: 탐험가의 투구
-      // 설명: 거친 환경을 견디는 투구. 체력+32
+      // 설명: 거친 환경을 견디는 투구. 체력+30
       case CardType.EXPLORER_HEAD:
         await equipItem(user, rooms, room, 0, CardType.EXPLORER_HEAD);
         break;
 
       // 이름: 탐험가의 갑옷
-      // 설명: 유연성과 보호력을 겸비한 갑옷. 방어력+2, 체력+24
+      // 설명: 유연성과 보호력을 겸비한 갑옷. 방어력+2, 체력+20
       case CardType.EXPLORER_ARMOR:
         await equipItem(user, rooms, room, 1, CardType.EXPLORER_ARMOR);
         break;
 
       // 이름: 탐험가의 망토
-      // 설명: 바람과 비를 막아주는 견고한 망토. 방어력+4, 체력+16
+      // 설명: 바람과 비를 막아주는 견고한 망토. 방어력+4, 체력+10
       case CardType.EXPLORER_CLOAK:
         await equipItem(user, rooms, room, 2, CardType.EXPLORER_CLOAK);
         break;
 
       // 이름: 탐험가의 장갑
-      // 설명: 정밀한 손놀림을 돕는 장갑. 공격력+2, 방어력+2, 체력+4
+      // 설명: 정밀한 손놀림을 돕는 장갑. 공격력+1, 방어력+2, 체력+5
       case CardType.EXPLORER_GLOVE:
         await equipItem(user, rooms, room, 3, CardType.EXPLORER_GLOVE);
         break;
 
       // 이름: 영웅의 무기
-      // 설명: 강력한 적도 제압 가능한 놀라운 무기. 공격력+8
+      // 설명: 강력한 적도 제압 가능한 놀라운 무기. 공격력+4
       case CardType.HERO_WEAPON:
         await equipWeapon(user, rooms, room, CardType.HERO_WEAPON);
         break;
 
       // 이름: 영웅의 투구
-      // 설명: 영광스러운 전투를 상징하는 투구. 체력+64
+      // 설명: 영광스러운 전투를 상징하는 투구. 체력+60
       case CardType.HERO_HEAD:
         await equipItem(user, rooms, room, 0, CardType.HERO_HEAD);
         break;
 
       // 이름: 영웅의 갑옷
-      // 설명: 방어와 위엄을 겸비한 갑옷. 방어력+2, 체력+48
+      // 설명: 방어와 위엄을 겸비한 갑옷. 방어력+4, 체력+40
       case CardType.HERO_ARMOR:
         await equipItem(user, rooms, room, 1, CardType.HERO_ARMOR);
         break;
 
       // 이름: 영웅의 망토
-      // 설명: 마법의 힘이 깃든 망토. 방어력+8, 체력+32
+      // 설명: 마법의 힘이 깃든 망토. 방어력+8, 체력+20
       case CardType.HERO_CLOAK:
         await equipItem(user, rooms, room, 2, CardType.HERO_CLOAK);
         break;
 
       // 이름: 영웅의 장갑
-      // 설명: 전투 기술을 극대화하는 장갑. 공격력+4, 방어력+4, 체력+8
+      // 설명: 전투 기술을 극대화하는 장갑. 공격력+2, 방어력+4, 체력+10
       case CardType.HERO_GLOVE:
         await equipItem(user, rooms, room, 3, CardType.HERO_GLOVE);
         break;
 
       // 이름: 전설의 무기
-      // 설명: 신화적 힘이 담긴 무기, 적에게 파멸을 선사한다. 공격력+12
+      // 설명: 신화적 힘이 담긴 무기, 적에게 파멸을 선사한다. 공격력+6
       case CardType.LEGENDARY_WEAPON:
         await equipWeapon(user, rooms, room, CardType.LEGENDARY_WEAPON);
         break;
 
       // 이름: 전설의 투구
-      // 설명: 신성한 보호막을 제공하는 투구, 사용자를 불멸로 이끈다. 체력+96
+      // 설명: 신성한 보호막을 제공하는 투구, 사용자를 불멸로 이끈다. 체력+90
       case CardType.LEGENDARY_HEAD:
         await equipItem(user, rooms, room, 0, CardType.LEGENDARY_HEAD);
         break;
 
       // 이름: 전설의 갑옷
-      // 설명: 황금빛 문양과 마법이 깃든 최강의 갑옷. 방어력+6, 체력+72
+      // 설명: 황금빛 문양과 마법이 깃든 최강의 갑옷. 방어력+6, 체력+60
       case CardType.LEGENDARY_ARMOR:
         await equipItem(user, rooms, room, 1, CardType.LEGENDARY_ARMOR);
         break;
 
       // 이름: 전설의 망토
-      // 설명: 우주의 에너지가 깃든 최강의 망토. 방어력+12, 체력+48
+      // 설명: 우주의 에너지가 깃든 최강의 망토. 방어력+12, 체력+30
       case CardType.LEGENDARY_CLOAK:
         await equipItem(user, rooms, room, 2, CardType.LEGENDARY_CLOAK);
         break;
 
       // 이름: 전설의 장갑
-      // 설명: 신화의 기술과 힘을 담은 승리의 장갑. 공격력+6, 방어력+6, 체력+12
+      // 설명: 신화의 기술과 힘을 담은 승리의 장갑. 공격력+3, 방어력+6, 체력+15
       case CardType.LEGENDARY_GLOVE:
         await equipItem(user, rooms, room, 3, CardType.LEGENDARY_GLOVE);
         break;
