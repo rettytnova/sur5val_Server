@@ -60,10 +60,35 @@ export const gameEndNotification = async (roomId: number, winRType: number) => {
   delete monsterAiDatas[roomId];
   delete shoppingUserIdSessions[roomId];
 
+  // 게임 끝나는 시점에 이미 게임 종료한 유저 방에서 내쫒기
   const userDatas: User[] = await getRedisData('userData');
   if (userDatas) {
     const userIds = userDatas.map((user) => user.id);
     room.users = room.users.filter((user) => userIds.includes(user.id));
+  }
+
+  // 내쫒은 시점에 방에 인원이 0명인지 검사 - 방 폭파
+  let isDeleteRoom: boolean = false;
+  if (room.users.length <= 0) {
+    for (let i = 0; i < rooms.length; i++) {
+      if (rooms[i].id === room.id) {
+        rooms.splice(i, 1);
+        isDeleteRoom = true;
+        break;
+      }
+    }
+  }
+
+  // 내쫒은 시점에 방장 검사 - 방장 넘기기
+  if (!isDeleteRoom) {
+    let haveOwner: boolean = false;
+    for (let i = 0; i < room.users.length; i++) {
+      if (room.users[i].id === room.ownerId) {
+        haveOwner = true;
+        break;
+      }
+    }
+    if (!haveOwner) room.ownerId = room.users[0].id;
   }
 
   addgRoomId();

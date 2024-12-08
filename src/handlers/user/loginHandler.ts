@@ -135,14 +135,10 @@ export const loginHandler = async (socket: CustomSocket, payload: Object): Promi
               users: rooms[i].users,
               characterPositions: characterPositionDatas[rooms[i].id]
             };
-            setTimeout(() => {
-              sendPacket(socket, config.packetType.GAME_START_NOTIFICATION, notifiData);
-            }, 100);
-            setTimeout(() => {
-              sendPacket(socket, config.packetType.USER_UPDATE_NOTIFICATION, {
-                user: rooms[i].users
-              });
-            }, 100);
+            sendPacket(socket, config.packetType.GAME_START_NOTIFICATION, notifiData);
+            sendPacket(socket, config.packetType.USER_UPDATE_NOTIFICATION, {
+              user: rooms[i].users
+            });
           }
         }
       }

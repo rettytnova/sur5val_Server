@@ -5,9 +5,7 @@ import { socketSessions } from '../session/socketSession.js';
 
 export const onClose = (socket: CustomSocket) => async () => {
   const endUserId: number | null = await getUserIdBySocket(socket);
-  if (!endUserId) {
-    console.error('게임을 종료하는 유저의 userData가 이미 존재하지 않습니다');
-  } else {
+  if (endUserId) {
     // 강제종료 했을 경우 방에서 나가기 처리
     await leaveRoomHandler(socket);
 
