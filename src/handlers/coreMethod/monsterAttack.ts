@@ -70,7 +70,7 @@ export const monsterAttackPlayer = async (player: User, monster: User, room: Roo
     }
   }
   if (!monsterPosition) {
-    console.error('존재하지 않는 monsterPosition를 찾고 있습니다.', characterPositions[room.id], monster);
+    console.error('존재하지 않는 monsterPosition를 찾고 있습니다.', characterPositions[room.id], room.users);
     return;
   }
 
@@ -107,7 +107,7 @@ export const monsterAttackPlayer = async (player: User, monster: User, room: Roo
     }
     monsterData.attackCool = attackCool;
 
-    //
+    // 공격 실행
     for (let i = 0; i < rooms.length; i++) {
       for (let j = 0; j < rooms[i].users.length; j++) {
         if (rooms[i].users[j].id === player.id) {
@@ -117,7 +117,6 @@ export const monsterAttackPlayer = async (player: User, monster: User, room: Roo
             rooms[i].users[j].character.stateInfo.state = 15;
             rooms[i].users[j].character.hp = 0;
           }
-
           await userUpdateNotification(rooms[i]);
           await setRedisData('roomData', rooms);
         }
@@ -136,6 +135,11 @@ export const monsterAttackPlayer = async (player: User, monster: User, room: Roo
         userId: player.id,
         animationType: 2
       });
+    }
+
+    // 에러 찾기 임시 함수
+    if (room.users.length !== characterPositions[room.id].length) {
+      throw new Error(`monsterAttack에서 에러 발생 ${room.users}, ${characterPositions[room.id]}`);
     }
   }
 };

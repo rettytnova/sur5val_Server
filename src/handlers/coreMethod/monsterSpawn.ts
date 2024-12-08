@@ -114,7 +114,7 @@ export const monsterSpawnStart = async (roomId: number, level: number) => {
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // 몬스터 생성 함수
-export const monsterSpawn = async (roomId: number, level: number) => {
+const monsterSpawn = async (roomId: number, level: number) => {
   // 몬스터 초기 데이터 값 가져오기
   const monsterDBInfo = Server.getInstance().monsterInfo;
   if (!monsterDBInfo) {
@@ -123,11 +123,11 @@ export const monsterSpawn = async (roomId: number, level: number) => {
   }
 
   // 유효성 검사
-  const roomDatas = await getRedisData('roomData');
+  const rooms = await getRedisData('roomData');
   let roomData: Room | null = null;
-  for (let i = 0; i < roomDatas.length; i++) {
-    if (roomDatas[i].id === roomId) {
-      roomData = roomDatas[i];
+  for (let i = 0; i < rooms.length; i++) {
+    if (rooms[i].id === roomId) {
+      roomData = rooms[i];
     }
   }
   if (roomData === null) return;
@@ -169,14 +169,14 @@ export const monsterSpawn = async (roomId: number, level: number) => {
 
   // 생성된 몬스터 정보 redis에 저장 하기
   roomData.users.push(monster);
-  await setRedisData('roomData', roomDatas);
+  await setRedisData('roomData', rooms);
 
   // 랜덤 위치 생성하기
   let characterPositionDatas = await getRedisData('characterPositionDatas');
   if (!characterPositionDatas) {
-    characterPositionDatas = { [roomData.id]: [] };
-  } else if (!characterPositionDatas[roomData.id]) {
-    characterPositionDatas[roomData.id] = [];
+    characterPositionDatas = { [roomId]: [] };
+  } else if (!characterPositionDatas[roomId]) {
+    characterPositionDatas[roomId] = [];
   }
   positionIndex = (positionIndex + 1) % position.length;
 
@@ -198,4 +198,9 @@ export const monsterSpawn = async (roomId: number, level: number) => {
     monsterData.attackCool / 2,
     monsterData.attackRange
   );
+
+  // 에러 찾기 임시 함수
+  if (roomData.users.length !== characterPositionDatas[roomId].length) {
+    throw new Error(`monsterMove에서 에러 발생 ${roomData.users}, ${characterPositionDatas[roomId]}`);
+  }
 };
