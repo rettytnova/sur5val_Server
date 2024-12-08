@@ -74,7 +74,7 @@ export const gameStartHandler = async (socket: CustomSocket, payload: Object) =>
       for (let i = 0; i < normalRound; i++) {
         await normalPhaseNotification(i + 1, room.id, inGameTime * i);
       }
-      bossPhaseNotification(normalRound + 1, room.id, inGameTime * normalRound);
+      await bossPhaseNotification(normalRound + 1, room.id, inGameTime * normalRound);
       inGameTimeSessions[room.id] = Date.now();
 
       // 게임 종료 notification 보내기
@@ -102,17 +102,17 @@ export const normalPhaseNotification = async (level: number, roomId: number, sen
     shoppingUserIdSessions[roomId] = [];
     await monsterSpawnStart(roomId, level);
     const characterPositionDatas = await getRedisData('characterPositionDatas');
-    const roomData: Room[] = await getRedisData('roomData');
+    const rooms: Room[] = await getRedisData('roomData');
 
     let room: Room | null = null;
-    for (let i = 0; i < roomData.length; i++) {
-      if (roomData[i].id === roomId) {
-        room = roomData[i];
+    for (let i = 0; i < rooms.length; i++) {
+      if (rooms[i].id === roomId) {
+        room = rooms[i];
         break;
       }
     }
     if (!room) return;
-    await setBossStat(room, level);
+    setBossStat(room, level);
 
     const initGameInfo = Server.getInstance().initGameInfo;
     if (!initGameInfo) return;
@@ -123,6 +123,7 @@ export const normalPhaseNotification = async (level: number, roomId: number, sen
       users: room.users,
       characterPositions: characterPositionDatas[roomId]
     };
+
     for (let i = 0; i < room.users.length; i++) {
       const userSocket = socketSessions[room.users[i].id];
       if (userSocket) {
@@ -132,7 +133,7 @@ export const normalPhaseNotification = async (level: number, roomId: number, sen
 
     await monsterMoveStart(roomId, inGameTime);
     await userUpdateNotification(room);
-    await setRedisData('roomData', roomData);
+    await setRedisData('roomData', rooms);
   }, sendTime);
 };
 
@@ -143,18 +144,18 @@ export const bossPhaseNotification = async (level: number, roomId: number, sendT
     shoppingUserIdSessions[roomId] = [];
     await monsterSpawnStart(roomId, level);
     const characterPositionDatas = await getRedisData('characterPositionDatas');
-    const roomData: Room[] = await getRedisData('roomData');
+    const rooms: Room[] = await getRedisData('roomData');
 
     let room: Room | null = null;
-    for (let i = 0; i < roomData.length; i++) {
-      if (roomData[i].id === roomId) {
-        room = roomData[i];
+    for (let i = 0; i < rooms.length; i++) {
+      if (rooms[i].id === roomId) {
+        room = rooms[i];
         break;
       }
     }
     if (!room) return;
-    await setBossStat(room, level);
-    await setRedisData('roomData', roomData);
+    setBossStat(room, level);
+    await setRedisData('roomData', rooms);
 
     const initGameInfo = Server.getInstance().initGameInfo;
     if (!initGameInfo) return;
@@ -178,7 +179,7 @@ export const bossPhaseNotification = async (level: number, roomId: number, sendT
 };
 
 // 보스 스탯 상승
-export const setBossStat = async (room: Room, level: number) => {
+export const setBossStat = (room: Room, level: number) => {
   for (let i = 0; i < room.users.length; i++) {
     if (room.users[i].character.roleType === RoleType.BOSS_MONSTER) {
       room.users[i].character.aliveState = true;
@@ -186,7 +187,7 @@ export const setBossStat = async (room: Room, level: number) => {
       // room.users[i].character.hp = 1000 * level;
       // room.users[i].character.maxHp = room.users[i].character.hp;
       // room.users[i].character.mp = 30 * level;
-      room.users[i].character.attack = 5 * (level + 1);
+      room.users[i].character.attack = 10 * level;
       room.users[i].character.armor = 1 * level;
 
       switch (level) {
