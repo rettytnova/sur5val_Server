@@ -161,5 +161,10 @@ export const monsterMoveStart = async (roomId: number, totalTime: number) => {
         });
       }
     }
+
+    // 에러 찾기 임시 함수
+    if (room.users.length !== characterPositions[roomId].length) {
+      throw new Error(`monsterSpawn에서 에러 발생 ${room.users}, ${characterPositions[roomId]}`);
+    }
   }, 100);
 };

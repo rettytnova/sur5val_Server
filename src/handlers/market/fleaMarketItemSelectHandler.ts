@@ -105,6 +105,7 @@ export const fleaMarketItemSelectHandler = async (socket: net.Socket, payload: O
         break;
       }
     }
+    console.log('돈이 부족합니다.');
     return;
   }
 
