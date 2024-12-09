@@ -1,10 +1,11 @@
 import Server from '../../class/server.js';
 import { spawnPoint } from '../../config/config.js';
 import { CharacterPositionData, Room, User } from '../../interface/interface.js';
-import { RoleType } from '../enumTyps.js';
+import { RoleType, UserCharacterType } from '../enumTyps.js';
 import { getRedisData, monsterAI, nonSameRandom, setRedisData } from '../handlerMethod.js';
 import { monsterAiDatas } from './monsterMove.js';
 
+let idx = -1;
 const position = [
   [-17.5, 9],
   [-17.5, -1.1],
@@ -25,7 +26,7 @@ let monsterNumber = 10000000;
 let positionIndex = 0;
 
 // 게임 시작 시 몬스터 스폰 시작
-export const monsterSpawnStart = async (roomId: number, level: number) => {
+export const monsterSpawnStart = async (roomId: number, level: number, idx: number) => {
   // 유저가 속한 room찾기
   const rooms = await getRedisData('roomData');
   let room: Room | null = null;
@@ -91,11 +92,46 @@ export const monsterSpawnStart = async (roomId: number, level: number) => {
   const userPositionDatas = [];
   for (let i = 0; i < room.users.length; i++) {
     const randomSpawnPoint = spawnPoint[randomIndex[i]];
-    const characterPositionData: CharacterPositionData = {
-      id: room.users[i].id,
-      x: randomSpawnPoint.x,
-      y: randomSpawnPoint.y
-    };
+
+    let characterPositionData: CharacterPositionData = { id: -1, x: -1, y: -1 };
+    if (level === 5 && room.users[i].character.characterType === UserCharacterType.PINK_SLIME) {
+      switch (idx) {
+        case 0:
+          characterPositionData = {
+            id: room.users[i].id,
+            x: -22.5,
+            y: -1.14001215
+          };
+          break;
+        case 1:
+          characterPositionData = {
+            id: room.users[i].id,
+            x: 1.38865852,
+            y: -9.18549061
+          };
+          break;
+        case 2:
+          characterPositionData = {
+            id: room.users[i].id,
+            x: 22.0167046,
+            y: -1.156556
+          };
+          break;
+        case 3:
+          characterPositionData = {
+            id: room.users[i].id,
+            x: 1.54476261,
+            y: 9.82438946
+          };
+          break;
+      }
+    } else {
+      characterPositionData = {
+        id: room.users[i].id,
+        x: randomSpawnPoint.x,
+        y: randomSpawnPoint.y
+      };
+    }
     userPositionDatas.push(characterPositionData);
   }
   characterPositionDatas[room.id].unshift(...userPositionDatas);
