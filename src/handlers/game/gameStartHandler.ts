@@ -100,7 +100,7 @@ export const normalPhaseNotification = async (level: number, roomId: number, sen
   setTimeout(async () => {
     await fleaMarketCardCreate(level, roomId);
     shoppingUserIdSessions[roomId] = [];
-    await monsterSpawnStart(roomId, level);
+    await monsterSpawnStart(roomId, level, -1);
     const characterPositionDatas = await getRedisData('characterPositionDatas');
     const rooms: Room[] = await getRedisData('roomData');
 
@@ -142,7 +142,8 @@ export const bossPhaseNotification = async (level: number, roomId: number, sendT
   setTimeout(async () => {
     await fleaMarketCardCreate(level, roomId);
     shoppingUserIdSessions[roomId] = [];
-    await monsterSpawnStart(roomId, level);
+    const idx: number = randomNumber(0, 3);
+    await monsterSpawnStart(roomId, level, idx);
     const characterPositionDatas = await getRedisData('characterPositionDatas');
     const rooms: Room[] = await getRedisData('roomData');
 
@@ -166,7 +167,7 @@ export const bossPhaseNotification = async (level: number, roomId: number, sendT
       users: room.users,
       characterPositions: characterPositionDatas[roomId]
     };
-    const idx: number = randomNumber(0, 3);
+
     for (let i = 0; i < room.users.length; i++) {
       const userSocket = socketSessions[room.users[i].id];
       if (userSocket) {
