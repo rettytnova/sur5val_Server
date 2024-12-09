@@ -112,8 +112,7 @@ export const config = {
     PASS_DEBUFF_RESPONSE: 45,
     WARNING_NOTIFICATION: 46,
     ANIMATION_NOTIFICATION: 47,
-    MONSTER_REWARD_REQUEST: 48,
-    MONSTER_REWARD_RESPONSE: 49
+    GLOBAL_MESSAGE_RESPONSE: 48
   },
   chattingPacketType: {
     CHATTING_LOGIN_REQUEST: 1,
@@ -197,8 +196,7 @@ export const packetMaps = {
 
   [config.packetType.ANIMATION_NOTIFICATION]: 'animationNotification',
 
-  [config.packetType.MONSTER_REWARD_REQUEST]: 'monsterDeathRewardRequest',
-  [config.packetType.MONSTER_REWARD_RESPONSE]: 'monsterDeathRewardResponse'
+  [config.packetType.GLOBAL_MESSAGE_RESPONSE]: 'globalMessageResponse'
 };
 
 export const chattingPacketMaps = {
