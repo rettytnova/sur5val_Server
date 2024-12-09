@@ -267,7 +267,7 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
         }
 
         // 정령 버프 실행
-        await attackArea(4, user, room.id, 0.8, 5, 2, 15000, 4000, CardType.ARCHER_EXTENDED_SKILL);
+        await summonSpiritBuff(4, user, room, rooms, 0.8, 5, 2, 15000, 4000, CardType.ARCHER_EXTENDED_SKILL);
         // sendAnimation(user, user, ??);
         break;
 
@@ -281,7 +281,7 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
         }
 
         // 정령 버프 실행
-        await attackArea(4, user, room.id, 1.2, 5, 1, 15000, 4000, CardType.ROGUE_EXTENDED_SKILL);
+        await summonSpiritBuff(4, user, room, rooms, 1.2, 5, 1, 15000, 4000, CardType.ROGUE_EXTENDED_SKILL);
         // sendAnimation(user, user, ??);
         break;
 
@@ -365,13 +365,13 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
         await attackRagne(user, user, rooms, room, 1, 5, 3);
         break;
 
-      // 이름:
-      // 설명:
+      // 이름: 보스 스킬 공격1
+      // 설명: 보스 스킬 공격1
       case CardType.NONE:
         break;
 
-      // 이름:
-      // 설명:
+      // 이름: 보스 스킬 공격2
+      // 설명: 보스 스킬 공격2
       case CardType.NONE:
 
       // 이름:
@@ -382,7 +382,7 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
       // 소모품 201 ~ 300 // 소모품 201 ~ 300 //  소모품 201 ~ 300 //  소모품 201 ~ 300 //  소모품 201 ~ 300 //  소모품 201 ~ 300 //  소모품 201 ~ 300 //
 
       // 이름: 순수한 이슬
-      // 설명: 맑고 순수한 이슬 한 방울이 체력을 3 회복해준다! 지친 몸에 활력을 더해 다시 전투에 나설 수 있도록 돕는다.
+      // 설명: 맑고 순수한 이슬 한 방울이 체력을 5 회복해준다! 지친 몸에 활력을 더해 다시 전투에 나설 수 있도록 돕는다.
       case CardType.BASIC_HP_POTION:
         await usePotion(user, rooms, room, CardType.BASIC_HP_POTION);
         break;
@@ -394,7 +394,7 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
         break;
 
       // 이름: 치유의 빛
-      // 설명: 은은한 치유의 빛이 체력을 6 회복해준다! 깊은 상처를 어루만지고 전투의 피로를 씻어내는 신비한 물약.
+      // 설명: 은은한 치유의 빛이 체력을 10 회복해준다! 깊은 상처를 어루만지고 전투의 피로를 씻어내는 신비한 물약.
       case CardType.ADVANCED_HP_POTION:
         await usePotion(user, rooms, room, CardType.ADVANCED_HP_POTION);
         break;
@@ -406,7 +406,7 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
         break;
 
       // 이름: 생명의 숨결
-      // 설명: 신비로운 생명의 기운이 체력을 10 회복해준다! 생명의 근원이 담긴 이 물약은 가장 극한의 상황에서도 새로운 힘을 불어넣는다.
+      // 설명: 신비로운 생명의 기운이 체력을 20 회복해준다! 생명의 근원이 담긴 이 물약은 가장 극한의 상황에서도 새로운 힘을 불어넣는다.
       case CardType.MASTER_HP_POTION:
         await usePotion(user, rooms, room, CardType.MASTER_HP_POTION);
         break;
@@ -429,14 +429,47 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
         await usePotion(user, rooms, room, CardType.MASTER_EXP_POTION);
         break;
 
-      // 이름:
-      // 설명:
-      case CardType.NONE:
-        break;
+      // 이름: 용기의 정수
+      // 설명: 한 모금 마시면 두려움이 사라지고 무한한 힘이 깨어납니다. 30초간 공격력 +3
+      case CardType.ATTACK_POTION: {
+        // 해당 아이템 보유여부 검사 및 개수 차감
+        let isOwned: boolean = false;
+        for (let i = 0; i < user.character.handCards.length; i++) {
+          if (user.character.handCards[i].type === cardType && user.character.handCards[i].count > 0) {
+            user.character.handCards[i].count--;
+            isOwned = true;
+            break;
+          }
+        }
+        if (isOwned === false) {
+          console.error('보유중이지 않은 버프 아이템 요청');
+          return;
+        }
 
-      // 이름:
-      // 설명:
-      case CardType.NONE:
+        // 버프 실행
+        await changeStatus(0, user, rooms, room, 0, 0, 3, 30000, CardType.ATTACK_POTION);
+        break;
+      }
+
+      // 이름: 강철의 비약
+      // 설명: 한 모금 마시면 몸이 강철처럼 단단해져 적의 공격을 견뎌냅니다. 30초간 방어력 +5
+      case CardType.DEFENSE_PORTION:
+        // 해당 아이템 보유여부 검사 및 개수 차감
+        let isOwned: boolean = false;
+        for (let i = 0; i < user.character.handCards.length; i++) {
+          if (user.character.handCards[i].type === cardType && user.character.handCards[i].count > 0) {
+            user.character.handCards[i].count--;
+            isOwned = true;
+            break;
+          }
+        }
+        if (isOwned === false) {
+          console.error('보유중이지 않은 버프 아이템 요청');
+          return;
+        }
+
+        // 버프 실행
+        await changeStatus(0, user, rooms, room, 0, 3, 0, 30000, CardType.DEFENSE_PORTION);
         break;
 
       // 장비 301 ~ 400 // 장비 301 ~ 400  / 장비 301 ~ 400 // 장비 301 ~ 400 // 장비 301 ~ 400 // 장비 301 ~ 400 // 장비 301 ~ 400 // 장비 301 ~ 400 //
@@ -813,10 +846,7 @@ const changeStatus = async (
     }
 
     // 버프 해제 시점에 기존 게임이 종료된 상태일 경우
-    if (nowRoom.id !== room.id) {
-      console.error('게임이 이미 종료되었습니다.');
-      return;
-    }
+    if (nowRoom.id !== room.id) return;
 
     // 버프 해제 시점의 유저 찾기
     let skillUser: User | null = null;
@@ -937,11 +967,12 @@ const partyBuff = async (
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
-// 자신 주변을 일정시간동안 공격하는 버프 (함께 싸우는 소환수 개념)
-const attackArea = async (
+// 자신 주변을 일정시간동안 공격하는 버프 (정령 소환 버프)
+const summonSpiritBuff = async (
   manaCost: number,
   attacker: User,
-  roomId: number,
+  room: Room,
+  rooms: Room[],
   skillCoeffcient: number,
   range: number,
   targetNumber: number,
@@ -978,6 +1009,11 @@ const attackArea = async (
 
   // 버프 상태 추가
   characterBuffStatus[attacker.id].push(cardType);
+
+  // 마나 소모
+  attacker.character.mp -= manaCost;
+  await setRedisData('roomData', rooms);
+  userUpdateNotification(room);
 
   // 스킬 정보 생성
   let lastAttack: number = 0;
@@ -1017,7 +1053,7 @@ const attackArea = async (
       console.log('스킬 사용자가 속한 room 정보를 찾을 수 없습니다.');
       return;
     }
-    if (nowRoom.id !== roomId) {
+    if (nowRoom.id !== room.id) {
       deleteBuff(attacker, cardType);
       clearInterval(attackSkill);
       console.log('게임이 이미 종료되어서 스킬을 종료합니다.');
@@ -1042,7 +1078,7 @@ const attackArea = async (
 
     // 공격자의 위치 값 얻기
     const characterPositionDatas = await getRedisData('characterPositionDatas');
-    const characterPositionData: CharacterPositionData[] = characterPositionDatas[roomId];
+    const characterPositionData: CharacterPositionData[] = characterPositionDatas[room.id];
     let attackerPosition: CharacterPositionData | null = null;
     for (let i = 0; i < characterPositionData.length; i++) {
       if (characterPositionData[i].id === attacker.id) {
@@ -1098,9 +1134,9 @@ const attackArea = async (
       const target = targetMonsters[i].monster.character;
       target.hp = Math.max(target.hp - skillUser.character.attack * skillCoeffcient + target.armor, 0);
       sendAnimation(skillUser, targetMonsters[i].monster, 1);
-      for (let j = 0; j < monsterAiDatas[roomId].length; j++) {
-        if (monsterAiDatas[roomId][j].id === targetMonsters[i].monster.id) {
-          monsterAiDatas[roomId][j].animationDelay = 5;
+      for (let j = 0; j < monsterAiDatas[room.id].length; j++) {
+        if (monsterAiDatas[room.id][j].id === targetMonsters[i].monster.id) {
+          monsterAiDatas[room.id][j].animationDelay = 5;
           break;
         }
       }
@@ -1126,7 +1162,7 @@ const attackArea = async (
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // 본인의 Hp, Mp 회복 / Exp 획득
 const usePotion = async (user: User, rooms: Room[], room: Room, cardsType: number) => {
-  // 해당 아이템 보유여부 검사
+  // 해당 아이템 보유여부 검사 및 개수 차감
   let isOwned: boolean = false;
   for (let i = 0; i < user.character.handCards.length; i++) {
     if (user.character.handCards[i].type === cardsType && user.character.handCards[i].count > 0) {
@@ -1135,7 +1171,10 @@ const usePotion = async (user: User, rooms: Room[], room: Room, cardsType: numbe
       break;
     }
   }
-  if (isOwned === false) return;
+  if (isOwned === false) {
+    console.error('보유중이지 않은 아이템 요청');
+    return;
+  }
 
   const consumableItemInfo = Server.getInstance().consumableItemInfo;
   if (!consumableItemInfo) {
