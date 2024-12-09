@@ -37,7 +37,8 @@
     S2CReactionResponse: 'response.S2CReactionResponse',
     S2CDestroyCardResponse: 'response.S2CDestroyCardResponse',
     S2CCardSelectResponse: 'response.S2CCardSelectResponse',
-    S2CPassDebuffResponse: 'response.S2CPassDebuffResponse'
+    S2CPassDebuffResponse: 'response.S2CPassDebuffResponse',
+    S2CGlobalMessageResponse: 'response.S2CGlobalMessageResponse'
   },
   notification: {
     S2CJoinRoomNotification: 'notification.S2CJoinRoomNotification',

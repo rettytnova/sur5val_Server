@@ -106,3 +106,9 @@ message S2CCardSelectResponse {
     bool success = 1;
     GlobalFailCode failCode = 2;
 }
+
+// 전역 메세지 응답
+message S2CGlobalMessageResponse{
+    GlobalMessageType globalMessageType = 1;
+    string globalMessage = 2;
+}
