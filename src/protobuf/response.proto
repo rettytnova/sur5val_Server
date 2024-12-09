@@ -109,5 +109,6 @@ message S2CCardSelectResponse {
 
 // 전역 메세지 응답
 message S2CGlobalMessageResponse{
-    string globalMessage = 1;
+    GlobalMessageType globalMessageType = 1;
+    string globalMessage = 2;
 }
