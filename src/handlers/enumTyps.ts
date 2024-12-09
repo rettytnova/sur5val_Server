@@ -141,3 +141,10 @@ export const RoleType = Object.freeze({
   BOSS_MONSTER: 4 //PSYCHOPATH
 });
 export type RoleType = (typeof RoleType)[keyof typeof RoleType];
+
+export const GlobalMessageType = Object.freeze({
+  GLOBAL_MESSAGE_NONE: 0,
+  GLOBAL_MESSAGE_ROUND: 1,
+  GLOBAL_MESSAGE_COOLTIME: 2
+})
+export type GlobalMessageType = (typeof GlobalMessageType)[keyof typeof GlobalMessageType];
