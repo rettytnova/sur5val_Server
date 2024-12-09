@@ -307,6 +307,10 @@ message S2CAnimationNotification {
     AnimationType animationType = 2;
 }
 
+message S2CGlobalMessageResponse{
+    string globalMessage = 1;
+}
+
 // 최상위 GamePacket 메시지
 message GamePacket {
     oneof payload {
@@ -400,6 +404,9 @@ message GamePacket {
 
         // 효과 알림
         S2CAnimationNotification animationNotification = 47;
+
+        // 전역 메세지
+        S2CGlobalMessageResponse globalMessageResponse = 48;
     }
 }
 

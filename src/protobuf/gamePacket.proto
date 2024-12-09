@@ -181,7 +181,10 @@ message GamePacket {
         S2CWarningNotification warningNotification = 46;
 
         // 효과 알림
-        S2CAnimationNotification animationNotification = 47;
+        S2CAnimationNotification animationNotification = 47;        
+
+        // 전역 메세지
+        S2CGlobalMessageResponse globalMessageResponse = 48;
     }
 }
 
