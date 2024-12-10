@@ -115,7 +115,7 @@ export const fleaMarketItemBuy = async (socket: CustomSocket, payload: Object) =
   };
   let isOwned: boolean = false;
   for (let i = 0; i < cardPickUser.character.handCards.length; i++) {
-    if (cardPickUser.character.handCards[i].type === fleMarketPickCard) {
+    if (cardPickUser.character.handCards[i].type === newCard.type) {
       cardPickUser.character.handCards[i].count++;
       isOwned = true;
       break;
