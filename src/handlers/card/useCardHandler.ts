@@ -1244,6 +1244,7 @@ const equipItem = async (user: User, rooms: Room[], room: Room, equipIndex: numb
     if (user.character.handCards[i].type === cardsType && user.character.handCards[i].count > 0) {
       user.character.handCards[i].count--;
       isOwned = true;
+      break;
       console.log(user.character.handCards[i]);
     }
   }
@@ -1286,12 +1287,16 @@ const equipItem = async (user: User, rooms: Room[], room: Room, equipIndex: numb
 
   await setRedisData('roomData', rooms);
   await userUpdateNotification(room);
+  sendPacket(socketSessions[user.id], config.packetType.USE_CARD_RESPONSE, {
+    success: true,
+    failCode: 0
+  });
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // 무기 장착
 const equipWeapon = async (user: User, rooms: Room[], room: Room, cardsType: number) => {
-  // 해당 아이템 보유여부 검사
+  // DB의 카드 생성 정보 가져오기
   const equipCardDBInfo = Server.getInstance().equipItemInfo;
   if (!equipCardDBInfo) {
     console.error('무기카드 정보가 존재하지 않습니다.', equipCardDBInfo);
@@ -1302,11 +1307,13 @@ const equipWeapon = async (user: User, rooms: Room[], room: Room, cardsType: num
     console.error('해당 카드가 존재하지 않습니다.');
     return;
   }
+  // 해당 아이템 보유여부 검사
   let isOwned: boolean = false;
   for (let i = 0; i < user.character.handCards.length; i++) {
     if (user.character.handCards[i].type === cardsType && user.character.handCards[i].count > 0) {
       user.character.handCards[i].count--;
       isOwned = true;
+      break;
     }
   }
   if (isOwned === false) return;
@@ -1343,6 +1350,10 @@ const equipWeapon = async (user: User, rooms: Room[], room: Room, cardsType: num
 
   await setRedisData('roomData', rooms);
   await userUpdateNotification(room);
+  sendPacket(socketSessions[user.id], config.packetType.USE_CARD_RESPONSE, {
+    success: true,
+    failCode: 0
+  });
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
