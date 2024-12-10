@@ -17,7 +17,7 @@ export const fleaMarketCardCreate = async (round: number, roomId: number): Promi
     return;
   }
 
-  const cards: CardType[] = [];
+  const cards: number[] = [];
 
   let fleaMarketCards = await getRedisData('fleaMarketCards');
   if (!fleaMarketCards) {
@@ -28,11 +28,11 @@ export const fleaMarketCardCreate = async (round: number, roomId: number): Promi
 
   const pickedIndex = nonSameRandom(0, shopList.itemList.length - 1, shopListNumber);
   for (let i = 0; i < shopListNumber; i++) {
-    cards.push(shopList.itemList[pickedIndex[i]]);
+    cards.push(shopList.itemList[pickedIndex[i]] + 1000);
   }
   cards.push(1000);
 
   fleaMarketCards[roomId] = cards;
-
+  console.log('구매 리스트 생성:', cards);
   await setRedisData('fleaMarketCards', fleaMarketCards);
 };

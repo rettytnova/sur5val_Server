@@ -66,6 +66,9 @@ message C2SUseCardRequest {
 message C2SFleaMarketPickRequest {    
 }
 
+message C2SFleaMarketSellRequest {    
+}
+
 message C2SFleaMarketCardPickRequest{
     int32 pickIndex = 1;
 }

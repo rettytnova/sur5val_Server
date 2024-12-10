@@ -382,55 +382,55 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
       // 소모품 201 ~ 300 // 소모품 201 ~ 300 //  소모품 201 ~ 300 //  소모품 201 ~ 300 //  소모품 201 ~ 300 //  소모품 201 ~ 300 //  소모품 201 ~ 300 //
 
       // 이름: 순수한 이슬
-      // 설명: 맑고 순수한 이슬 한 방울이 체력을 5 회복해준다! 지친 몸에 활력을 더해 다시 전투에 나설 수 있도록 돕는다.
+      // 설명: 맑고 순수한 이슬 한 방울이 체력을 20 회복해준다! 지친 몸에 활력을 더해 다시 전투에 나설 수 있도록 돕는다.
       case CardType.BASIC_HP_POTION:
         await usePotion(user, rooms, room, CardType.BASIC_HP_POTION);
         break;
 
       // 이름: 마력의 이슬
-      // 설명: 맑고 순수한 이슬 한 방울이 마력을 1 회복해준다! 고갈된 마법 에너지를 되살려 새로운 주문을 준비하자.
+      // 설명: 맑고 순수한 이슬 한 방울이 마력을 2 회복해준다! 고갈된 마법 에너지를 되살려 새로운 주문을 준비하자.
       case CardType.BASIC_MP_POTION:
         await usePotion(user, rooms, room, CardType.BASIC_MP_POTION);
         break;
 
       // 이름: 치유의 빛
-      // 설명: 은은한 치유의 빛이 체력을 10 회복해준다! 깊은 상처를 어루만지고 전투의 피로를 씻어내는 신비한 물약.
+      // 설명: 은은한 치유의 빛이 체력을 40 회복해준다! 깊은 상처를 어루만지고 전투의 피로를 씻어내는 신비한 물약.
       case CardType.ADVANCED_HP_POTION:
         await usePotion(user, rooms, room, CardType.ADVANCED_HP_POTION);
         break;
 
       // 이름: 마력의 빛
-      // 설명: 은은한 마나의 빛이 마력을 2 회복해준다! 흐릿했던 마법의 기운을 선명하게 채워주는 신비한 물약.
+      // 설명: 은은한 마나의 빛이 마력을 4 회복해준다! 흐릿했던 마법의 기운을 선명하게 채워주는 신비한 물약.
       case CardType.ADVANCED_MP_POTION:
         await usePotion(user, rooms, room, CardType.ADVANCED_MP_POTION);
         break;
 
       // 이름: 생명의 숨결
-      // 설명: 신비로운 생명의 기운이 체력을 20 회복해준다! 생명의 근원이 담긴 이 물약은 가장 극한의 상황에서도 새로운 힘을 불어넣는다.
+      // 설명: 신비로운 생명의 기운이 체력을 100 회복해준다! 생명의 근원이 담긴 이 물약은 가장 극한의 상황에서도 새로운 힘을 불어넣는다.
       case CardType.MASTER_HP_POTION:
         await usePotion(user, rooms, room, CardType.MASTER_HP_POTION);
         break;
 
       // 이름: 마력의 숨결
-      // 설명: 신비로운 마력의 기운이 마력을 4 회복해준다! 극한의 상황에서도 강력한 주문을 사용할 수 있는 힘을 불어넣는다.
+      // 설명: 신비로운 마력의 기운이 마력을 10 회복해준다! 극한의 상황에서도 강력한 주문을 사용할 수 있는 힘을 불어넣는다.
       case CardType.MASTER_MP_POTION:
         await usePotion(user, rooms, room, CardType.MASTER_MP_POTION);
         break;
 
       // 이름: 성장의 작은 불꽃
-      // 설명: 작은 불꽃이 당신의 성장을 돕습니다. 경험치 +10
+      // 설명: 작은 불꽃이 당신의 성장을 돕습니다. 경험치 +20
       case CardType.BASIC_EXP_POTION:
         await usePotion(user, rooms, room, CardType.BASIC_EXP_POTION);
         break;
 
       // 이름: 무한 성장의 불길
-      // 설명: 끝없는 불길로 압도적인 성장을 경험하세요. 경험치 +30
+      // 설명: 끝없는 불길로 압도적인 성장을 경험하세요. 경험치 +50
       case CardType.MASTER_EXP_POTION:
         await usePotion(user, rooms, room, CardType.MASTER_EXP_POTION);
         break;
 
       // 이름: 용기의 정수
-      // 설명: 한 모금 마시면 두려움이 사라지고 무한한 힘이 깨어납니다. 30초간 공격력 +3
+      // 설명: 한 모금 마시면 두려움이 사라지고 무한한 힘이 깨어납니다. 30초간 공격력 +5
       case CardType.ATTACK_POTION: {
         // 해당 아이템 보유여부 검사 및 개수 차감
         let isOwned: boolean = false;
@@ -452,7 +452,7 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
       }
 
       // 이름: 강철의 비약
-      // 설명: 한 모금 마시면 몸이 강철처럼 단단해져 적의 공격을 견뎌냅니다. 30초간 방어력 +5
+      // 설명: 한 모금 마시면 몸이 강철처럼 단단해져 적의 공격을 견뎌냅니다. 30초간 방어력 +8
       case CardType.DEFENSE_PORTION:
         // 해당 아이템 보유여부 검사 및 개수 차감
         let isOwned: boolean = false;

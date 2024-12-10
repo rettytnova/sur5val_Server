@@ -15,6 +15,7 @@
     C2SPositionUpdateRequest: 'request.C2SPositionUpdateRequest',
     C2SUseCardRequest: 'request.C2SUseCardRequest',
     C2SFleaMarketPickRequest: 'request.C2SFleaMarketPickRequest',
+    C2SFleaMarketSellRequest: 'request.C2SFleaMarketSellRequest',
     C2SFleaMarketCardPickRequest: 'request.C2SFleaMarketCardPickRequest',
     C2SReactionRequest: 'request.C2SReactionRequest',
     C2SPassDebuffRequest: 'request.C2SPassDebuffRequest',

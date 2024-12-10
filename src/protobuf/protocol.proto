@@ -232,6 +232,10 @@ message S2CFleaMarketNotification {
 message C2SFleaMarketPickRequest {
 }
 
+message C2SFleaMarketSellRequest {
+}
+
+
 message C2SFleaMarketCardPickRequest {
     int32 pickIndex = 1;
 }
@@ -408,6 +412,9 @@ message GamePacket {
 
         // 전역 메세지
         S2CGlobalMessageResponse globalMessageResponse = 48;
+
+        // 플리마켓
+        C2SFleaMarketSellRequest fleaMarketSellRequest = 49;
     }
 }
 
