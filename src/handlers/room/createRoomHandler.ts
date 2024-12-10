@@ -35,7 +35,7 @@ export const createRoomHandler = async (socket: net.Socket, payload: Object) => 
           if (rooms[i].users[j].id === userId) {
             console.error('이미 참여중인 방이 존재합니다.');
             const sendData = {
-              success: 0,
+              success: false,
               room: {},
               failCode: GlobalFailCode.JOIN_ROOM_FAILED
             };
