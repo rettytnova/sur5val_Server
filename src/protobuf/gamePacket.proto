@@ -185,6 +185,9 @@ message GamePacket {
 
         // 전역 메세지
         S2CGlobalMessageResponse globalMessageResponse = 48;
+
+        // 플리마켓
+        C2SFleaMarketSellRequest fleaMarketSellRequest = 49;
     }
 }
 
