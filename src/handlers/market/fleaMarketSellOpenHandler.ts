@@ -1,10 +1,10 @@
-import { CustomSocket, User } from '../../interface/interface.js';
-import { getRedisData, getRoomByUserId, getUserIdBySocket } from '../handlerMethod.js';
-import { sendPacket } from '../../packet/createPacket.js';
 import { config } from '../../config/config.js';
+import { CustomSocket, User } from '../../interface/interface.js';
+import { sendPacket } from '../../packet/createPacket.js';
 import { shoppingUserIdSessions } from '../../session/shoppingSession.js';
+import { getRoomByUserId, getUserIdBySocket } from '../handlerMethod.js';
 
-export const fleaMarketOpenHandler = async (socket: CustomSocket) => {
+export const fleaMarketItemSellOpenHandler = async (socket: CustomSocket) => {
   const userId: number | null = await getUserIdBySocket(socket);
   if (!userId) {
     console.error('fleaMarketOpen 레디스에 유저가 없음');
@@ -35,23 +35,22 @@ export const fleaMarketOpenHandler = async (socket: CustomSocket) => {
     return;
   }
 
-  let redisFleaMarketCards = await getRedisData('fleaMarketCards');
-  if (!redisFleaMarketCards) {
-    console.error('fleaMarketOpen 레디스에 플리 마켓 카드 없음');
-    return;
+  const sellCards: number[] = [];
+  for (let i = 0; i < fleaMarketOpenUser.character.handCards.length; i++) {
+    if (fleaMarketOpenUser.character.handCards[i].type > 200 && fleaMarketOpenUser.character.handCards[i].count > 0) {
+      sellCards.push(fleaMarketOpenUser.character.handCards[i].type + 2000);
+      fleaMarketOpenUser.character.handCards[i].count--;
+      i--;
+      if (sellCards.length >= 7) break;
+    }
   }
+  sellCards.push(1000);
 
-  const fleaMarketCards = redisFleaMarketCards[room.id];
-  if (!fleaMarketCards) {
-    console.error('fleaMarketOpen 방에 생성된 플리 마켓 카드 없음');
-    return;
-  }
-
-  let shoppingUserIds: number[] | null = shoppingUserIdSessions[room.id];
+  let shoppingUserIds: [number, boolean][] | null = shoppingUserIdSessions[room.id];
   if (!shoppingUserIds) shoppingUserIds = shoppingUserIdSessions[room.id] = [];
-  shoppingUserIds.push(userId);
+  shoppingUserIds.push([userId, false]);
 
   sendPacket(socket, config.packetType.FLEA_MARKET_PICK_RESPONSE, {
-    fleaMarketCardTypes: fleaMarketCards
+    fleaMarketCardTypes: sellCards
   });
 };

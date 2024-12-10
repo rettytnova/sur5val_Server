@@ -3,11 +3,7 @@ import Server from '../class/server.js';
 import net from 'net';
 import ChattingServer from '../chattingServer/class/chattingServer.js';
 
-export const sendPacket = (
-  socket: net.Socket,
-  packetType: number,
-  data: Object,
-) => {
+export const sendPacket = (socket: net.Socket, packetType: number, data: Object) => {
   try {
     const protoMessages = Server.getInstance().getProtoMessages();
     const gamePacket = protoMessages.packet.GamePacket;
@@ -16,24 +12,21 @@ export const sendPacket = (
     packet[packetMaps[packetType]] = data;
 
     //const responseGamePacket = gamePacket.create(packet);
+    // console.log(gamePacket.verify(packet));
     const gamePacketBuffer = gamePacket.encode(packet).finish();
 
     const serializedPacket = serializer(gamePacketBuffer, packetType);
     socket.write(serializedPacket);
 
-    //const deserializedPacket = gamePacket.decode(gamePacketBuffer);
+    // const deserializedPacket = gamePacket.decode(gamePacketBuffer);
 
-    //console.dir(deserializedPacket, { depth: null });
+    // console.dir(deserializedPacket, { depth: null });
   } catch (error) {
     console.error('Error sending response packet', error);
   }
 };
 
-export const sendChattingPacket = (
-  socket: net.Socket,
-  packetType: number,
-  data: Object
-) => {
+export const sendChattingPacket = (socket: net.Socket, packetType: number, data: Object) => {
   try {
     const protoMessages = ChattingServer.getInstance().getProtoMessages();
     const chattingPacket = protoMessages.packet.ChattingPacket;
@@ -44,17 +37,12 @@ export const sendChattingPacket = (
     const chattingPacketBuffer = chattingPacket.encode(packet).finish();
     const serializedChattingPacket = serializer(chattingPacketBuffer, packetType);
     socket.write(serializedChattingPacket);
-  }
-  catch (error) {
+  } catch (error) {
     console.error('Error send Chatting response packet', error);
   }
 };
 
-export const serializer = (
-  gamePacketBuffer: Buffer,
-  packetType: number,
-  sequence = 1,
-) => {
+export const serializer = (gamePacketBuffer: Buffer, packetType: number, sequence = 1) => {
   // packetType (2 bytes)
   const packetTypeBuffer = Buffer.alloc(2);
   packetTypeBuffer.writeUInt16BE(packetType, 0);
@@ -81,6 +69,6 @@ export const serializer = (
     versionBuffer,
     sequenceBuffer,
     payloadLengthBuffer,
-    gamePacketBuffer,
+    gamePacketBuffer
   ]);
 };

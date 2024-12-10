@@ -125,7 +125,7 @@ const setRewards = (attacker: User, target: User): boolean => {
         // 공격자 골드 획득
         attacker.character.gold += target.character.gold;
       } else {
-        console.error('골드 보상 실패');
+        // console.error('골드 보상 실패');
         return false;
       }
     }

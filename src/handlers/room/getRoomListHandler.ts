@@ -6,13 +6,14 @@ import { GlobalFailCode, RoomStateType } from '../enumTyps.js';
 
 export const getRoomListHandler = async (socket: CustomSocket) => {
   const rooms: Room[] | undefined = await getRedisData('roomData');
+
   const userId: number | null = await getUserIdBySocket(socket);
   if (rooms === undefined) return;
   for (let i = 0; i < rooms.length; i++) {
     for (let j = 0; j < rooms[i].users.length; j++) {
-      if (rooms[i].users[j].id === userId) {
+      if (rooms[i].users[j].id === userId && rooms[i].state === RoomStateType.WAIT) {
         const sendData = {
-          success: 1,
+          success: true,
           room: rooms[i],
           failCode: GlobalFailCode.NONE
         };
