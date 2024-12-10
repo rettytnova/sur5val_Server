@@ -57,7 +57,7 @@ export const leaveRoomHandler = async (socket: net.Socket) => {
 
   // 유저에게 success response 전달
   sendPacket(socket, config.packetType.LEAVE_ROOM_RESPONSE, {
-    success: 1,
+    success: true,
     fail: GlobalFailCode.NONE
   });
 
@@ -70,7 +70,7 @@ export const leaveRoomHandler = async (socket: net.Socket) => {
       });
 
       const sendData = {
-        success: 1,
+        success: true,
         room: rooms[roomIndex],
         failCode: GlobalFailCode.NONE
       };

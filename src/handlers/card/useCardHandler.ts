@@ -1245,6 +1245,7 @@ const equipItem = async (user: User, rooms: Room[], room: Room, equipIndex: numb
       user.character.handCards[i].count--;
       isOwned = true;
       break;
+      console.log(user.character.handCards[i]);
     }
   }
   if (isOwned === false) return;
