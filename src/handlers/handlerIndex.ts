@@ -10,12 +10,13 @@ import { gamePrepareHandler } from './game/gamePrepareHandler.js';
 import { gameStartHandler } from './game/gameStartHandler.js';
 import { positionUpdateHandler } from './user/positionUpdateHandler.js';
 import { useCardHandler } from './card/useCardHandler.js';
-import { fleaMarketOpenHandler } from './market/fleaMarketOpenHandler.js';
+import { fleaMarketBuyOpenHandler } from './market/fleaMarketBuyOpenHandler.js';
 import { destoryCardHandler } from './card/destoryCardHandler.js';
 import { cardSelectHandler } from './card/cardSelectHandler.js';
 import { passDebuffHandler } from './user/passDebuffHandler.js';
-import { fleaMarketItemSelectHandler } from './market/fleaMarketItemSelectHandler.js';
+import { fleaMarketSelectHandler } from './market/fleaMarketSelectHandler.js';
 import { gameEndHandler } from './game/gameEndHandler.js';
+import { fleaMarketItemSellOpenHandler } from './market/fleaMarketSellOpenHandler.js';
 
 const handlers = {
   [config.packetType.REGISTER_REQUEST]: {
@@ -63,11 +64,15 @@ const handlers = {
     protoType: 'request.C2SUseCardRequest'
   },
   [config.packetType.FLEA_MARKET_PICK_REQUEST]: {
-    handler: fleaMarketOpenHandler,
+    handler: fleaMarketBuyOpenHandler,
     protoType: 'request.C2SFleaMarketPickRequest'
   },
+  [config.packetType.FLEA_MARKET_SELL_REQUEST]: {
+    handler: fleaMarketItemSellOpenHandler,
+    protoType: 'request.C2SFleaMarketSellRequest'
+  },
   [config.packetType.FLEA_MARKET_CARD_PICK_REQUEST]: {
-    handler: fleaMarketItemSelectHandler,
+    handler: fleaMarketSelectHandler,
     protoType: 'request.C2SFleaMarketCardPickRequest'
   },
   [config.packetType.REACTION_REQUEST]: {

@@ -32,6 +32,8 @@ export const loginHandler = async (socket: CustomSocket, payload: Object): Promi
     failCode: GlobalFailCode.NONE
   };
 
+  let isOn: boolean = false;
+
   try {
     // 유효성 검사 ----------------------------------------------------------------------
     // 이메일 유효성 검사
@@ -136,9 +138,10 @@ export const loginHandler = async (socket: CustomSocket, payload: Object): Promi
               characterPositions: characterPositionDatas[rooms[i].id]
             };
             sendPacket(socket, config.packetType.GAME_START_NOTIFICATION, notifiData);
-            sendPacket(socket, config.packetType.USER_UPDATE_NOTIFICATION, {
-              user: rooms[i].users
-            });
+            // sendPacket(socket, config.packetType.USER_UPDATE_NOTIFICATION, {
+            //   user: rooms[i].users
+            // });
+            isOn = true;
           }
         }
       }
@@ -151,5 +154,5 @@ export const loginHandler = async (socket: CustomSocket, payload: Object): Promi
   }
 
   // 클라이언트에 데이터 보내기
-  sendPacket(socket, packetType.LOGIN_RESPONSE, responseData);
+  if (!isOn) sendPacket(socket, packetType.LOGIN_RESPONSE, responseData);
 };
