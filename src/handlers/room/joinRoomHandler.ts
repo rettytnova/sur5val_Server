@@ -17,7 +17,7 @@ export const joinRoomHandler = async (socket: CustomSocket, payload: Object) => 
   if (!userId) {
     console.error('요청한 클라이언트의 userData가 존재하지 않습니다.');
     const sendData = {
-      success: 0,
+      success: false,
       room: {},
       failCode: GlobalFailCode.JOIN_ROOM_FAILED
     };
@@ -31,7 +31,7 @@ export const joinRoomHandler = async (socket: CustomSocket, payload: Object) => 
       if (rooms[i].users[j].id === userId) {
         console.error('이미 참여중인 방이 존재합니다.');
         const sendData = {
-          success: 0,
+          success: false,
           room: {},
           failCode: GlobalFailCode.JOIN_ROOM_FAILED
         };
@@ -48,7 +48,7 @@ export const joinRoomHandler = async (socket: CustomSocket, payload: Object) => 
         // 존재하는 방 번호지만 인원이 꽉 차 있을 시 실패 response
         if (rooms[i].maxUserNum <= rooms[i].users.length) {
           const sendData = {
-            success: 0,
+            success: false,
             room: {},
             failCode: GlobalFailCode.JOIN_ROOM_FAILED
           };
@@ -59,7 +59,7 @@ export const joinRoomHandler = async (socket: CustomSocket, payload: Object) => 
         // 존재하는 방 번호지만 wait 상태가 아닐 시 실패 response
         if (rooms[i].state !== RoomStateType.WAIT) {
           const sendData = {
-            success: 0,
+            success: false,
             room: {},
             failCode: GlobalFailCode.JOIN_ROOM_FAILED
           };
@@ -82,7 +82,7 @@ export const joinRoomHandler = async (socket: CustomSocket, payload: Object) => 
         await setRedisData('roomData', rooms);
 
         const sendData = {
-          success: 1,
+          success: true,
           room: rooms[i],
           failCode: GlobalFailCode.NONE
         };
@@ -106,7 +106,7 @@ export const joinRoomHandler = async (socket: CustomSocket, payload: Object) => 
   } else {
     // 존재하지 않는 방 번호 요청 시 실패 response
     const sendData = {
-      success: 0,
+      success: false,
       room: {},
       failCode: GlobalFailCode.ROOM_NOT_FOUND
     };
