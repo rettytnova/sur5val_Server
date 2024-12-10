@@ -1,8 +1,8 @@
 import { config } from '../../config/config.js';
-import { Card, CustomSocket, User } from '../../interface/interface.js';
+import { CustomSocket, User } from '../../interface/interface.js';
 import { sendPacket } from '../../packet/createPacket.js';
 import { shoppingUserIdSessions } from '../../session/shoppingSession.js';
-import { getRedisData, getRoomByUserId, getUserIdBySocket } from '../handlerMethod.js';
+import { getRoomByUserId, getUserIdBySocket } from '../handlerMethod.js';
 
 export const fleaMarketItemSellOpenHandler = async (socket: CustomSocket) => {
   const userId: number | null = await getUserIdBySocket(socket);

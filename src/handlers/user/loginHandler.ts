@@ -32,8 +32,6 @@ export const loginHandler = async (socket: CustomSocket, payload: Object): Promi
     failCode: GlobalFailCode.NONE
   };
 
-  let isOn: boolean = false;
-
   try {
     // 유효성 검사 ----------------------------------------------------------------------
     // 이메일 유효성 검사
@@ -108,6 +106,35 @@ export const loginHandler = async (socket: CustomSocket, payload: Object): Promi
       }
     };
 
+    // 이미 게임 중인 상태일 경우 해당 게임으로 이동
+    setTimeout(async () => {
+      const rooms = await getRedisData('roomData');
+      if (rooms) {
+        for (let i = 0; i < rooms.length; i++) {
+          for (let j = 0; j < rooms[i].users.length; j++) {
+            if (rooms[i].users[j].id === userByEmail.id) {
+              const initGameInfo = Server.getInstance().initGameInfo;
+              if (!initGameInfo) return;
+              const inGameTime = initGameInfo[0].normalRoundTime;
+              const normalRound = initGameInfo[0].normalRoundNumber;
+              const leftTime = (inGameTime * normalRound - (Date.now() - inGameTimeSessions[rooms[i].id])) % inGameTime;
+              const characterPositionDatas = await getRedisData('characterPositionDatas');
+              const gameStateData = { phaseType: PhaseType.DAY, nextPhaseAt: Date.now() + leftTime };
+              const notifiData = {
+                gameState: gameStateData,
+                users: rooms[i].users,
+                characterPositions: characterPositionDatas[rooms[i].id]
+              };
+              sendPacket(socket, config.packetType.GAME_START_NOTIFICATION, notifiData);
+              sendPacket(socket, config.packetType.USER_UPDATE_NOTIFICATION, {
+                user: rooms[i].users
+              });
+            }
+          }
+        }
+      }
+    }, 100);
+
     // Redis에 데이터 보내기
     if (!userDatas) {
       await setRedisData('userData', [responseData.myInfo]);
@@ -119,34 +146,6 @@ export const loginHandler = async (socket: CustomSocket, payload: Object): Promi
     // socketSession에 socket 저장하기
     socketSessions[userByEmail.id] = socket;
 
-    // 이미 게임 중인 상태일 경우 해당 게임으로 이동
-    const rooms = await getRedisData('roomData');
-    if (rooms) {
-      for (let i = 0; i < rooms.length; i++) {
-        for (let j = 0; j < rooms[i].users.length; j++) {
-          if (rooms[i].users[j].id === userByEmail.id) {
-            const initGameInfo = Server.getInstance().initGameInfo;
-            if (!initGameInfo) return;
-            const inGameTime = initGameInfo[0].normalRoundTime;
-            const normalRound = initGameInfo[0].normalRoundNumber;
-            const leftTime = (inGameTime * normalRound - (Date.now() - inGameTimeSessions[rooms[i].id])) % inGameTime;
-            const characterPositionDatas = await getRedisData('characterPositionDatas');
-            const gameStateData = { phaseType: PhaseType.DAY, nextPhaseAt: Date.now() + leftTime };
-            const notifiData = {
-              gameState: gameStateData,
-              users: rooms[i].users,
-              characterPositions: characterPositionDatas[rooms[i].id]
-            };
-            sendPacket(socket, config.packetType.GAME_START_NOTIFICATION, notifiData);
-            // sendPacket(socket, config.packetType.USER_UPDATE_NOTIFICATION, {
-            //   user: rooms[i].users
-            // });
-            isOn = true;
-          }
-        }
-      }
-    }
-
     // 로그 처리 ----------------------------------------------------------------------
     console.info(`로그인 성공 : ${userByEmail.id}`);
   } catch (error) {
@@ -154,5 +153,5 @@ export const loginHandler = async (socket: CustomSocket, payload: Object): Promi
   }
 
   // 클라이언트에 데이터 보내기
-  if (!isOn) sendPacket(socket, packetType.LOGIN_RESPONSE, responseData);
+  sendPacket(socket, packetType.LOGIN_RESPONSE, responseData);
 };

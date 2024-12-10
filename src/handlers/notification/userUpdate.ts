@@ -30,7 +30,6 @@ export const userUpdateNotification = async (room: Room | null) => {
   for (let i = 0; i < shoppingUserIdSessions[room.id].length; i++) {
     const shoppingUserSocket = socketSessions[shoppingUserIdSessions[room.id][i][0]];
     if (shoppingUserIdSessions[room.id][i][1]) {
-      console.log('구매 목록 다시 띄우기:', redisFleaMarketCards[room.id]);
       sendPacket(shoppingUserSocket, config.packetType.FLEA_MARKET_PICK_RESPONSE, {
         fleaMarketCardTypes: redisFleaMarketCards[room.id]
       });
