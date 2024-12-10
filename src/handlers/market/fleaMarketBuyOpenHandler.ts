@@ -50,7 +50,7 @@ export const fleaMarketBuyOpenHandler = async (socket: CustomSocket) => {
   let shoppingUserIds: [number, boolean][] | null = shoppingUserIdSessions[room.id];
   if (!shoppingUserIds) shoppingUserIds = shoppingUserIdSessions[room.id] = [];
   shoppingUserIds.push([userId, true]);
-  console.log('구매 목록 보여주기:', fleaMarketCards);
+
   sendPacket(socket, config.packetType.FLEA_MARKET_PICK_RESPONSE, {
     fleaMarketCardTypes: fleaMarketCards
   });

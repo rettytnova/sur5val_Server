@@ -33,6 +33,5 @@ export const fleaMarketCardCreate = async (round: number, roomId: number): Promi
   cards.push(1000);
 
   fleaMarketCards[roomId] = cards;
-  console.log('구매 리스트 생성:', cards);
   await setRedisData('fleaMarketCards', fleaMarketCards);
 };
