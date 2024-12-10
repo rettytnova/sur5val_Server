@@ -10,7 +10,7 @@ import {
 } from '../../interface/interface.js';
 import { CardType, GlobalFailCode, RoleType } from '../enumTyps.js';
 import { sendPacket } from '../../packet/createPacket.js';
-import { getRedisData, getRoomByUserId, getUserIdBySocket, setRedisData } from '../../handlers/handlerMethod.js';
+import { getRedisData, getUserIdBySocket, setRedisData } from '../../handlers/handlerMethod.js';
 import { userUpdateNotification } from '../notification/userUpdate.js';
 import { socketSessions } from '../../session/socketSession.js';
 import { monsterAiDatas } from '../coreMethod/monsterMove.js';
@@ -32,6 +32,7 @@ const characterBuffStatus: { [characterId: number]: number[] } = {};
 export const useCardHandler = async (socket: CustomSocket, payload: Object): Promise<void> => {
   // response 데이터 초기화 ----------------------------------------------------------------------
   const { cardType, targetUserId: targetUserIdRaw } = payload as UseCardRequest;
+  console.log(cardType);
   const targetUserId = Number(targetUserIdRaw);
   let responseData: UseCardResponse = {
     success: true,
@@ -73,6 +74,12 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
       }
     }
     if (user === null) return;
+    if (user.character.aliveState === false || user.character.hp <= 0) {
+      console.log(
+        `죽어있는 대상은 행동을 할 수 없습니다. 상태: ${user.character.aliveState}, 체력: ${user.character.hp}`
+      );
+      return;
+    }
 
     // target 정보 찾기
     let target: User | null = null;
@@ -98,9 +105,13 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
         if (!target) return;
         if (!attackPossible(user, target, 0)) return;
 
+        // 공격 자원 처리
+        user.character.coolDown = Date.now();
+        await setRedisData('roomData', rooms);
+
         // 공격 실행
-        await attackTarget(user, rooms, room, 1, target);
-        sendAnimation(user, target, 2);
+        await attackTarget(user.id, room.id, 1, target.id);
+        sendAnimation(user, target, 1);
         for (let i = 0; i < monsterAiDatas[room.id].length; i++) {
           if (monsterAiDatas[room.id][i].id === target.id) {
             monsterAiDatas[room.id][i].animationDelay = 5;
@@ -108,10 +119,6 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
           }
         }
 
-        // 공격 완료 처리
-        user.character.coolDown = Date.now();
-        await setRedisData('roomData', rooms);
-        await userUpdateNotification(room);
         break;
       }
       // 이름: 쌍둥이 폭팔 (마법사 기본 스킬) , 애니메이션 번호 : 1번
@@ -121,8 +128,13 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
         if (!target) return;
         if (!attackPossible(user, target, 2)) return;
 
+        // 공격 자원 처리
+        user.character.coolDown = Date.now();
+        user.character.mp -= 2;
+        await setRedisData('roomData', rooms);
+
         // 스킬 실행1
-        await attackTarget(user, rooms, room, 1, target);
+        await attackTarget(user.id, room.id, 1, target.id);
         let index: number | null = null;
         for (let i = 0; i < monsterAiDatas[room.id].length; i++) {
           if (monsterAiDatas[room.id][i].id === target.id) {
@@ -135,22 +147,11 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
 
         // 스킬 실행2
         setTimeout(async () => {
-          await attackTarget(user, rooms, room, 1.5, target);
+          await attackTarget(user.id, room.id, 1.5, target.id);
           if (index) monsterAiDatas[room.id][index].animationDelay = 5;
           sendAnimation(user, target, 1);
         }, 800);
 
-        // 보스를 죽였는지 검사
-        if (target.character.roleType === RoleType.BOSS_MONSTER && target.character.hp <= 0) {
-          await gameEndNotification(room.id, 3);
-          return;
-        }
-
-        // 공격 완료 처리
-        user.character.coolDown = Date.now();
-        user.character.mp -= 2;
-        await setRedisData('roomData', rooms);
-        await userUpdateNotification(room);
         break;
       }
 
@@ -159,53 +160,60 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
       case CardType.ARCHER_BASIC_SKILL:
         if (!target) return;
         if (!attackPossible(user, target, 2)) return;
-        await attackTarget(user, rooms, room, 2, target);
+
+        // 공격 자원 처리
+        user.character.coolDown = Date.now();
+        user.character.mp -= 2;
+        await setRedisData('roomData', rooms);
+
+        // 공격 실행
+        await attackTarget(user.id, room.id, 2, target.id);
         for (let i = 0; i < monsterAiDatas[room.id].length; i++) {
           if (monsterAiDatas[room.id][i].id === target.id) {
             monsterAiDatas[room.id][i].animationDelay = 4;
             break;
           }
         }
-        user.character.coolDown = Date.now();
-        user.character.mp -= 2;
         // sendAnimation(user, target, 4);
 
-        await setRedisData('roomData', rooms);
-        await userUpdateNotification(room);
         break;
 
       // 이름: 급습 (도적 기본 스킬) , 애니메이션 번호 : 10번
       // 설명: MP소모: 3, 적의 급소를 노려 치명적인 공격을 한 방 가한다.
       case CardType.ROGUE_BASIC_SKILL:
         if (!target) return;
-        if (!attackPossible(user, target, 2.5)) return;
-        //await movePosition(user, target, room);
-        await attackTarget(user, rooms, room, 3, target);
+        if (!attackPossible(user, target, 3)) return;
+
+        // 공격 자원 처리
+        user.character.coolDown = Date.now();
+        user.character.mp -= 3;
+        await setRedisData('roomData', rooms);
+
+        // 공격 실행
+        await attackTarget(user.id, room.id, 2.5, target.id);
         for (let i = 0; i < monsterAiDatas[room.id].length; i++) {
           if (monsterAiDatas[room.id][i].id === target.id) {
             monsterAiDatas[room.id][i].animationDelay = 6;
             break;
           }
         }
-        user.character.coolDown = Date.now();
-        user.character.mp -= 3;
         // sendAnimation(user, target, 10);
 
-        await setRedisData('roomData', rooms);
-        userUpdateNotification(room);
         break;
 
-      // 이름: 전장의 함성 (전사 기본 스킬), 애니메이션 번호 : 7
-      // 설명:
+      // 이름: 투사의 결단 (전사 기본 스킬), 애니메이션 번호 : 7
+      // 설명: MP소모: 2, 투사의 의지로 방패는 견고해지고 검은 강력해집니다.
       case CardType.WARRIOR_BASIC_SKILL:
-        user.character.coolDown = Date.now();
-        await partyBuff(2, user, rooms, room, 0, 1, 1, 10000, CardType.WARRIOR_BASIC_SKILL);
-
-        for (let i = 0; i < room.users.length; i++) {
-          if (room.users[i].character.roleType === RoleType.SUR5VAL) {
-            // sendAnimation(room.users[i], room.users[i], 7);
-          }
+        // 공격 유효성 검증
+        if (user.character.mp < 2) {
+          console.log('마나가 부족합니다.');
+          return;
         }
+
+        // 버프 스킬 실행
+        await changeStatus(2, user, rooms, room, 0, 2, 2, 15000, CardType.WARRIOR_BASIC_SKILL);
+        // sendAnimation(user, user, 7);
+
         break;
 
       // 이름: 삼중 타격 (마법사 강화 스킬), 애니메이션 번호 : 1
@@ -215,8 +223,13 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
         if (!target) return;
         if (!attackPossible(user, target, 3)) return;
 
+        // 공격 자원 처리
+        user.character.coolDown = Date.now();
+        user.character.mp -= 3;
+        await setRedisData('roomData', rooms);
+
         // 스킬 실행1
-        await attackTarget(user, rooms, room, 1.2, target);
+        await attackTarget(user.id, room.id, 1.2, target.id);
         let index: number | null = null;
         for (let i = 0; i < monsterAiDatas[room.id].length; i++) {
           if (monsterAiDatas[room.id][i].id === target.id) {
@@ -229,72 +242,94 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
 
         // 스킬 실행2
         setTimeout(async () => {
-          await attackTarget(user, rooms, room, 1.4, target);
+          await attackTarget(user.id, room.id, 1.4, target.id);
           if (index) monsterAiDatas[room.id][index].animationDelay = 4;
           sendAnimation(user, target, 1);
         }, 600);
 
         // 스킬 실행3
         setTimeout(async () => {
-          await attackTarget(user, rooms, room, 1.7, target);
+          await attackTarget(user.id, room.id, 1.7, target.id);
           if (index) monsterAiDatas[room.id][index].animationDelay = 4;
           sendAnimation(user, target, 1);
         }, 1200);
 
-        // 공격 완료 처리
-        user.character.mp -= 3;
-        user.character.coolDown = Date.now();
-        await setRedisData('roomData', rooms);
-        await userUpdateNotification(room);
         break;
       }
 
-      // 이름: 궁수 강화 스킬
-      // 설명: 일시적(10초간)으로 방어력이 대폭 상승한다.
+      // 이름: 폭풍의 눈 (궁수 강화 스킬), 애니메이션 번호 : ??
+      // 설명: Mp소모: 4, 강력한 회오리 바람의 정령을 소환합니다. 정령은 캐릭터를 따라다니며 주변 적을 지속적으로 공격합니다.
       case CardType.ARCHER_EXTENDED_SKILL:
-        console.log('궁수 강화 스킬 사용!!!!');
+        // 공격 유효성 검증
+        if (user.character.mp < 4) {
+          console.log('마나가 부족합니다.');
+          return;
+        }
+
+        // 정령 버프 실행
+        await summonSpiritBuff(4, user, room, rooms, 0.8, 5, 2, 15000, 4000, CardType.ARCHER_EXTENDED_SKILL);
+        // sendAnimation(user, user, ??);
         break;
 
-      // 이름: 도적 강화 스킬
-      // 설명:
+      // 이름: 그림자의 춤 (도적 강화 스킬), 애니메이션 번호 : ??
+      // 설명: Mp소모: 4, 날카로운 그림자 칼날의 정령을 소환합니다. 정령은 캐릭터를 따라다니며 주변 적을 지속적으로 공격합니다.
       case CardType.ROGUE_EXTENDED_SKILL:
-        console.log('도적 강화 스킬 사용!!!!');
+        // 공격 유효성 검증
+        if (user.character.mp < 4) {
+          console.log('마나가 부족합니다.');
+          return;
+        }
+
+        // 정령 버프 실행
+        await summonSpiritBuff(4, user, room, rooms, 1.2, 5, 1, 15000, 4000, CardType.ROGUE_EXTENDED_SKILL);
+        // sendAnimation(user, user, ??);
         break;
 
-      // 이름: 전사 강화 스킬
-      // 설명:
+      // 이름: 천둥의 강타 (전사 강화 스킬), 애니메이션 번호 : ??
+      // 설명: Mp소모: 3, 천둥의 힘으로 방어를 돌파하고 강력한 일격을 날립니다.
       case CardType.WARRIOR_EXTENDED_SKILL:
-        if (!user) return;
-        await changeStatus(2, user, rooms, room, 0, 8, -2);
-        setTimeout(async () => {
-          await changeStatus(0, user, rooms, room, 0, -8, 2);
-        }, 10000);
+        // 공격 유효성 검증
+        if (!target) return;
+        if (!attackPossible(user, target, 3)) return;
+
+        // 공격 자원 처리
+        user.character.coolDown = Date.now();
+        user.character.mp -= 3;
+        await setRedisData('roomData', rooms);
+
+        // 공격 실행
+        await attackTargetTrueDamage(userId, room.id, 3, target.id);
+        for (let i = 0; i < monsterAiDatas[room.id].length; i++) {
+          if (monsterAiDatas[room.id][i].id === target.id) {
+            monsterAiDatas[room.id][i].animationDelay = 6;
+            break;
+          }
+        }
+        // sendAnimation(user, target, ??);
         break;
 
       // 이름: 불멸의 폭풍
-      // 설명: 강력한 마법 폭풍이 적을 덮친다. 번개와 화염이 뒤엉켜 적에게 치명적인 피해를 입힌다.
+      // 설명: Mp소모: 4, 강력한 마법 폭풍이 적을 덮친다. 번개와 화염이 뒤엉켜 적에게 치명적인 피해를 입힌다.
       case CardType.MAGICIAN_FINAL_SKILL:
         // 공격 유효성 검증
         if (!target) return;
         if (!attackPossible(user, target, 4)) return;
 
+        // 공격 자원 처리
+        user.character.coolDown = Date.now();
+        user.character.mp -= 4;
+        await setRedisData('roomData', rooms);
+
         // 스킬 실행
-        await attackTarget(user, rooms, room, 7, target);
-        let index: number | null = null;
+        await attackTarget(user.id, room.id, 6, target.id);
         for (let i = 0; i < monsterAiDatas[room.id].length; i++) {
           if (monsterAiDatas[room.id][i].id === target.id) {
             monsterAiDatas[room.id][i].animationDelay = 6;
-            index = i;
             break;
           }
         }
         sendAnimation(user, target, 3);
 
-        // 마나 소모
-        user.character.coolDown = Date.now();
-        user.character.mp -= 4;
-        await setRedisData('roomData', rooms);
-        await userUpdateNotification(room);
         break;
 
       // 이름: 궁수 최종 스킬
@@ -309,10 +344,19 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
         console.log('도적 최종 스킬 발동!');
         break;
 
-      // 이름: 전사 최종 스킬
-      // 설명:
+      // 이름: 수호의 결단
+      // 설명: Mp소모: 5, 전장의 수호자로서 모든 아군에게 일정시간동안 유지되는 불굴의 힘과 방어력을 부여합니다.
       case CardType.WARRIOR_FINAL_SKILL:
-        console.log('전사 최종 스킬 발동!');
+        // 공격 자원 처리
+        user.character.coolDown = Date.now();
+
+        // 버프 실행
+        await partyBuff(5, user, rooms, room, 0, 2, 2, 10000, CardType.WARRIOR_FINAL_SKILL);
+        for (let i = 0; i < room.users.length; i++) {
+          if (room.users[i].character.roleType === RoleType.SUR5VAL) {
+            // sendAnimation(room.users[i], room.users[i], 7);
+          }
+        }
         break;
 
       // 이름: 보스 기본 공격
@@ -321,13 +365,13 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
         await attackRagne(user, user, rooms, room, 1, 5, 3);
         break;
 
-      // 이름:
-      // 설명:
+      // 이름: 보스 스킬 공격1
+      // 설명: 보스 스킬 공격1
       case CardType.NONE:
         break;
 
-      // 이름:
-      // 설명:
+      // 이름: 보스 스킬 공격2
+      // 설명: 보스 스킬 공격2
       case CardType.NONE:
 
       // 이름:
@@ -338,76 +382,94 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
       // 소모품 201 ~ 300 // 소모품 201 ~ 300 //  소모품 201 ~ 300 //  소모품 201 ~ 300 //  소모품 201 ~ 300 //  소모품 201 ~ 300 //  소모품 201 ~ 300 //
 
       // 이름: 순수한 이슬
-      // 설명: 맑고 순수한 이슬 한 방울이 체력을 3 회복해준다! 지친 몸에 활력을 더해 다시 전투에 나설 수 있도록 돕는다.
+      // 설명: 맑고 순수한 이슬 한 방울이 체력을 20 회복해준다! 지친 몸에 활력을 더해 다시 전투에 나설 수 있도록 돕는다.
       case CardType.BASIC_HP_POTION:
         await usePotion(user, rooms, room, CardType.BASIC_HP_POTION);
         break;
 
       // 이름: 마력의 이슬
-      // 설명: 맑고 순수한 이슬 한 방울이 마력을 1 회복해준다! 고갈된 마법 에너지를 되살려 새로운 주문을 준비하자.
+      // 설명: 맑고 순수한 이슬 한 방울이 마력을 2 회복해준다! 고갈된 마법 에너지를 되살려 새로운 주문을 준비하자.
       case CardType.BASIC_MP_POTION:
         await usePotion(user, rooms, room, CardType.BASIC_MP_POTION);
         break;
 
       // 이름: 치유의 빛
-      // 설명: 은은한 치유의 빛이 체력을 6 회복해준다! 깊은 상처를 어루만지고 전투의 피로를 씻어내는 신비한 물약.
+      // 설명: 은은한 치유의 빛이 체력을 40 회복해준다! 깊은 상처를 어루만지고 전투의 피로를 씻어내는 신비한 물약.
       case CardType.ADVANCED_HP_POTION:
         await usePotion(user, rooms, room, CardType.ADVANCED_HP_POTION);
         break;
 
       // 이름: 마력의 빛
-      // 설명: 은은한 마나의 빛이 마력을 2 회복해준다! 흐릿했던 마법의 기운을 선명하게 채워주는 신비한 물약.
+      // 설명: 은은한 마나의 빛이 마력을 4 회복해준다! 흐릿했던 마법의 기운을 선명하게 채워주는 신비한 물약.
       case CardType.ADVANCED_MP_POTION:
         await usePotion(user, rooms, room, CardType.ADVANCED_MP_POTION);
         break;
 
       // 이름: 생명의 숨결
-      // 설명: 신비로운 생명의 기운이 체력을 10 회복해준다! 생명의 근원이 담긴 이 물약은 가장 극한의 상황에서도 새로운 힘을 불어넣는다.
+      // 설명: 신비로운 생명의 기운이 체력을 100 회복해준다! 생명의 근원이 담긴 이 물약은 가장 극한의 상황에서도 새로운 힘을 불어넣는다.
       case CardType.MASTER_HP_POTION:
         await usePotion(user, rooms, room, CardType.MASTER_HP_POTION);
         break;
 
       // 이름: 마력의 숨결
-      // 설명: 신비로운 마력의 기운이 마력을 4 회복해준다! 극한의 상황에서도 강력한 주문을 사용할 수 있는 힘을 불어넣는다.
+      // 설명: 신비로운 마력의 기운이 마력을 10 회복해준다! 극한의 상황에서도 강력한 주문을 사용할 수 있는 힘을 불어넣는다.
       case CardType.MASTER_MP_POTION:
         await usePotion(user, rooms, room, CardType.MASTER_MP_POTION);
         break;
 
       // 이름: 성장의 작은 불꽃
-      // 설명: 작은 불꽃이 당신의 성장을 돕습니다. 경험치 +10
+      // 설명: 작은 불꽃이 당신의 성장을 돕습니다. 경험치 +20
       case CardType.BASIC_EXP_POTION:
         await usePotion(user, rooms, room, CardType.BASIC_EXP_POTION);
         break;
 
       // 이름: 무한 성장의 불길
-      // 설명: 끝없는 불길로 압도적인 성장을 경험하세요. 경험치 +30
+      // 설명: 끝없는 불길로 압도적인 성장을 경험하세요. 경험치 +50
       case CardType.MASTER_EXP_POTION:
         await usePotion(user, rooms, room, CardType.MASTER_EXP_POTION);
         break;
 
-      // 이름:
-      // 설명:
-      case CardType.NONE:
-        break;
+      // 이름: 용기의 정수
+      // 설명: 한 모금 마시면 두려움이 사라지고 무한한 힘이 깨어납니다. 30초간 공격력 +5
+      case CardType.ATTACK_POTION: {
+        // 해당 아이템 보유여부 검사 및 개수 차감
+        let isOwned: boolean = false;
+        for (let i = 0; i < user.character.handCards.length; i++) {
+          if (user.character.handCards[i].type === cardType && user.character.handCards[i].count > 0) {
+            user.character.handCards[i].count--;
+            isOwned = true;
+            break;
+          }
+        }
+        if (isOwned === false) {
+          console.error('보유중이지 않은 버프 아이템 요청');
+          return;
+        }
 
-      // 이름:
-      // 설명:
-      case CardType.NONE:
+        // 버프 실행
+        await changeStatus(0, user, rooms, room, 0, 0, 3, 30000, CardType.ATTACK_POTION);
         break;
+      }
 
-      // 이름:
-      // 설명:
-      case CardType.NONE:
-        break;
+      // 이름: 강철의 비약
+      // 설명: 한 모금 마시면 몸이 강철처럼 단단해져 적의 공격을 견뎌냅니다. 30초간 방어력 +8
+      case CardType.DEFENSE_PORTION:
+        // 해당 아이템 보유여부 검사 및 개수 차감
+        let isOwned: boolean = false;
+        for (let i = 0; i < user.character.handCards.length; i++) {
+          if (user.character.handCards[i].type === cardType && user.character.handCards[i].count > 0) {
+            user.character.handCards[i].count--;
+            isOwned = true;
+            break;
+          }
+        }
+        if (isOwned === false) {
+          console.error('보유중이지 않은 버프 아이템 요청');
+          return;
+        }
 
-      // 이름:
-      // 설명:
-      case CardType.NONE:
-        break;
-
-      // 이름:
-      // 설명:
-      case CardType.NONE:
+        // 버프 실행
+        await changeStatus(0, user, rooms, room, 0, 3, 0, 30000, CardType.DEFENSE_PORTION);
         break;
 
       // 장비 301 ~ 400 // 장비 301 ~ 400  / 장비 301 ~ 400 // 장비 301 ~ 400 // 장비 301 ~ 400 // 장비 301 ~ 400 // 장비 301 ~ 400 // 장비 301 ~ 400 //
@@ -419,25 +481,25 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
         break;
 
       // 이름: 탐험가의 투구
-      // 설명: 거친 환경을 견디는 투구. 체력+30
+      // 설명: 거친 환경을 견디는 투구. 체력+20
       case CardType.EXPLORER_HEAD:
         await equipItem(user, rooms, room, 0, CardType.EXPLORER_HEAD);
         break;
 
       // 이름: 탐험가의 갑옷
-      // 설명: 유연성과 보호력을 겸비한 갑옷. 방어력+2, 체력+20
+      // 설명: 유연성과 보호력을 겸비한 갑옷. 방어력+1, 체력+15
       case CardType.EXPLORER_ARMOR:
         await equipItem(user, rooms, room, 1, CardType.EXPLORER_ARMOR);
         break;
 
       // 이름: 탐험가의 망토
-      // 설명: 바람과 비를 막아주는 견고한 망토. 방어력+4, 체력+10
+      // 설명: 바람과 비를 막아주는 견고한 망토. 방어력+2, 체력+10
       case CardType.EXPLORER_CLOAK:
         await equipItem(user, rooms, room, 2, CardType.EXPLORER_CLOAK);
         break;
 
       // 이름: 탐험가의 장갑
-      // 설명: 정밀한 손놀림을 돕는 장갑. 공격력+1, 방어력+2, 체력+5
+      // 설명: 정밀한 손놀림을 돕는 장갑. 공격력+1, 방어력+1, 체력+5
       case CardType.EXPLORER_GLOVE:
         await equipItem(user, rooms, room, 3, CardType.EXPLORER_GLOVE);
         break;
@@ -449,25 +511,25 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
         break;
 
       // 이름: 영웅의 투구
-      // 설명: 영광스러운 전투를 상징하는 투구. 체력+60
+      // 설명: 영광스러운 전투를 상징하는 투구. 체력+40
       case CardType.HERO_HEAD:
         await equipItem(user, rooms, room, 0, CardType.HERO_HEAD);
         break;
 
       // 이름: 영웅의 갑옷
-      // 설명: 방어와 위엄을 겸비한 갑옷. 방어력+4, 체력+40
+      // 설명: 방어와 위엄을 겸비한 갑옷. 방어력+2, 체력+30
       case CardType.HERO_ARMOR:
         await equipItem(user, rooms, room, 1, CardType.HERO_ARMOR);
         break;
 
       // 이름: 영웅의 망토
-      // 설명: 마법의 힘이 깃든 망토. 방어력+8, 체력+20
+      // 설명: 마법의 힘이 깃든 망토. 방어력+4, 체력+20
       case CardType.HERO_CLOAK:
         await equipItem(user, rooms, room, 2, CardType.HERO_CLOAK);
         break;
 
       // 이름: 영웅의 장갑
-      // 설명: 전투 기술을 극대화하는 장갑. 공격력+2, 방어력+4, 체력+10
+      // 설명: 전투 기술을 극대화하는 장갑. 공격력+2, 방어력+2, 체력+10
       case CardType.HERO_GLOVE:
         await equipItem(user, rooms, room, 3, CardType.HERO_GLOVE);
         break;
@@ -479,235 +541,32 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
         break;
 
       // 이름: 전설의 투구
-      // 설명: 신성한 보호막을 제공하는 투구, 사용자를 불멸로 이끈다. 체력+90
+      // 설명: 신성한 보호막을 제공하는 투구, 사용자를 불멸로 이끈다. 체력+60
       case CardType.LEGENDARY_HEAD:
         await equipItem(user, rooms, room, 0, CardType.LEGENDARY_HEAD);
         break;
 
       // 이름: 전설의 갑옷
-      // 설명: 황금빛 문양과 마법이 깃든 최강의 갑옷. 방어력+6, 체력+60
+      // 설명: 황금빛 문양과 마법이 깃든 최강의 갑옷. 방어력+3, 체력+45
       case CardType.LEGENDARY_ARMOR:
         await equipItem(user, rooms, room, 1, CardType.LEGENDARY_ARMOR);
         break;
 
       // 이름: 전설의 망토
-      // 설명: 우주의 에너지가 깃든 최강의 망토. 방어력+12, 체력+30
+      // 설명: 우주의 에너지가 깃든 최강의 망토. 방어력+6, 체력+30
       case CardType.LEGENDARY_CLOAK:
         await equipItem(user, rooms, room, 2, CardType.LEGENDARY_CLOAK);
         break;
 
       // 이름: 전설의 장갑
-      // 설명: 신화의 기술과 힘을 담은 승리의 장갑. 공격력+3, 방어력+6, 체력+15
+      // 설명: 신화의 기술과 힘을 담은 승리의 장갑. 공격력+3, 방어력+3, 체력+15
       case CardType.LEGENDARY_GLOVE:
         await equipItem(user, rooms, room, 3, CardType.LEGENDARY_GLOVE);
-        break;
-
-      // 이름:
-      // 설명:
-      case CardType.NONE:
-        break;
-
-      // 이름:
-      // 설명:
-      case CardType.NONE:
-        break;
-
-      // 이름:
-      // 설명:
-      case CardType.NONE:
-        break;
-
-      // 이름:
-      // 설명:
-      case CardType.NONE:
-        break;
-
-      // 이름:
-      // 설명:
-      case CardType.NONE:
         break;
     }
   } catch (error) {
     console.error(`useCardHandler ${error as Error}`);
   }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////
-// 스킬 애니메이션 패킷 보내기
-const sendAnimation = (user: User, animationTarget: User, animationType: number) => {
-  sendPacket(socketSessions[user.id], config.packetType.ANIMATION_NOTIFICATION, {
-    userId: animationTarget.id,
-    animationType: animationType
-  });
-  if (animationTarget.character.roleType !== RoleType.WEAK_MONSTER) {
-    sendPacket(socketSessions[animationTarget.id], config.packetType.ANIMATION_NOTIFICATION, {
-      userId: animationTarget.id,
-      animationType: animationType
-    });
-  }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////
-// 해당 캐릭터(아군) 능력치 변동
-const changeStatus = async (
-  manaCost: number,
-  user: User,
-  rooms: Room[],
-  room: Room,
-  hp: number,
-  armor: number,
-  attack: number
-) => {
-  // 제대로된 대상이 지정되었는지 검사
-  if (user.character.roleType !== RoleType.SUR5VAL) {
-    console.error('아군에게만 사용할 수 있는 스킬입니다.');
-    return;
-  }
-
-  // 마나가 충분한지 검사
-  if (user.character.mp < manaCost) {
-    console.log('마나가 부족합니다.');
-    return;
-  }
-
-  // 버프 스킬 실행
-  user.character.mp -= manaCost;
-  if (user.character.hp + hp <= user.character.maxHp) {
-    user.character.hp += hp;
-  } else {
-    user.character.hp = user.character.maxHp;
-  }
-  user.character.mp += armor;
-  user.character.mp += attack;
-
-  await setRedisData('roomData', rooms);
-  await userUpdateNotification(room);
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////
-// 파티 버프 (모든 아군 캐릭터 능력치 변동)
-const partyBuff = async (
-  manaCost: number,
-  user: User,
-  rooms: Room[],
-  room: Room,
-  hp: number,
-  armor: number,
-  attack: number,
-  buffTime: number,
-  cardType: number
-) => {
-  // 마나가 충분한지 검사
-  if (user.character.mp < manaCost) {
-    console.log('마나가 부족합니다.');
-    return;
-  }
-
-  // 이미 버프 상태인지 검사
-  if (characterBuffStatus[user.id]) {
-    for (let i = 0; i < characterBuffStatus[user.id].length; i++) {
-      if (characterBuffStatus[user.id][i] === cardType) {
-        console.log('이미 warDrum 버프 상태입니다.');
-        return;
-      }
-    }
-  } else {
-    characterBuffStatus[user.id] = [];
-  }
-
-  // 버프 스킬 실행
-  characterBuffStatus[user.id].push(cardType);
-  user.character.mp -= manaCost;
-  for (let i = 0; i < room.users.length; i++) {
-    if (room.users[i].character.roleType === RoleType.SUR5VAL) {
-      room.users[i].character.maxHp += hp;
-      room.users[i].character.armor += armor;
-      room.users[i].character.attack += attack;
-    }
-  }
-  console.log('버프 사용 후: ', characterBuffStatus);
-  await setRedisData('roomData', rooms);
-  await userUpdateNotification(room);
-
-  // 버프 해제
-  setTimeout(async () => {
-    // 버프 사용자 목록에서 제거
-    for (let i = 0; i < characterBuffStatus[user.id].length; i++) {
-      if (characterBuffStatus[user.id][i] === cardType) {
-        characterBuffStatus[user.id].splice(i, 1);
-        if (characterBuffStatus[user.id].length === 0) {
-          delete characterBuffStatus[user.id];
-          console.log('삭제 후 characterBuffStatus 전체: ', characterBuffStatus);
-          break;
-        }
-      }
-    }
-
-    // 버프 끝나는 시점의 room 정보 찾기
-    const nowRooms: Room[] | undefined = await getRedisData('roomData');
-    if (nowRooms === undefined) {
-      console.error('서버에 Rooms정보가 존재하지 않습니다.');
-      return;
-    }
-    let nowRoom: Room | undefined;
-    for (let i = 0; i < nowRooms.length; i++) {
-      for (let j = 0; j < nowRooms[i].users.length; j++) {
-        if (nowRooms[i].users[j].id === user.id) {
-          nowRoom = nowRooms[i];
-        }
-      }
-    }
-    if (!nowRoom) {
-      console.error('카드 사용자가 속한 room 정보를 찾을 수 없습니다.');
-      return;
-    }
-
-    // 버프 해제 시점에 기존 게임이 종료된 상태일 경우
-    if (nowRoom.id !== room.id) {
-      console.error('게임이 이미 종료되었습니다.');
-      return;
-    }
-
-    // 버프 해제 실행
-    for (let i = 0; i < room.users.length; i++) {
-      if (room.users[i].character.roleType === RoleType.SUR5VAL) {
-        room.users[i].character.maxHp -= hp;
-        room.users[i].character.armor -= armor;
-        room.users[i].character.attack -= attack;
-        room.users[i].character.hp = Math.min(room.users[i].character.hp, room.users[i].character.maxHp);
-      }
-    }
-    console.log('버프 해제 성공');
-    console.log('버프 해제 후: ', characterBuffStatus);
-    await setRedisData('roomData', rooms);
-    await userUpdateNotification(room);
-  }, buffTime);
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////
-// 공격 유효성 검증
-const attackPossible = (attacker: User, target: User, needMp: number) => {
-  const initGameInfo = Server.getInstance().initGameInfo;
-  if (!initGameInfo) return;
-  const attackCool = initGameInfo[0].attackCool;
-  if (Date.now() - attacker.character.coolDown < attackCool) {
-    // console.log('공격 쿨타임 중입니다.');
-    return false;
-  }
-  if (attacker.character.mp < needMp) {
-    // console.log('마나가 부족합니다.');
-    return false;
-  }
-  if (target.character.roleType === RoleType.SUR5VAL) {
-    console.log('아군을 공격할 수는 없습니다.');
-    return false;
-  }
-  if (target.character.hp <= 0) {
-    console.log('살아있는 적만 공격할 수 있습니다.');
-    return false;
-  }
-
-  return true;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -783,17 +642,50 @@ const attackRagne = async (
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
-// 타겟이 된 적 공격 (적군 체력 감소)
-const attackTarget = async (attacker: User, rooms: Room[], room: Room, skillCoeffcient: number, target: User) => {
+// 타겟이 된 적 공격
+const attackTarget = async (attackerId: number, roomId: number, skillCoeffcient: number, targetId: number) => {
   // 공격 실행 중 라운드가 바뀌지 않았는지 검사
+  const nowRooms = await getRedisData('roomData');
   let isChanged: boolean = true;
-  const roomNow = await getRoomByUserId(attacker.id);
-  if (!roomNow) return;
-  for (let i = 0; i < roomNow.users.length; i++) {
-    if (roomNow.users[i].id === target.id) isChanged = false;
+  let nowRoom: Room | null = null;
+  for (let i = 0; i < nowRooms.length; i++) {
+    if (nowRooms[i].id === roomId) {
+      nowRoom = nowRooms[i];
+      break;
+    }
+  }
+  if (!nowRoom) return;
+  for (let i = 0; i < nowRoom.users.length; i++) {
+    if (nowRoom.users[i].id === targetId) isChanged = false;
   }
   if (isChanged) {
     console.log('공격 실행 중 라운드 바뀌어서 몬스터 사라짐');
+    return;
+  }
+
+  // 공격자의 정보 가져오기
+  let attacker: User | null = null;
+  for (let i = 0; i < nowRoom.users.length; i++) {
+    if (nowRoom.users[i].id === attackerId) {
+      attacker = nowRoom.users[i];
+      break;
+    }
+  }
+  if (!attacker) {
+    console.error('공격자의 정보 가져오기에 실패하였습니다.');
+    return;
+  }
+
+  // 타겟 정보 가져오기
+  let target: User | null = null;
+  for (let i = 0; i < nowRoom.users.length; i++) {
+    if (nowRoom.users[i].id === targetId) {
+      target = nowRoom.users[i];
+      break;
+    }
+  }
+  if (!target) {
+    console.error('타겟의 정보 가져오기에 실패하였습니다.');
     return;
   }
 
@@ -802,23 +694,475 @@ const attackTarget = async (attacker: User, rooms: Room[], room: Room, skillCoef
   target.character.hp = Math.max(target.character.hp - damage, 0);
   if (target.character.aliveState && target.character.hp <= 0) {
     attacker.character.exp += target.character.exp;
-    await monsterReward(rooms, room, attacker, target);
+    await monsterReward(nowRooms, nowRoom, attacker, target);
   }
 
   // 보스를 죽였는지 검사
   if (target.character.roleType === RoleType.BOSS_MONSTER && target.character.hp <= 0) {
-    await gameEndNotification(room.id, 3);
+    await gameEndNotification(roomId, 3);
     return;
   }
 
+  await setRedisData('roomData', nowRooms);
+  await userUpdateNotification(nowRoom);
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+// 타겟이 된 적 공격 (방어력 무시 공격)
+const attackTargetTrueDamage = async (
+  attackerId: number,
+  roomId: number,
+  skillCoeffcient: number,
+  targetId: number
+) => {
+  // 공격 실행 중 라운드가 바뀌지 않았는지 검사
+  const nowRooms = await getRedisData('roomData');
+  let isChanged: boolean = true;
+  let nowRoom: Room | null = null;
+  for (let i = 0; i < nowRooms.length; i++) {
+    if (nowRooms[i].id === roomId) {
+      nowRoom = nowRooms[i];
+      break;
+    }
+  }
+  if (!nowRoom) return;
+  for (let i = 0; i < nowRoom.users.length; i++) {
+    if (nowRoom.users[i].id === targetId) isChanged = false;
+  }
+  if (isChanged) {
+    console.log('공격 실행 중 라운드 바뀌어서 몬스터 사라짐');
+    return;
+  }
+
+  // 공격자의 정보 가져오기
+  let attacker: User | null = null;
+  for (let i = 0; i < nowRoom.users.length; i++) {
+    if (nowRoom.users[i].id === attackerId) {
+      attacker = nowRoom.users[i];
+      break;
+    }
+  }
+  if (!attacker) {
+    console.error('공격자의 정보 가져오기에 실패하였습니다.');
+    return;
+  }
+
+  // 타겟 정보 가져오기
+  let target: User | null = null;
+  for (let i = 0; i < nowRoom.users.length; i++) {
+    if (nowRoom.users[i].id === targetId) {
+      target = nowRoom.users[i];
+      break;
+    }
+  }
+  if (!target) {
+    console.error('타겟의 정보 가져오기에 실패하였습니다.');
+    return;
+  }
+
+  // 공격 스킬 실행
+  const damage = Math.round(attacker.character.attack * skillCoeffcient);
+  target.character.hp = Math.max(target.character.hp - damage, 0);
+  if (target.character.aliveState && target.character.hp <= 0) {
+    attacker.character.exp += target.character.exp;
+    await monsterReward(nowRooms, nowRoom, attacker, target);
+  }
+
+  // 보스를 죽였는지 검사
+  if (target.character.roleType === RoleType.BOSS_MONSTER && target.character.hp <= 0) {
+    await gameEndNotification(roomId, 3);
+    return;
+  }
+
+  await setRedisData('roomData', nowRooms);
+  await userUpdateNotification(nowRoom);
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+// 해당 캐릭터(아군) 버프
+const changeStatus = async (
+  manaCost: number,
+  user: User,
+  rooms: Room[],
+  room: Room,
+  hp: number,
+  armor: number,
+  attack: number,
+  buffTime: number,
+  cardType: number
+) => {
+  // 마나가 충분한지 검사
+  if (user.character.mp < manaCost) {
+    console.log('마나가 부족합니다.');
+    return;
+  }
+
+  // 이미 버프 상태인지 검사
+  if (characterBuffStatus[user.id]) {
+    for (let i = 0; i < characterBuffStatus[user.id].length; i++) {
+      if (characterBuffStatus[user.id][i] === cardType) {
+        console.log('이미 버프 상태입니다.');
+        return;
+      }
+    }
+  } else {
+    characterBuffStatus[user.id] = [];
+  }
+
+  // 버프 스킬 실행
+  characterBuffStatus[user.id].push(cardType);
+  user.character.mp -= manaCost;
+  user.character.hp += hp;
+  user.character.maxHp += hp;
+  user.character.attack += attack;
+  user.character.armor += armor;
+  console.log('버프 사용 후: ', characterBuffStatus);
   await setRedisData('roomData', rooms);
   await userUpdateNotification(room);
+
+  // 버프 해제
+  setTimeout(async () => {
+    // 버프 목록에서 제거
+    deleteBuff(user, cardType);
+    console.log('버프 삭제 후: ', characterBuffStatus);
+
+    // 버프 끝나는 시점의 room 정보 찾기
+    const nowRooms: Room[] | undefined = await getRedisData('roomData');
+    if (nowRooms === undefined) {
+      console.error('서버에 Rooms정보가 존재하지 않습니다.');
+      return;
+    }
+    let nowRoom: Room | undefined;
+    for (let i = 0; i < nowRooms.length; i++) {
+      for (let j = 0; j < nowRooms[i].users.length; j++) {
+        if (nowRooms[i].users[j].id === user.id) {
+          nowRoom = nowRooms[i];
+        }
+      }
+    }
+    if (!nowRoom) {
+      console.error('카드 사용자가 속한 room 정보를 찾을 수 없습니다.');
+      return;
+    }
+
+    // 버프 해제 시점에 기존 게임이 종료된 상태일 경우
+    if (nowRoom.id !== room.id) return;
+
+    // 버프 해제 시점의 유저 찾기
+    let skillUser: User | null = null;
+    for (let i = 0; i < nowRoom.users.length; i++) {
+      if (nowRoom.users[i].id === user.id) {
+        skillUser = nowRoom.users[i];
+        break;
+      }
+    }
+    if (!skillUser) {
+      console.error('버프 해제 중 유저 정보를 찾지 못하였습니다.');
+      return;
+    }
+
+    // 버프 해제 실행
+    skillUser.character.hp -= hp;
+    skillUser.character.maxHp -= hp;
+    skillUser.character.attack -= attack;
+    skillUser.character.armor -= armor;
+    skillUser.character.hp = Math.min(skillUser.character.hp, skillUser.character.maxHp);
+
+    await setRedisData('roomData', nowRooms);
+    await userUpdateNotification(nowRoom);
+  }, buffTime);
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+// 파티 버프 (모든 아군 캐릭터 능력치 변동)
+const partyBuff = async (
+  manaCost: number,
+  user: User,
+  rooms: Room[],
+  room: Room,
+  hp: number,
+  armor: number,
+  attack: number,
+  buffTime: number,
+  cardType: number
+) => {
+  // 마나가 충분한지 검사
+  if (user.character.mp < manaCost) {
+    console.log('마나가 부족합니다.');
+    return;
+  }
+
+  // 이미 버프 상태인지 검사
+  if (characterBuffStatus[user.id]) {
+    for (let i = 0; i < characterBuffStatus[user.id].length; i++) {
+      if (characterBuffStatus[user.id][i] === cardType) {
+        console.log('이미 버프 상태입니다.');
+        return;
+      }
+    }
+  } else {
+    characterBuffStatus[user.id] = [];
+  }
+
+  // 버프 스킬 실행
+  characterBuffStatus[user.id].push(cardType);
+  user.character.mp -= manaCost;
+  for (let i = 0; i < room.users.length; i++) {
+    if (room.users[i].character.roleType === RoleType.SUR5VAL) {
+      room.users[i].character.hp += hp;
+      room.users[i].character.maxHp += hp;
+      room.users[i].character.attack += attack;
+      room.users[i].character.armor += armor;
+    }
+  }
+  console.log('버프 사용 후: ', characterBuffStatus);
+  await setRedisData('roomData', rooms);
+  await userUpdateNotification(room);
+
+  // 버프 해제
+  setTimeout(async () => {
+    // 버프 목록에서 제거
+    deleteBuff(user, cardType);
+    console.log('버프 삭제 후: ', characterBuffStatus);
+
+    // 버프 끝나는 시점의 room 정보 찾기
+    const nowRooms: Room[] | undefined = await getRedisData('roomData');
+    if (nowRooms === undefined) {
+      console.error('서버에 Rooms정보가 존재하지 않습니다.');
+      return;
+    }
+    let nowRoom: Room | undefined;
+    for (let i = 0; i < nowRooms.length; i++) {
+      for (let j = 0; j < nowRooms[i].users.length; j++) {
+        if (nowRooms[i].users[j].id === user.id) {
+          nowRoom = nowRooms[i];
+        }
+      }
+    }
+    if (!nowRoom) {
+      console.error('카드 사용자가 속한 room 정보를 찾을 수 없습니다.');
+      return;
+    }
+
+    // 버프 해제 시점에 기존 게임이 종료된 상태일 경우
+    if (nowRoom.id !== room.id) {
+      console.error('게임이 이미 종료되었습니다.');
+      return;
+    }
+
+    // 버프 해제 실행
+    for (let i = 0; i < nowRoom.users.length; i++) {
+      if (nowRoom.users[i].character.roleType === RoleType.SUR5VAL) {
+        nowRoom.users[i].character.hp -= hp;
+        nowRoom.users[i].character.maxHp -= hp;
+        nowRoom.users[i].character.attack -= attack;
+        nowRoom.users[i].character.armor -= armor;
+        nowRoom.users[i].character.hp = Math.min(nowRoom.users[i].character.hp, nowRoom.users[i].character.maxHp);
+      }
+    }
+
+    await setRedisData('roomData', nowRooms);
+    await userUpdateNotification(nowRoom);
+  }, buffTime);
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+// 자신 주변을 일정시간동안 공격하는 버프 (정령 소환 버프)
+const summonSpiritBuff = async (
+  manaCost: number,
+  attacker: User,
+  room: Room,
+  rooms: Room[],
+  skillCoeffcient: number,
+  range: number,
+  targetNumber: number,
+  duration: number,
+  attackCool: number,
+  cardType: number
+) => {
+  // 캐릭터의 공격 쿨타임 검사
+  const initGameInfo = Server.getInstance().initGameInfo;
+  if (!initGameInfo) return;
+  const characterAttackCool = initGameInfo[0].attackCool;
+  if (Date.now() - attacker.character.coolDown < characterAttackCool) {
+    console.log('공격 쿨타임 중입니다.');
+    return false;
+  }
+
+  // 마나가 충분한지 검사
+  if (attacker.character.mp < manaCost) {
+    console.log('마나가 부족합니다.');
+    return;
+  }
+
+  // 이미 버프 상태인지 검사
+  if (characterBuffStatus[attacker.id]) {
+    for (let i = 0; i < characterBuffStatus[attacker.id].length; i++) {
+      if (characterBuffStatus[attacker.id][i] === cardType) {
+        console.log('이미 버프 상태입니다.');
+        return;
+      }
+    }
+  } else {
+    characterBuffStatus[attacker.id] = [];
+  }
+
+  // 버프 상태 추가
+  characterBuffStatus[attacker.id].push(cardType);
+
+  // 마나 소모
+  attacker.character.mp -= manaCost;
+  await setRedisData('roomData', rooms);
+  userUpdateNotification(room);
+
+  // 스킬 정보 생성
+  let lastAttack: number = 0;
+  let skillFinishTime: number = Date.now() + duration;
+
+  // 버프 스킬 실행
+  const attackSkill = setInterval(async () => {
+    // 해당 스킬의 쿨타임 검사
+    if (Date.now() - lastAttack < attackCool) return;
+
+    // 스킬 지속시간 종료되었는지 확인 및 종료
+    if (skillFinishTime < Date.now()) {
+      deleteBuff(attacker, cardType);
+      clearInterval(attackSkill);
+      console.log('스킬 지속시간이 종료되었습니다.');
+    }
+
+    // 스킬이 끝나기 전에 게임이 종료되었는지 확인 및 종료
+    const nowRooms: Room[] | undefined = await getRedisData('roomData');
+    if (nowRooms === undefined) {
+      deleteBuff(attacker, cardType);
+      clearInterval(attackSkill);
+      console.log('스킬 사용자가 속한 room 정보를 찾을 수 없습니다.');
+      return;
+    }
+    let nowRoom: Room | undefined;
+    for (let i = 0; i < nowRooms.length; i++) {
+      for (let j = 0; j < nowRooms[i].users.length; j++) {
+        if (nowRooms[i].users[j].id === attacker.id) {
+          nowRoom = nowRooms[i];
+        }
+      }
+    }
+    if (!nowRoom) {
+      deleteBuff(attacker, cardType);
+      clearInterval(attackSkill);
+      console.log('스킬 사용자가 속한 room 정보를 찾을 수 없습니다.');
+      return;
+    }
+    if (nowRoom.id !== room.id) {
+      deleteBuff(attacker, cardType);
+      clearInterval(attackSkill);
+      console.log('게임이 이미 종료되어서 스킬을 종료합니다.');
+      return;
+    }
+
+    // 공격자의 상태 값 얻기
+    let skillUser: User | null = null;
+    for (let i = 0; i < nowRoom.users.length; i++) {
+      if (nowRoom.users[i].id === attacker.id) {
+        skillUser = nowRoom.users[i];
+      }
+    }
+    if (!skillUser) return;
+
+    // 공격자가 죽어있으면 종료
+    if (skillUser.character.hp <= 0) {
+      deleteBuff(attacker, cardType);
+      clearInterval(attackSkill);
+      console.log('버프 스킬 시전자가 사망하여 정령 버프가 종료되었습니다.');
+    }
+
+    // 공격자의 위치 값 얻기
+    const characterPositionDatas = await getRedisData('characterPositionDatas');
+    const characterPositionData: CharacterPositionData[] = characterPositionDatas[room.id];
+    let attackerPosition: CharacterPositionData | null = null;
+    for (let i = 0; i < characterPositionData.length; i++) {
+      if (characterPositionData[i].id === attacker.id) {
+        attackerPosition = characterPositionData[i];
+        break;
+      }
+    }
+    if (!attackerPosition) {
+      console.error('공격자의 position 값을 찾지 못하였습니다.');
+      return;
+    }
+
+    const targetMonsters = [];
+    // 체력 0 초과의 적 정보 얻기
+    for (let i = 0; i < nowRoom.users.length; i++) {
+      if (
+        (nowRoom.users[i].character.roleType === RoleType.WEAK_MONSTER ||
+          nowRoom.users[i].character.roleType === RoleType.BOSS_MONSTER) &&
+        nowRoom.users[i].character.hp > 0
+      ) {
+        let enemyPosition: CharacterPositionData | null = null;
+        for (let j = 0; j < characterPositionData.length; j++) {
+          if (characterPositionData[j].id === nowRoom.users[i].id) {
+            enemyPosition = characterPositionData[j];
+            break;
+          }
+        }
+
+        // 범위 안에 있는 적인지 검사
+        if (!enemyPosition) {
+          console.error('몬스터의 position 값을 찾지 못하였습니다.');
+          return;
+        }
+        if ((enemyPosition.x - attackerPosition.x) ** 2 + (enemyPosition.y - attackerPosition.y) ** 2 < range ** 2) {
+          targetMonsters.push({
+            monster: nowRoom.users[i],
+            distance: (enemyPosition.x - attackerPosition.x) ** 2 + (enemyPosition.y - attackerPosition.y) ** 2
+          });
+        }
+      }
+    }
+
+    // 거리가 가까운 순으로 정렬 후 먼 순서로 삭제
+    if (!targetMonsters) return;
+    if (targetMonsters.length > targetNumber) {
+      targetMonsters.sort((a, b) => a.distance - b.distance);
+      targetMonsters.splice(targetNumber);
+    }
+
+    // 공격 실행
+    for (let i = 0; i < targetMonsters.length; i++) {
+      // 딜링 및 애니메이션 재생
+      const target = targetMonsters[i].monster.character;
+      target.hp = Math.max(target.hp - skillUser.character.attack * skillCoeffcient + target.armor, 0);
+      sendAnimation(skillUser, targetMonsters[i].monster, 1);
+      for (let j = 0; j < monsterAiDatas[room.id].length; j++) {
+        if (monsterAiDatas[room.id][j].id === targetMonsters[i].monster.id) {
+          monsterAiDatas[room.id][j].animationDelay = 5;
+          break;
+        }
+      }
+
+      // 처치 검사 하여 보상 획득
+      if (target.hp <= 0 && target.aliveState) {
+        skillUser.character.exp += target.exp;
+        await monsterReward(nowRooms, nowRoom, skillUser, targetMonsters[i].monster);
+      }
+
+      // 보스를 죽였는지 검사
+      if (target.roleType === RoleType.BOSS_MONSTER && target.hp <= 0) {
+        await gameEndNotification(nowRoom.id, 3);
+        return;
+      }
+    }
+    lastAttack = Date.now();
+    await setRedisData('roomData', nowRooms);
+    await userUpdateNotification(nowRoom);
+  }, 200);
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // 본인의 Hp, Mp 회복 / Exp 획득
 const usePotion = async (user: User, rooms: Room[], room: Room, cardsType: number) => {
-  // 해당 아이템 보유여부 검사
+  // 해당 아이템 보유여부 검사 및 개수 차감
   let isOwned: boolean = false;
   for (let i = 0; i < user.character.handCards.length; i++) {
     if (user.character.handCards[i].type === cardsType && user.character.handCards[i].count > 0) {
@@ -827,7 +1171,10 @@ const usePotion = async (user: User, rooms: Room[], room: Room, cardsType: numbe
       break;
     }
   }
-  if (isOwned === false) return;
+  if (isOwned === false) {
+    console.error('보유중이지 않은 아이템 요청');
+    return;
+  }
 
   const consumableItemInfo = Server.getInstance().consumableItemInfo;
   if (!consumableItemInfo) {
@@ -897,6 +1244,7 @@ const equipItem = async (user: User, rooms: Room[], room: Room, equipIndex: numb
     if (user.character.handCards[i].type === cardsType && user.character.handCards[i].count > 0) {
       user.character.handCards[i].count--;
       isOwned = true;
+      console.log(user.character.handCards[i]);
     }
   }
   if (isOwned === false) return;
@@ -995,4 +1343,60 @@ const equipWeapon = async (user: User, rooms: Room[], room: Room, cardsType: num
 
   await setRedisData('roomData', rooms);
   await userUpdateNotification(room);
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+// 버프 사용자 목록에서 제거
+const deleteBuff = (user: User, buffType: number) => {
+  for (let i = 0; i < characterBuffStatus[user.id].length; i++) {
+    if (characterBuffStatus[user.id][i] === buffType) {
+      characterBuffStatus[user.id].splice(i, 1);
+      console.log('삭제 후 남은 버프', characterBuffStatus[user.id]);
+      if (characterBuffStatus[user.id].length === 0) {
+        delete characterBuffStatus[user.id];
+        break;
+      }
+    }
+  }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+// 공격 유효성 검증
+const attackPossible = (attacker: User, target: User, needMp: number) => {
+  const initGameInfo = Server.getInstance().initGameInfo;
+  if (!initGameInfo) return;
+  const attackCool = initGameInfo[0].attackCool;
+  if (Date.now() - attacker.character.coolDown < attackCool) {
+    console.log('공격 쿨타임 중입니다.');
+    return false;
+  }
+  if (attacker.character.mp < needMp) {
+    console.log('마나가 부족합니다.');
+    return false;
+  }
+  if (target.character.roleType === RoleType.SUR5VAL) {
+    console.log('아군을 공격할 수는 없습니다.');
+    return false;
+  }
+  if (target.character.hp <= 0) {
+    console.log('살아있는 적만 공격할 수 있습니다.');
+    return false;
+  }
+
+  return true;
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+// 스킬 애니메이션 패킷 보내기
+const sendAnimation = (user: User, animationTarget: User, animationType: number) => {
+  sendPacket(socketSessions[user.id], config.packetType.ANIMATION_NOTIFICATION, {
+    userId: animationTarget.id,
+    animationType: animationType
+  });
+  if (animationTarget.character.roleType !== RoleType.WEAK_MONSTER) {
+    sendPacket(socketSessions[animationTarget.id], config.packetType.ANIMATION_NOTIFICATION, {
+      userId: animationTarget.id,
+      animationType: animationType
+    });
+  }
 };

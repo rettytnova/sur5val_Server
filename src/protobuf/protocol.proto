@@ -232,6 +232,10 @@ message S2CFleaMarketNotification {
 message C2SFleaMarketPickRequest {
 }
 
+message C2SFleaMarketSellRequest {
+}
+
+
 message C2SFleaMarketCardPickRequest {
     int32 pickIndex = 1;
 }
@@ -305,6 +309,11 @@ message S2CWarningNotification {
 message S2CAnimationNotification {
     int64 userId = 1;
     AnimationType animationType = 2;
+}
+
+message S2CGlobalMessageResponse{
+    GlobalMessageType globalMessageType = 1;
+    string globalMessage = 2;
 }
 
 // 최상위 GamePacket 메시지
@@ -400,6 +409,12 @@ message GamePacket {
 
         // 효과 알림
         S2CAnimationNotification animationNotification = 47;
+
+        // 전역 메세지
+        S2CGlobalMessageResponse globalMessageResponse = 48;
+
+        // 플리마켓
+        C2SFleaMarketSellRequest fleaMarketSellRequest = 49;
     }
 }
 
@@ -494,46 +509,51 @@ enum CardType {
     CONTAINMENT_UNIT = 21; // 3장
     SATELLITE_TARGET = 22; // 1장
     BOMB = 23; // 1장
-   SUR5VER_BASIC_SKILL = 100;
-   MAGICIAN_BASIC_SKILL = 101;
-   ARCHER_BASIC_SKILL = 102;
-   ROGUE_BASIC_SKILL = 103;
-   WARRIOR_BASIC_SKILL = 104;
-   MAGICIAN_EXTENDED_SKILL = 105;
-   ARCHER_EXTENDED_SKILL = 106;
-   ROGUE_EXTENDED_SKILL = 107;
-   WARRIOR_EXTENDED_SKILL = 108;
-   MAGICIAN_FINAL_SKILL = 109;
-   BOSS_BASIC_SKILL = 113;
-   BASIC_HP_POTION = 201;
-   BASIC_MP_POTION = 202;
-   ADVANCED_HP_POTION = 203;
-   ADVANCED_MP_POTION = 204;
-   MASTER_HP_POTION = 205;
-   MASTER_MP_POTION = 206;
-   BASIC_EXP_POTION = 207;
-   MASTER_EXP_POTION = 208;
-   NONE_WEAPON = 301;
-   NONE_HEAD = 302;
-   NONE_ARMOR = 303;
-   NONE_CLOAK = 304;
-   NONE_GLOVE = 305;
-   EXPLORER_WEAPON = 306;
-   EXPLORER_HEAD = 307;
-   EXPLORER_ARMOR = 308;
-   EXPLORER_CLOAK = 309;
-   EXPLORER_GLOVE = 310;
-   HERO_WEAPON = 311;
-   HERO_HEAD = 312;
-   HERO_ARMOR = 313;
-   HERO_CLOAK = 314;
-   HERO_GLOVE = 315;
-   LEGENDARY_WEAPON = 316;
-   LEGENDARY_HEAD = 317;
-   LEGENDARY_ARMOR = 318;
-   LEGENDARY_CLOAK = 319;
-   LEGENDARY_GLOVE = 320;
-   EXIT_BUTTON = 1000;
+    SUR5VER_BASIC_SKILL = 100;
+    MAGICIAN_BASIC_SKILL = 101;
+    ARCHER_BASIC_SKILL = 102;
+    ROGUE_BASIC_SKILL = 103;
+    WARRIOR_BASIC_SKILL = 104;
+    MAGICIAN_EXTENDED_SKILL = 105;
+    ARCHER_EXTENDED_SKILL = 106;
+    ROGUE_EXTENDED_SKILL = 107;
+    WARRIOR_EXTENDED_SKILL = 108;
+    MAGICIAN_FINAL_SKILL = 109;
+    ARCHER_FINAL_SKILL = 110;
+    ROGUE_FINAL_SKILL = 111;
+    WARRIOR_FINAL_SKILL = 112;
+    BOSS_BASIC_SKILL = 113;
+    BASIC_HP_POTION = 201;
+    BASIC_MP_POTION = 202;
+    ADVANCED_HP_POTION = 203;
+    ADVANCED_MP_POTION = 204;
+    MASTER_HP_POTION = 205;
+    MASTER_MP_POTION = 206;
+    BASIC_EXP_POTION = 207;
+    MASTER_EXP_POTION = 208;
+    ATTACK_POTION = 209;
+    DEFENSE_PORTION = 210;
+    NONE_WEAPON = 301;
+    NONE_HEAD = 302;
+    NONE_ARMOR = 303;
+    NONE_CLOAK = 304;
+    NONE_GLOVE = 305;
+    EXPLORER_WEAPON = 306;
+    EXPLORER_HEAD = 307;
+    EXPLORER_ARMOR = 308;
+    EXPLORER_CLOAK = 309;
+    EXPLORER_GLOVE = 310;
+    HERO_WEAPON = 311;
+    HERO_HEAD = 312;
+    HERO_ARMOR = 313;
+    HERO_CLOAK = 314;
+    HERO_GLOVE = 315;
+    LEGENDARY_WEAPON = 316;
+    LEGENDARY_HEAD = 317;
+    LEGENDARY_ARMOR = 318;
+    LEGENDARY_CLOAK = 319;
+    LEGENDARY_GLOVE = 320;
+    EXIT_BUTTON = 1000;
 }
 
 enum RoleType {
@@ -574,4 +594,11 @@ enum AnimationType {
     SATELLITE_TARGET_ANIMATION = 1;
     BOMB_ANIMATION = 2;
     SHIELD_ANIMATION = 3;
+}
+
+enum GlobalMessageType
+{
+    GLOBAL_MESSAGE_NONE = 0;
+    GLOBAL_MESSAGE_ROUND = 1;
+    GLOBAL_MESSAGE_COOLTIME = 2;
 }

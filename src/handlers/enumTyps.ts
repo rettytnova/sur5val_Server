@@ -66,6 +66,8 @@ export const CardType = Object.freeze({
   MASTER_MP_POTION: 206,
   BASIC_EXP_POTION: 207,
   MASTER_EXP_POTION: 208,
+  ATTACK_POTION: 209,
+  DEFENSE_PORTION: 210,
   NONE_WEAPON: 301,
   NONE_HEAD: 302,
   NONE_ARMOR: 303,
@@ -139,3 +141,10 @@ export const RoleType = Object.freeze({
   BOSS_MONSTER: 4 //PSYCHOPATH
 });
 export type RoleType = (typeof RoleType)[keyof typeof RoleType];
+
+export const GlobalMessageType = Object.freeze({
+  GLOBAL_MESSAGE_NONE: 0,
+  GLOBAL_MESSAGE_ROUND: 1,
+  GLOBAL_MESSAGE_COOLTIME: 2
+})
+export type GlobalMessageType = (typeof GlobalMessageType)[keyof typeof GlobalMessageType];
