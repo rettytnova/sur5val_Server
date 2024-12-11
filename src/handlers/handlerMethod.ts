@@ -69,14 +69,24 @@ export const monsterAI = (
   else if (monsterDirection === 2) nextY = y - monsterdistance * moveSpeed;
   else if (monsterDirection === 3) nextX = x - monsterdistance * moveSpeed;
 
-  if (nextX < -19.5) monsterDirection = (monsterDirection + 2) % 4;
-  else if (nextX > 19.5) monsterDirection = (monsterDirection + 2) % 4;
-  else if (nextX > -15.5 && nextX < -1.5 && nextY > 0.5 && nextY < 7.5) monsterDirection = (monsterDirection + 2) % 4;
-  else if (nextX > -15.5 && nextX < -3.5 && nextY > -8.3 && nextY < -2.8) monsterDirection = (monsterDirection + 2) % 4;
-  else if (nextX > 4.5 && nextX < 13.5 && nextY > 1.5 && nextY < 7.5) monsterDirection = (monsterDirection + 2) % 4;
-  else if (nextX > 3.5 && nextX < 14.5 && nextY > -7.5 && nextY < -2.5) monsterDirection = (monsterDirection + 2) % 4;
-  else if (nextY > 10.5) monsterDirection = (monsterDirection + 2) % 4;
-  else if (nextY < -10.5) monsterDirection = (monsterDirection + 2) % 4;
+  if (
+    !(-25 <= nextX && nextX <= 25) || // 오른쪽, 왼족 외벽
+    !(-11 <= nextY && nextY <= 11) || // 위, 아래 외벽
+    (-23 <= nextX && nextX <= 0 && 5 <= nextY && nextY <= 10) || // 건물 1, 2
+    (3 <= nextX && nextX <= 23 && 5 <= nextY && nextY <= 10) || // 건물 3, 4
+    (-23 <= nextX && nextX <= -2.5 && -9 <= nextY && nextY <= -2.5) || // 건물 5, 6
+    (5 <= nextX && nextX <= 23 && -9 <= nextY && nextY <= -2.5) || // 건물 7, 8
+    (-21 <= nextX && nextX <= -20 && 2.5 <= nextY && nextY <= 3.5) || // 부쉬 1
+    (-15 <= nextX && nextX <= -14 && 2.5 <= nextY && nextY <= 3.5) || // 부쉬 2
+    (11 <= nextX && nextX <= 12 && 0.5 <= nextY && nextY <= 1.5) || // 부쉬 3
+    (21 <= nextX && nextX <= 22 && 0.5 <= nextY && nextY <= 1.5) || // 부쉬 4
+    (-2 <= nextX && nextX <= -1 && -8.5 <= nextY && nextY <= -7.5) || // 부쉬 5
+    (4 <= nextX && nextX <= 5 && -8.5 <= nextY && nextY <= -7.5) || // 부쉬 6
+    (-9 <= nextX && nextX <= -8 && 2 <= nextY && nextY <= 3) || // 작은 나무1
+    (14 <= nextX && nextX <= 15 && 2 <= nextY && nextY <= 3) || // 작은 나무2
+    (0 <= nextX && nextX <= 3 && -2 <= nextY && nextY <= 1) // 큰나무
+  )
+    monsterDirection = (monsterDirection + 2) % 4;
 
   let index;
   for (let i = 0; i < monsterAiDatas[roomId].length; i++) {
