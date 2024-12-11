@@ -1,7 +1,5 @@
 import { config } from "../../../../config/config.js";
-import { sendChattingPacket } from "../../../../packet/createPacket.js";
 import ChattingRoom from "../../../class/chattingRoom.js";
-import ChattingServer from "../../../class/chattingServer.js";
 import ChattingUser from "../../../class/chattingUser.js";
 import { Job } from "../../../interface/chattingServerInterface.js";
 

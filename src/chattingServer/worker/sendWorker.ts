@@ -1,6 +1,5 @@
 import { parentPort } from 'worker_threads';
 import { SendPacketData } from "../interface/chattingServerInterface.js";
-import { sendPacket } from '../../packet/createPacket.js';
 
 class SendWorker {
     private sendQueue: SendPacketData[];
