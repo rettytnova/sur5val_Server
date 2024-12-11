@@ -21,12 +21,20 @@ class ChattingRoom {
         this.roomJobQue = [];
     }
 
+    getUsers() {
+        return this.users;
+    }
+
     getRoomId() {
         return this.id;
     }
 
     getRoomOwnerEmail() {
         return this.ownerEmail;
+    }
+
+    setRoomOwnerEmail() {
+        this.ownerEmail = this.users[0].getEmail();
     }
 
     userFind(userId: string) {
