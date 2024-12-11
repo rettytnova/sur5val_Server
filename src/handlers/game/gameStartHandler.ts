@@ -1,5 +1,5 @@
 import { CustomSocket, Room } from '../../interface/interface.js';
-import { GlobalFailCode, PhaseType, RoleType, RoomStateType } from '../enumTyps.js';
+import { CardType, GlobalFailCode, PhaseType, RoleType, RoomStateType } from '../enumTyps.js';
 import { sendPacket } from '../../packet/createPacket.js';
 import { config } from '../../config/config.js';
 import { getRedisData, getUserIdBySocket, setRedisData } from '../handlerMethod.js';
@@ -103,7 +103,6 @@ export const normalPhaseNotification = async (level: number, roomId: number, sen
     await monsterSpawnStart(roomId, level, -1);
     const characterPositionDatas = await getRedisData('characterPositionDatas');
     const rooms: Room[] = await getRedisData('roomData');
-
     let room: Room | null = null;
     for (let i = 0; i < rooms.length; i++) {
       if (rooms[i].id === roomId) {
@@ -112,6 +111,7 @@ export const normalPhaseNotification = async (level: number, roomId: number, sen
       }
     }
     if (!room) return;
+    if (room.id !== roomId) return;
     setBossStat(room, level);
 
     const initGameInfo = Server.getInstance().initGameInfo;
@@ -146,7 +146,6 @@ export const bossPhaseNotification = async (level: number, roomId: number, sendT
     await monsterSpawnStart(roomId, level, idx);
     const characterPositionDatas = await getRedisData('characterPositionDatas');
     const rooms: Room[] = await getRedisData('roomData');
-
     let room: Room | null = null;
     for (let i = 0; i < rooms.length; i++) {
       if (rooms[i].id === roomId) {
@@ -155,6 +154,7 @@ export const bossPhaseNotification = async (level: number, roomId: number, sendT
       }
     }
     if (!room) return;
+    if (room.id !== roomId) return;
     setBossStat(room, level);
     await setRedisData('roomData', rooms);
 
@@ -205,7 +205,7 @@ export const setBossStat = (room: Room, level: number) => {
           room.users[i].character.handCards = [];
           break;
         case 5: // 보스 라운드
-          room.users[i].character.handCards = [];
+          room.users[i].character.handCards = [{ type: CardType.BOSS_EXTENDED_SKILL, count: 1 }];
           break;
         default:
           console.log('보스 스텟 설정을 위한 라운드(level)의 값이 잘못되었습니다.:', level);
