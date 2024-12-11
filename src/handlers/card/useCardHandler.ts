@@ -17,6 +17,7 @@ import { monsterAiDatas } from '../coreMethod/monsterMove.js';
 import { monsterReward, setCardRewards, setStatRewards } from '../coreMethod/monsterReward.js';
 import { gameEndNotification } from '../notification/gameEnd.js';
 import Server from '../../class/server.js';
+import { shoppingUserIdSessions } from '../../session/shoppingSession.js';
 
 const characterBuffStatus: { [characterId: number]: number[] } = {};
 
@@ -89,11 +90,6 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
       }
     }
 
-    // sendPacket(socket, config.packetType.USE_CARD_RESPONSE, {
-    //   success: true,
-    //   failCode: GlobalFailCode.NONE
-    // });
-
     // 카드타입 별로 사용 효과 정의 (1~100: 스킬, 101~200: 소모품, 201~: 장비)
     switch (cardType) {
       // 스킬 1 ~ 100 // 스킬 1 ~ 100 // 스킬 1 ~ 100 // 스킬 1 ~ 100 // 스킬 1 ~ 100 // 스킬 1 ~ 100 // 스킬 1 ~ 100 // 스킬 1 ~ 100 //
@@ -111,7 +107,7 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
 
         // 공격 실행
         await attackTarget(user.id, room.id, 1, target.id);
-        sendAnimation(user, target, 1);
+        sendAnimation(room, target, 1);
         for (let i = 0; i < monsterAiDatas[room.id].length; i++) {
           if (monsterAiDatas[room.id][i].id === target.id) {
             monsterAiDatas[room.id][i].animationDelay = 5;
@@ -143,13 +139,13 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
             break;
           }
         }
-        sendAnimation(user, target, 1);
+        sendAnimation(room, target, 1);
 
         // 스킬 실행2
         setTimeout(async () => {
           await attackTarget(user.id, room.id, 1.5, target.id);
           if (index) monsterAiDatas[room.id][index].animationDelay = 5;
-          sendAnimation(user, target, 1);
+          sendAnimation(room, target, 1);
         }, 800);
 
         break;
@@ -238,20 +234,20 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
             break;
           }
         }
-        sendAnimation(user, target, 1);
+        sendAnimation(room, target, 1);
 
         // 스킬 실행2
         setTimeout(async () => {
           await attackTarget(user.id, room.id, 1.4, target.id);
           if (index) monsterAiDatas[room.id][index].animationDelay = 4;
-          sendAnimation(user, target, 1);
+          sendAnimation(room, target, 1);
         }, 600);
 
         // 스킬 실행3
         setTimeout(async () => {
           await attackTarget(user.id, room.id, 1.7, target.id);
           if (index) monsterAiDatas[room.id][index].animationDelay = 4;
-          sendAnimation(user, target, 1);
+          sendAnimation(room, target, 1);
         }, 1200);
 
         break;
@@ -328,55 +324,120 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
             break;
           }
         }
-        sendAnimation(user, target, 3);
+        sendAnimation(room, target, 3);
 
-        break;
-
-      // 이름: 궁수 최종 스킬
-      // 설명:
-      case CardType.ARCHER_FINAL_SKILL:
-        console.log('궁수 최종 스킬 발동!');
-        break;
-
-      // 이름: 도적 최종 스킬
-      // 설명:
-      case CardType.ROGUE_FINAL_SKILL:
-        console.log('도적 최종 스킬 발동!');
         break;
 
       // 이름: 수호의 결단
       // 설명: Mp소모: 5, 전장의 수호자로서 모든 아군에게 일정시간동안 유지되는 불굴의 힘과 방어력을 부여합니다.
-      case CardType.WARRIOR_FINAL_SKILL:
+      case CardType.ARCHER_FINAL_SKILL:
         // 공격 자원 처리
         user.character.coolDown = Date.now();
 
         // 버프 실행
-        await partyBuff(5, user, rooms, room, 0, 2, 2, 10000, CardType.WARRIOR_FINAL_SKILL);
+        await partyBuff(5, user, rooms, room, 0, 3, 3, 15000, CardType.WARRIOR_FINAL_SKILL);
         for (let i = 0; i < room.users.length; i++) {
           if (room.users[i].character.roleType === RoleType.SUR5VAL) {
-            // sendAnimation(room.users[i], room.users[i], 7);
+            // sendAnimation(room.users[i], room.users[i], ??);
           }
         }
         break;
 
+      // 이름: 무력화 단검
+      // 설명: Mp소모: 5, 단검의 독이 적의 근력을 서서히 마비시킵니다. (일정시간 동안 대상 공격력 감소)
+      case CardType.ROGUE_FINAL_SKILL:
+        // 공격 유효성 검증
+        if (!target) return;
+        if (!attackPossible(user, target, 5)) return;
+
+        // 공격 자원 처리
+        user.character.coolDown = Date.now();
+        user.character.mp -= 5;
+        await setRedisData('roomData', rooms);
+
+        // 스킬 실행
+        await changeStatus(0, target, rooms, room, 0, 0, -user.character.attack, 10000, CardType.ROGUE_FINAL_SKILL);
+        await attackTarget(user.id, room.id, 4, target.id);
+        for (let i = 0; i < monsterAiDatas[room.id].length; i++) {
+          if (monsterAiDatas[room.id][i].id === target.id) {
+            monsterAiDatas[room.id][i].animationDelay = 6;
+            break;
+          }
+        }
+        // sendAnimation(user, target, ??);
+
+        break;
+
+      // 이름: 흡혈의 검
+      // 설명: Mp소모: 4, 흡혈의 검이 적의 생명력을 흡수하여 전사의 힘을 유지합니다
+      case CardType.WARRIOR_FINAL_SKILL:
+        // 공격 유효성 검증
+        if (!target) return;
+        if (!attackPossible(user, target, 4)) return;
+
+        // 공격 자원 처리
+        user.character.coolDown = Date.now();
+        user.character.mp -= 4;
+
+        // 스킬 실행
+        user.character.hp = Math.min(user.character.hp + user.character.attack * 2, user.character.maxHp);
+        await setRedisData('roomData', rooms);
+        await attackTarget(user.id, room.id, 3, target.id);
+        for (let i = 0; i < monsterAiDatas[room.id].length; i++) {
+          if (monsterAiDatas[room.id][i].id === target.id) {
+            monsterAiDatas[room.id][i].animationDelay = 6;
+            break;
+          }
+        }
+        // sendAnimation(user, target, ??);
+
+        break;
+
       // 이름: 보스 기본 공격
-      // 설명: 보스 기본 공격
+      // 설명: 본인 주위의 적들을 공격합니다.
       case CardType.BOSS_BASIC_SKILL:
         await attackRagne(user, user, rooms, room, 1, 5, 3);
         break;
 
-      // 이름: 보스 스킬 공격1
-      // 설명: 보스 스킬 공격1
-      case CardType.NONE:
+      // 이름: 대재앙의 강타
+      // 설명: Mp소모: 10, 치명적인 일격으로 적을 공격하고, 충격파로 광범위한 피해를 줍니다.
+      case CardType.BOSS_EXTENDED_SKILL:
+        // 공격 유효성 검증
+        if (!target) return;
+        const initGameInfo = Server.getInstance().initGameInfo;
+        if (!initGameInfo) return;
+        const attackCool = initGameInfo[0].attackCool;
+        if (Date.now() - user.character.coolDown < attackCool) {
+          console.log('공격 쿨타임 중입니다.');
+          return;
+        }
+        if (user.character.mp < 10) {
+          console.log('마나가 부족합니다.');
+          return;
+        }
+        if (target.character.roleType !== RoleType.SUR5VAL) {
+          console.log('아군을 공격할 수는 없습니다.');
+          return;
+        }
+        if (target.character.hp <= 0) {
+          console.log('살아있는 적만 공격할 수 있습니다.');
+          return;
+        }
+
+        // 공격 자원 처리
+        user.character.coolDown = Date.now();
+        user.character.mp -= 10;
+
+        // 스킬 실행
+        await attackRagne(user, target, rooms, room, 0.6, 4, 3);
+        await attackTarget(user.id, room.id, 0.8, target.id);
+        sendAnimation(room, target, 3);
         break;
 
-      // 이름: 보스 스킬 공격2
-      // 설명: 보스 스킬 공격2
-      case CardType.NONE:
-
-      // 이름:
-      // 설명:
-      case CardType.NONE:
+      // 이름: 보스 스킬 더 만들고 싶을 경우
+      // 설명: 보스 스킬 더 만들고 싶을 경우
+      case CardType.BOSS_FINAL_SKILL:
+        console.log('굳이 만들게?');
         break;
 
       // 소모품 201 ~ 300 // 소모품 201 ~ 300 //  소모품 201 ~ 300 //  소모품 201 ~ 300 //  소모품 201 ~ 300 //  소모품 201 ~ 300 //  소모품 201 ~ 300 //
@@ -388,25 +449,25 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
         break;
 
       // 이름: 마력의 이슬
-      // 설명: 맑고 순수한 이슬 한 방울이 마력을 2 회복해준다! 고갈된 마법 에너지를 되살려 새로운 주문을 준비하자.
+      // 설명: 맑고 순수한 이슬 한 방울이 마력을 4 회복해준다! 고갈된 마법 에너지를 되살려 새로운 주문을 준비하자.
       case CardType.BASIC_MP_POTION:
         await usePotion(user, rooms, room, CardType.BASIC_MP_POTION);
         break;
 
       // 이름: 치유의 빛
-      // 설명: 은은한 치유의 빛이 체력을 40 회복해준다! 깊은 상처를 어루만지고 전투의 피로를 씻어내는 신비한 물약.
+      // 설명: 은은한 치유의 빛이 체력을 30 회복해준다! 깊은 상처를 어루만지고 전투의 피로를 씻어내는 신비한 물약.
       case CardType.ADVANCED_HP_POTION:
         await usePotion(user, rooms, room, CardType.ADVANCED_HP_POTION);
         break;
 
       // 이름: 마력의 빛
-      // 설명: 은은한 마나의 빛이 마력을 4 회복해준다! 흐릿했던 마법의 기운을 선명하게 채워주는 신비한 물약.
+      // 설명: 은은한 마나의 빛이 마력을 6 회복해준다! 흐릿했던 마법의 기운을 선명하게 채워주는 신비한 물약.
       case CardType.ADVANCED_MP_POTION:
         await usePotion(user, rooms, room, CardType.ADVANCED_MP_POTION);
         break;
 
       // 이름: 생명의 숨결
-      // 설명: 신비로운 생명의 기운이 체력을 100 회복해준다! 생명의 근원이 담긴 이 물약은 가장 극한의 상황에서도 새로운 힘을 불어넣는다.
+      // 설명: 신비로운 생명의 기운이 체력을 50 회복해준다! 생명의 근원이 담긴 이 물약은 가장 극한의 상황에서도 새로운 힘을 불어넣는다.
       case CardType.MASTER_HP_POTION:
         await usePotion(user, rooms, room, CardType.MASTER_HP_POTION);
         break;
@@ -447,12 +508,12 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
         }
 
         // 버프 실행
-        await changeStatus(0, user, rooms, room, 0, 0, 3, 30000, CardType.ATTACK_POTION);
+        await changeStatus(0, user, rooms, room, 0, 0, 5, 30000, CardType.ATTACK_POTION);
         break;
       }
 
       // 이름: 강철의 비약
-      // 설명: 한 모금 마시면 몸이 강철처럼 단단해져 적의 공격을 견뎌냅니다. 30초간 방어력 +8
+      // 설명: 한 모금 마시면 몸이 강철처럼 단단해져 적의 공격을 견뎌냅니다. 30초간 방어력 +6
       case CardType.DEFENSE_PORTION:
         // 해당 아이템 보유여부 검사 및 개수 차감
         let isOwned: boolean = false;
@@ -469,97 +530,97 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
         }
 
         // 버프 실행
-        await changeStatus(0, user, rooms, room, 0, 3, 0, 30000, CardType.DEFENSE_PORTION);
+        await changeStatus(0, user, rooms, room, 0, 6, 0, 30000, CardType.DEFENSE_PORTION);
         break;
 
       // 장비 301 ~ 400 // 장비 301 ~ 400  / 장비 301 ~ 400 // 장비 301 ~ 400 // 장비 301 ~ 400 // 장비 301 ~ 400 // 장비 301 ~ 400 // 장비 301 ~ 400 //
 
       // 이름: 탐험가의 무기
-      // 설명: 야생에서 빛을 발하는 무기. 공격력+2
+      // 설명: 야생에서 빛을 발하는 무기. 공격력+3
       case CardType.EXPLORER_WEAPON:
         await equipWeapon(user, rooms, room, CardType.EXPLORER_WEAPON);
         break;
 
       // 이름: 탐험가의 투구
-      // 설명: 거친 환경을 견디는 투구. 체력+20
+      // 설명: 거친 환경을 견디는 투구. 체력+21
       case CardType.EXPLORER_HEAD:
         await equipItem(user, rooms, room, 0, CardType.EXPLORER_HEAD);
         break;
 
       // 이름: 탐험가의 갑옷
-      // 설명: 유연성과 보호력을 겸비한 갑옷. 방어력+1, 체력+15
+      // 설명: 유연성과 보호력을 겸비한 갑옷. 방어력+1, 체력+17
       case CardType.EXPLORER_ARMOR:
         await equipItem(user, rooms, room, 1, CardType.EXPLORER_ARMOR);
         break;
 
       // 이름: 탐험가의 망토
-      // 설명: 바람과 비를 막아주는 견고한 망토. 방어력+2, 체력+10
+      // 설명: 바람과 비를 막아주는 견고한 망토. 방어력+2, 체력+13
       case CardType.EXPLORER_CLOAK:
         await equipItem(user, rooms, room, 2, CardType.EXPLORER_CLOAK);
         break;
 
       // 이름: 탐험가의 장갑
-      // 설명: 정밀한 손놀림을 돕는 장갑. 공격력+1, 방어력+1, 체력+5
+      // 설명: 정밀한 손놀림을 돕는 장갑. 공격력+1, 방어력+1, 체력+10
       case CardType.EXPLORER_GLOVE:
         await equipItem(user, rooms, room, 3, CardType.EXPLORER_GLOVE);
         break;
 
       // 이름: 영웅의 무기
-      // 설명: 강력한 적도 제압 가능한 놀라운 무기. 공격력+4
+      // 설명: 강력한 적도 제압 가능한 놀라운 무기. 공격력+6
       case CardType.HERO_WEAPON:
         await equipWeapon(user, rooms, room, CardType.HERO_WEAPON);
         break;
 
       // 이름: 영웅의 투구
-      // 설명: 영광스러운 전투를 상징하는 투구. 체력+40
+      // 설명: 영광스러운 전투를 상징하는 투구. 체력+30
       case CardType.HERO_HEAD:
         await equipItem(user, rooms, room, 0, CardType.HERO_HEAD);
         break;
 
       // 이름: 영웅의 갑옷
-      // 설명: 방어와 위엄을 겸비한 갑옷. 방어력+2, 체력+30
+      // 설명: 방어와 위엄을 겸비한 갑옷. 방어력+2, 체력+22
       case CardType.HERO_ARMOR:
         await equipItem(user, rooms, room, 1, CardType.HERO_ARMOR);
         break;
 
       // 이름: 영웅의 망토
-      // 설명: 마법의 힘이 깃든 망토. 방어력+4, 체력+20
+      // 설명: 마법의 힘이 깃든 망토. 방어력+4, 체력+14
       case CardType.HERO_CLOAK:
         await equipItem(user, rooms, room, 2, CardType.HERO_CLOAK);
         break;
 
       // 이름: 영웅의 장갑
-      // 설명: 전투 기술을 극대화하는 장갑. 공격력+2, 방어력+2, 체력+10
+      // 설명: 전투 기술을 극대화하는 장갑. 공격력+2, 방어력+2, 체력+12
       case CardType.HERO_GLOVE:
         await equipItem(user, rooms, room, 3, CardType.HERO_GLOVE);
         break;
 
       // 이름: 전설의 무기
-      // 설명: 신화적 힘이 담긴 무기, 적에게 파멸을 선사한다. 공격력+6
+      // 설명: 신화적 힘이 담긴 무기, 적에게 파멸을 선사한다. 공격력+10
       case CardType.LEGENDARY_WEAPON:
         await equipWeapon(user, rooms, room, CardType.LEGENDARY_WEAPON);
         break;
 
       // 이름: 전설의 투구
-      // 설명: 신성한 보호막을 제공하는 투구, 사용자를 불멸로 이끈다. 체력+60
+      // 설명: 신성한 보호막을 제공하는 투구, 사용자를 불멸로 이끈다. 체력+40
       case CardType.LEGENDARY_HEAD:
         await equipItem(user, rooms, room, 0, CardType.LEGENDARY_HEAD);
         break;
 
       // 이름: 전설의 갑옷
-      // 설명: 황금빛 문양과 마법이 깃든 최강의 갑옷. 방어력+3, 체력+45
+      // 설명: 황금빛 문양과 마법이 깃든 최강의 갑옷. 방어력+3, 체력+28
       case CardType.LEGENDARY_ARMOR:
         await equipItem(user, rooms, room, 1, CardType.LEGENDARY_ARMOR);
         break;
 
       // 이름: 전설의 망토
-      // 설명: 우주의 에너지가 깃든 최강의 망토. 방어력+6, 체력+30
+      // 설명: 우주의 에너지가 깃든 최강의 망토. 방어력+6, 체력+16
       case CardType.LEGENDARY_CLOAK:
         await equipItem(user, rooms, room, 2, CardType.LEGENDARY_CLOAK);
         break;
 
       // 이름: 전설의 장갑
-      // 설명: 신화의 기술과 힘을 담은 승리의 장갑. 공격력+3, 방어력+3, 체력+15
+      // 설명: 신화의 기술과 힘을 담은 승리의 장갑. 공격력+3, 방어력+3, 체력+16
       case CardType.LEGENDARY_GLOVE:
         await equipItem(user, rooms, room, 3, CardType.LEGENDARY_GLOVE);
         break;
@@ -570,7 +631,7 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
-// 보스스킬: 범위 적 공격
+// 범위 공격
 const attackRagne = async (
   attacker: User,
   center: User,
@@ -633,8 +694,14 @@ const attackRagne = async (
       alivePlayers[i][0].character.aliveState = false;
       alivePlayers[i][0].character.stateInfo.state = 15;
       alivePlayers[i][0].character.hp = 0;
+      for (let i = 0; i < shoppingUserIdSessions[room.id].length; i++) {
+        if (shoppingUserIdSessions[room.id][i][0] === attacker.id) {
+          shoppingUserIdSessions[room.id].splice(i, 1);
+          break;
+        }
+      }
     }
-    sendAnimation(attacker, alivePlayers[i][0], 1);
+    sendAnimation(room, alivePlayers[i][0], 1);
   }
 
   await setRedisData('roomData', rooms);
@@ -700,6 +767,17 @@ const attackTarget = async (attackerId: number, roomId: number, skillCoeffcient:
   // 보스를 죽였는지 검사
   if (target.character.roleType === RoleType.BOSS_MONSTER && target.character.hp <= 0) {
     await gameEndNotification(roomId, 3);
+    return;
+  }
+
+  // 생존자를 죽였는지 검사
+  if (target.character.roleType === RoleType.SUR5VAL && target.character.hp <= 0) {
+    for (let i = 0; i < shoppingUserIdSessions[roomId].length; i++) {
+      if (shoppingUserIdSessions[roomId][i][0] === attacker.id) {
+        shoppingUserIdSessions[roomId].splice(i, 1);
+        break;
+      }
+    }
     return;
   }
 
@@ -824,7 +902,6 @@ const changeStatus = async (
   setTimeout(async () => {
     // 버프 목록에서 제거
     deleteBuff(user, cardType);
-    console.log('버프 삭제 후: ', characterBuffStatus);
 
     // 버프 끝나는 시점의 room 정보 찾기
     const nowRooms: Room[] | undefined = await getRedisData('roomData');
@@ -923,7 +1000,6 @@ const partyBuff = async (
   setTimeout(async () => {
     // 버프 목록에서 제거
     deleteBuff(user, cardType);
-    console.log('버프 삭제 후: ', characterBuffStatus);
 
     // 버프 끝나는 시점의 room 정보 찾기
     const nowRooms: Room[] | undefined = await getRedisData('roomData');
@@ -1028,7 +1104,7 @@ const summonSpiritBuff = async (
     if (skillFinishTime < Date.now()) {
       deleteBuff(attacker, cardType);
       clearInterval(attackSkill);
-      console.log('스킬 지속시간이 종료되었습니다.');
+      return;
     }
 
     // 스킬이 끝나기 전에 게임이 종료되었는지 확인 및 종료
@@ -1133,7 +1209,7 @@ const summonSpiritBuff = async (
       // 딜링 및 애니메이션 재생
       const target = targetMonsters[i].monster.character;
       target.hp = Math.max(target.hp - skillUser.character.attack * skillCoeffcient + target.armor, 0);
-      sendAnimation(skillUser, targetMonsters[i].monster, 1);
+      sendAnimation(room, targetMonsters[i].monster, 1);
       for (let j = 0; j < monsterAiDatas[room.id].length; j++) {
         if (monsterAiDatas[room.id][j].id === targetMonsters[i].monster.id) {
           monsterAiDatas[room.id][j].animationDelay = 5;
@@ -1244,7 +1320,6 @@ const equipItem = async (user: User, rooms: Room[], room: Room, equipIndex: numb
     if (user.character.handCards[i].type === cardsType && user.character.handCards[i].count > 0) {
       user.character.handCards[i].count--;
       isOwned = true;
-      console.log(user.character.handCards[i]);
       break;
     }
   }
@@ -1399,15 +1474,14 @@ const attackPossible = (attacker: User, target: User, needMp: number) => {
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // 스킬 애니메이션 패킷 보내기
-const sendAnimation = (user: User, animationTarget: User, animationType: number) => {
-  sendPacket(socketSessions[user.id], config.packetType.ANIMATION_NOTIFICATION, {
-    userId: animationTarget.id,
-    animationType: animationType
-  });
-  if (animationTarget.character.roleType !== RoleType.WEAK_MONSTER) {
-    sendPacket(socketSessions[animationTarget.id], config.packetType.ANIMATION_NOTIFICATION, {
-      userId: animationTarget.id,
-      animationType: animationType
-    });
+const sendAnimation = (room: Room, animationTarget: User, animationType: number) => {
+  for (let i = 0; i < room.users.length; i++) {
+    const socket: CustomSocket | undefined = socketSessions[room.users[i].id];
+    if (socket) {
+      sendPacket(socket, config.packetType.ANIMATION_NOTIFICATION, {
+        userId: animationTarget.id,
+        animationType: animationType
+      });
+    }
   }
 };
