@@ -13,5 +13,9 @@ export const chattingLeaveRoomJobHandler = (job: Job): void => {
         return;
     }
 
-    leaveChattingRoom.roomUserDelete(chattingLeaveRoomUser.getId());
+    const isRoomRemove = leaveChattingRoom.roomUserDelete(chattingLeaveRoomUser.getId());
+    if (isRoomRemove == true) {
+        //console.log("방 삭제");
+        ChattingServer.getInstance().roomDelete(leaveChattingRoom.getRoomId());
+    }
 }
