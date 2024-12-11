@@ -110,12 +110,6 @@ export const fleaMarketItemSell = async (socket: CustomSocket, payload: Object) 
     console.error('판매하려는 카드를 소유하고 있지 않습니다.');
     return;
   }
-  for (let i = 0; i < shoppingUserIdSessions[room.id].length; i++) {
-    if (shoppingUserIdSessions[room.id][i][0] === userId) {
-      shoppingUserIdSessions[room.id].splice(i, 1);
-      break;
-    }
-  }
 
   // cardType 순서대로 인벤토리 정렬
   cardPickUser.character.handCards.sort((a, b) => a.type - b.type);
