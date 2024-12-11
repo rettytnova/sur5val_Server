@@ -1,5 +1,6 @@
 import DatabaseManager from "../../../../database/databaseManager.js";
 import { CustomSocket } from "../../../../interface/interface.js";
+import ChattingRoom from "../../../class/chattingRoom.js";
 import ChattingServer from "../../../class/chattingServer.js";
 import ChattingUser from "../../../class/chattingUser.js";
 import { Job } from "../../../interface/chattingServerInterface.js";
@@ -18,4 +19,16 @@ export const chattingLoginJobHandler = async (job: Job): Promise<void> => {
 
     const newChattingUser = new ChattingUser(userSocket, userEmail, loginUserNickName);
     ChattingServer.getInstance().getUsers().push(newChattingUser);
+
+    const rooms: ChattingRoom[] = ChattingServer.getInstance().getRooms();
+    const room = rooms.find((room: ChattingRoom) => room.getUsers().some((user: ChattingUser) => user.getEmail() == userEmail));
+    if (room) {
+        console.log("이미 참여중인 방이 있음");
+        const existUser = room.getUsers().find((user: ChattingUser) => user.getEmail() === userEmail);
+        if (existUser) {
+            room.roomUserDelete(existUser.getId());
+            newChattingUser.setJoinRoomId(room.getRoomId());
+            room.roomUserAdd(newChattingUser);
+        }
+    }
 }
