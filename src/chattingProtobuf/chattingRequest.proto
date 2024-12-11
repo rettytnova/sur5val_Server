@@ -7,13 +7,16 @@ message C2SChattingServerLoginRequest{
 }
 
 message C2SChattingServerCreateRoomRequest{    
+    string email = 1;
 }
 
 message C2SChattingServerJoinRoomRequest{    
+    string email = 1;
     string ownerEmail = 2;
 }
 
 message C2SChattingServerLeaveRoomRequest{
+    string email = 1;
 }
 
 message C2SChattingServerChatSendRequest{    
