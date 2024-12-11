@@ -8,6 +8,4 @@ export const chattingOnEnd = (socket: CustomSocket) => async () => {
         console.log("chattingOnEnd User 없음");
         return;
     }
-
-    chattingLeaveRoomReqHandler(socket, {});
 };
