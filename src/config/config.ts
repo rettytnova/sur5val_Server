@@ -206,6 +206,7 @@ export const chattingPacketMaps = {
   [config.chattingPacketType.CHATTING_CREATE_ROOM_REQUEST]: 'chattingServerCreateRoomRequest',
   [config.chattingPacketType.CHATTING_CREATE_ROOM_RESPONSE]: 'chattingServerCreateRoomResponse',
   [config.chattingPacketType.CHATTING_JOIN_ROOM_REQUEST]: 'chattingServerJoinRoomRequest',
+  [config.chattingPacketType.CHATTING_LEAVE_ROOM_REQUEST]: 'chattingServerLeaveRoomRequest',
   [config.chattingPacketType.CHATTING_CHAT_SEND_REQUEST]: 'chattingServerChatSendRequest',
   [config.chattingPacketType.CHATTING_CHAT_SEND_RESPONSE]: 'chattingServerChatSendResponse'
 };

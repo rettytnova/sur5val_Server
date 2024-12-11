@@ -5,6 +5,7 @@ import { getRedisData, getUserIdBySocket, setRedisData } from '../handlerMethod.
 import { CreateRoomPayload, CustomSocket, RedisUserData, Room, User } from '../../interface/interface.js';
 import { GlobalFailCode, RoomStateType } from '../enumTyps.js';
 import { socketSessions } from '../../session/socketSession.js';
+import Server from '../../class/server.js';
 
 let gRoomId: number = 1;
 export const getgRoomId = () => {
@@ -26,7 +27,8 @@ export const createRoomHandler = async (socket: net.Socket, payload: Object) => 
   if (!userId) {
     success = false;
     failCode = GlobalFailCode.CREATE_ROOM_FAILED;
-  } else {
+  }
+  else {
     // 이미 참여중인 방이 있는지 검사
     const rooms = await getRedisData('roomData');
     if (rooms) {
@@ -50,7 +52,8 @@ export const createRoomHandler = async (socket: net.Socket, payload: Object) => 
     if (!createRoomPayload.name || !createRoomPayload.maxUserNum) {
       success = false;
       failCode = GlobalFailCode.CREATE_ROOM_FAILED;
-    } else {
+    }
+    else {
       const users: User[] = [];
       let user: User | null = null;
       const userDatas = await getRedisData('userData');
@@ -61,7 +64,12 @@ export const createRoomHandler = async (socket: net.Socket, payload: Object) => 
           }
         }
       }
-      if (!user) return;
+
+      if (!user) {
+        console.log("createRoomHandler user가 없음");
+        return;
+      }
+
       users.push(user);
       createRoomPayload.maxUserNum = 5;
 
@@ -114,6 +122,9 @@ export const createRoomHandler = async (socket: net.Socket, payload: Object) => 
           failCode = GlobalFailCode.CREATE_ROOM_FAILED;
         }
       }
+
+      Server.getInstance().chattingServerSend(
+        config.chattingPacketType.CHATTING_CREATE_ROOM_REQUEST, { email: user.email });
     }
 
     sendPacket(socket, config.packetType.CREATE_ROOM_RESPONSE, {
