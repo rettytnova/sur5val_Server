@@ -27,7 +27,16 @@ export interface ChattingLoginResponse {
     message: string;
 }
 
+export interface ChattingCreateRoomPayload {
+    email: string;
+}
+
+export interface ChattingLeaveRoomPayload {
+    email: string;
+}
+
 export interface ChattingJoinRoomRequestPayload {
+    email: string;
     ownerEmail: string;
 }
 
