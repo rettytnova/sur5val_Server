@@ -7,19 +7,19 @@ import { monsterAiDatas } from './monsterMove.js';
 
 let idx = -1;
 const position = [
-  [-17.5, 9],
-  [-17.5, -1.1],
-  [-17.5, -9],
-  [-8.5, -1.1],
-  [1, 9],
-  [1, 4],
-  [1, -1],
-  [1, -5.5],
-  [1, -9],
-  [8.5, -1.1],
-  [17, 9],
-  [17, -1],
-  [17, -9]
+  [-17, 11.5],
+  [-17, -1.1],
+  [-17, -11.3],
+  [17, 11.5],
+  [17, -1.1],
+  [17, -11.3],
+  [1.5, 8],
+  [1.5, -8],
+  [-9.5, -1.1],
+  [9.5, -1.1],
+  [4.5, 1.1],
+  [-1.5, 1.1],
+  [1.5, -4.5]
 ];
 
 let monsterNumber = 10000000;
@@ -43,6 +43,8 @@ export const monsterSpawnStart = async (roomId: number, level: number, idx: numb
       room.users[i].character.hp = room.users[i].character.maxHp;
       room.users[i].character.stateInfo.state = 0;
       room.users[i].character.aliveState = true;
+      room.users[i].character.coolDown = 0;
+      room.users[i].character.gold += 100 * (level - 1);
     }
   }
 

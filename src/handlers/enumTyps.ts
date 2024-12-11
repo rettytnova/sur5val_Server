@@ -58,6 +58,8 @@ export const CardType = Object.freeze({
   ROGUE_FINAL_SKILL: 111,
   WARRIOR_FINAL_SKILL: 112,
   BOSS_BASIC_SKILL: 113,
+  BOSS_EXTENDED_SKILL: 114,
+  BOSS_FINAL_SKILL: 115,
   BASIC_HP_POTION: 201,
   BASIC_MP_POTION: 202,
   ADVANCED_HP_POTION: 203,
@@ -146,5 +148,5 @@ export const GlobalMessageType = Object.freeze({
   GLOBAL_MESSAGE_NONE: 0,
   GLOBAL_MESSAGE_ROUND: 1,
   GLOBAL_MESSAGE_COOLTIME: 2
-})
+});
 export type GlobalMessageType = (typeof GlobalMessageType)[keyof typeof GlobalMessageType];
