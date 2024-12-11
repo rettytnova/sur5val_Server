@@ -43,6 +43,8 @@ export const monsterSpawnStart = async (roomId: number, level: number, idx: numb
       room.users[i].character.hp = room.users[i].character.maxHp;
       room.users[i].character.stateInfo.state = 0;
       room.users[i].character.aliveState = true;
+      room.users[i].character.coolDown = 0;
+      room.users[i].character.gold += 100 * (level - 1);
     }
   }
 

@@ -7,6 +7,7 @@ import { animationDelay, monsterAiDatas } from './monsterMove.js';
 import { userUpdateNotification } from '../notification/userUpdate.js';
 import { RoleType } from '../enumTyps.js';
 import Server from '../../class/server.js';
+import { shoppingUserIdSessions } from '../../session/shoppingSession.js';
 
 // 몬스터와 유저의 조합 찾기
 export const monsterAttackCheck = async (room: Room, rooms: Room[]) => {
@@ -116,6 +117,12 @@ export const monsterAttackPlayer = async (player: User, monster: User, room: Roo
             rooms[i].users[j].character.aliveState = false;
             rooms[i].users[j].character.stateInfo.state = 15;
             rooms[i].users[j].character.hp = 0;
+            for (let i = 0; i < shoppingUserIdSessions[room.id].length; i++) {
+              if (shoppingUserIdSessions[room.id][i][0] === player.id) {
+                shoppingUserIdSessions[room.id].splice(i, 1);
+                break;
+              }
+            }
           }
           await userUpdateNotification(rooms[i]);
           await setRedisData('roomData', rooms);
@@ -123,18 +130,22 @@ export const monsterAttackPlayer = async (player: User, monster: User, room: Roo
       }
     }
 
-    // 애니메이션 효과 보내기
-    if (socketSessions[player.id]) {
-      for (let i = 0; i < monsterAiDatas[room.id].length; i++) {
-        if (monsterAiDatas[room.id][i].id === monster.id) {
-          monsterAiDatas[room.id][i].animationDelay = animationDelay;
-          break;
-        }
+    // 몬스터 딜레이 만들기
+    for (let i = 0; i < monsterAiDatas[room.id].length; i++) {
+      if (monsterAiDatas[room.id][i].id === monster.id) {
+        monsterAiDatas[room.id][i].animationDelay = animationDelay;
+        break;
       }
-      sendPacket(socketSessions[player.id], config.packetType.ANIMATION_NOTIFICATION, {
-        userId: player.id,
-        animationType: 2
-      });
+    }
+
+    // 애니메이셔 효과 보내기
+    for (let i = 0; i < room.users.length; i++) {
+      if (socketSessions[room.users[i].id]) {
+        sendPacket(socketSessions[room.users[i].id], config.packetType.ANIMATION_NOTIFICATION, {
+          userId: player.id,
+          animationType: 2
+        });
+      }
     }
 
     // 에러 찾기 임시 함수
