@@ -5,7 +5,7 @@ import "./chattingResponse.proto";
 
 package packet;
 
-message CommonPacket{
+message ChattingCommonPacket{
     uint32 packetType = 1;
     uint32 versionLength = 2;
     string version = 3;

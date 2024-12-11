@@ -179,8 +179,12 @@ class ChattingServer {
         return this.roomId;
     }
 
+    roomDelete(roomId: number) {
+        this.rooms = this.rooms.filter((room: ChattingRoom) => room.getRoomId() !== roomId);
+    }
+
     increaseRoomId() {
-        this.roomId;
+        this.roomId++;
     }
 
     getSendWorker() {

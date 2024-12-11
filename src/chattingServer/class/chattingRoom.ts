@@ -1,6 +1,7 @@
 import { config } from "../../config/config.js";
 import { sendChattingPacket } from "../../packet/createPacket.js";
 import { Job } from "../interface/chattingServerInterface.js";
+import ChattingServer from "./chattingServer.js";
 import ChattingUser from "./chattingUser.js";
 
 class ChattingRoom {
@@ -20,12 +21,20 @@ class ChattingRoom {
         this.roomJobQue = [];
     }
 
+    getUsers() {
+        return this.users;
+    }
+
     getRoomId() {
         return this.id;
     }
 
     getRoomOwnerEmail() {
         return this.ownerEmail;
+    }
+
+    setRoomOwnerEmail() {
+        this.ownerEmail = this.users[0].getEmail();
     }
 
     userFind(userId: string) {
@@ -48,9 +57,19 @@ class ChattingRoom {
         }
 
         this.users = this.users.filter((user) => user.getId() !== id);
+
+        if (this.users.length == 0) {
+            return true;
+        }
+
+        return false;
     }
 
     update() {
+        // this.users.forEach((user: ChattingUser) => {
+        //     console.log(`방 ${user.getEmail()}`);
+        // });
+
         while (this.roomJobQue.length > 0) {
             const job = this.roomJobQue.shift();
             if (!job) {
@@ -69,7 +88,8 @@ class ChattingRoom {
                     }
 
                     this.users.forEach((user: ChattingUser) => {
-                        sendChattingPacket(user.getUserSocket(), config.chattingPacketType.CHATTING_CHAT_SEND_RESPONSE, chatSendResponse);
+                        const chattingPacket = ChattingServer.getInstance().getProtoMessages().packet.ChattingPacket;
+                        sendChattingPacket(chattingPacket, user.getUserSocket(), config.chattingPacketType.CHATTING_CHAT_SEND_RESPONSE, chatSendResponse);
                     });
                     break;
             }

@@ -14,22 +14,28 @@ message C2SChattingServerLoginRequest{
 
 //-----------------------------------------
 // 방 생성
+// email : 방 생성하는 유저의 email
 //-----------------------------------------
 message C2SChattingServerCreateRoomRequest{    
+    string email = 1;
 }
 
 //---------------------------------------
 // 방 들어가기
+// email : 방 참여하는 유저의 email
 // ownerEmail : 참가하는 채팅방 ownerEmail
 //---------------------------------------
 message C2SChattingServerJoinRoomRequest{    
+    string email = 1;
     string ownerEmail = 2;
 }
 
 //----------------------------------------
 // 방 나가기
+// email : 채팅 방 나가는 유저 email
 //----------------------------------------
 message C2SChattingServerLeaveRoomRequest{
+    string email = 1;
 }
 
 //----------------------------------------

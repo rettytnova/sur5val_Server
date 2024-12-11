@@ -1,5 +1,4 @@
-import { CHATTING_ROOM_MAX, config } from "../../../../config/config.js";
-import { sendChattingPacket } from "../../../../packet/createPacket.js";
+import { CHATTING_ROOM_MAX } from "../../../../config/config.js";
 import ChattingRoom from "../../../class/chattingRoom.js";
 import ChattingServer from "../../../class/chattingServer.js";
 import ChattingUser from "../../../class/chattingUser.js";

@@ -1,3 +1,4 @@
+import Server from '../../class/server.js';
 import { config } from '../../config/config.js';
 import { CustomSocket, User } from '../../interface/interface.js';
 import { sendPacket } from '../../packet/createPacket.js';
@@ -63,9 +64,11 @@ export const joinRandomRoomHandler = async (socket: CustomSocket) => {
           for (let i = 0; i < userDatas.length; i++) {
             if (socketSessions[userDatas[i].id] === socket) {
               user = userDatas[i];
+              break;
             }
           }
         }
+
         if (!user) return;
         rooms[i].users.push(user);
         await setRedisData('roomData', rooms);
@@ -74,6 +77,10 @@ export const joinRandomRoomHandler = async (socket: CustomSocket) => {
           room: rooms[i],
           failCode: GlobalFailCode.NONE
         };
+
+        Server.getInstance().chattingServerSend(
+          config.chattingPacketType.CHATTING_JOIN_ROOM_REQUEST, { email: user.email, ownerEmail: rooms[i].ownerEmail });
+
         sendPacket(socket, config.packetType.JOIN_ROOM_RESPONSE, sendData);
 
         // 방에 있는 모든 인원에게 새로운 유저가 참가했다는 notification 전달 (본인 포함)

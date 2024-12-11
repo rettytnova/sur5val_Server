@@ -5,6 +5,7 @@ import { sendPacket } from '../../packet/createPacket.js';
 import { config } from '../../config/config.js';
 import { GlobalFailCode, RoomStateType, RoleType } from '../enumTyps.js';
 import { socketSessions } from '../../session/socketSession.js';
+import Server from '../../class/server.js';
 
 export const leaveRoomHandler = async (socket: net.Socket) => {
   // 해당 소켓으로 전달받는 데이터에 유저가 있는지
@@ -16,7 +17,7 @@ export const leaveRoomHandler = async (socket: net.Socket) => {
     });
     console.log('비정상적인 접근입니다. => 유저를 찾을 수 없습니다.');
     return;
-  } // 모든 방 데이터
+  } // 모든 방 데이터  
 
   const rooms: Room[] = await getRedisData('roomData');
   if (!rooms) return;
@@ -34,6 +35,7 @@ export const leaveRoomHandler = async (socket: net.Socket) => {
     return;
   }
 
+  let user: User | undefined
   let roomIndex: number | null = null;
   let userIndex: number | null = null;
   for (let i = 0; i < rooms.length; i++) {
@@ -41,6 +43,7 @@ export const leaveRoomHandler = async (socket: net.Socket) => {
       if (rooms[i].users[j].id === userId) {
         roomIndex = i;
         userIndex = j;
+        user = rooms[i].users[j];
       }
     }
   }
@@ -53,7 +56,16 @@ export const leaveRoomHandler = async (socket: net.Socket) => {
   // 나가는 유저가 방장일 경우 방장 변경
   if (userId === rooms[roomIndex].ownerId && rooms[roomIndex].users.length > 0) {
     rooms[roomIndex].ownerId = rooms[roomIndex].users[0].id;
+    rooms[roomIndex].ownerEmail = rooms[roomIndex].users[0].email;
   }
+
+  if (!user) {
+    return;
+  }
+
+  Server.getInstance().chattingServerSend(
+    config.chattingPacketType.CHATTING_LEAVE_ROOM_REQUEST, { email: user.email }
+  );
 
   // 유저에게 success response 전달
   sendPacket(socket, config.packetType.LEAVE_ROOM_RESPONSE, {

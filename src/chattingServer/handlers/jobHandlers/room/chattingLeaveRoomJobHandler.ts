@@ -13,5 +13,15 @@ export const chattingLeaveRoomJobHandler = (job: Job): void => {
         return;
     }
 
-    leaveChattingRoom.roomUserDelete(chattingLeaveRoomUser.getId());
+    const isRoomRemove = leaveChattingRoom.roomUserDelete(chattingLeaveRoomUser.getId());
+    if (isRoomRemove == true) {
+        console.log("방 삭제");
+        ChattingServer.getInstance().roomDelete(leaveChattingRoom.getRoomId());
+    }
+    else {
+        if (leaveChattingRoom.getRoomOwnerEmail() == chattingLeaveRoomUser.getEmail()) {
+            leaveChattingRoom.setRoomOwnerEmail();
+            console.log(`채팅방 방장이 ${chattingLeaveRoomUser.getEmail()}에서 ${leaveChattingRoom.getRoomOwnerEmail()}로 변경`);
+        }
+    }
 }
