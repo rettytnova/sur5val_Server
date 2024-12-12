@@ -1,5 +1,5 @@
 ﻿import { chattingPacketMaps, CLIENT_VERSION, packetMaps } from '../config/config.js';
-import Server from '../class/server.js';
+import Server from '../gameServer/class/server.js';
 import net from 'net';
 
 export const sendPacket = (socket: net.Socket, packetType: number, data: Object) => {

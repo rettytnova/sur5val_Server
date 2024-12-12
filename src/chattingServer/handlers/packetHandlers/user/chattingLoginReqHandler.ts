@@ -1,5 +1,5 @@
 import { config } from "../../../../config/config.js";
-import { CustomSocket } from "../../../../interface/interface.js";
+import { CustomSocket } from "../../../../gameServer/interface/interface.js";
 import ChattingServer from "../../../class/chattingServer.js";
 import { ChattingLoginRequestPayload, Job } from "../../../interface/chattingServerInterface.js";
 

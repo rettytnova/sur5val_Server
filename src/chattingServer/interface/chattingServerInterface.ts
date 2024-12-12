@@ -1,4 +1,4 @@
-import { CustomSocket } from "../../interface/interface.js";
+import { CustomSocket } from "../../gameServer/interface/interface.js";
 
 export class Job {
     public jobType: number;

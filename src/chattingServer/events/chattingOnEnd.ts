@@ -1,4 +1,4 @@
-import { CustomSocket } from "../../interface/interface.js";
+import { CustomSocket } from "../../gameServer/interface/interface.js";
 import ChattingServer from "../class/chattingServer.js";
 import { chattingLeaveRoomReqHandler } from "../handlers/packetHandlers/room/chattingLeaveRoomReqHandler.js";
 

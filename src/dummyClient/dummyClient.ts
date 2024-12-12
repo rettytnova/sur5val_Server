@@ -9,9 +9,9 @@ import { fileURLToPath } from 'url';
 import { packetNames } from "../protobuf/packetNames.js";
 import { CLIENT_VERSION, config, packetMaps, TOTAL_LENGTH, VERSION_START } from "../config/config.js";
 import { chattingPacketNames } from "../chattingProtobuf/chattingPacketNames.js";
-import { Room } from "../interface/interface.js";
+import { Room } from "../gameServer/interface/interface.js";
 import { packetParser } from "../packet/packetParser.js";
-import { getHandlerByPacketType } from "../handlers/handlerIndex.js";
+import { getHandlerByPacketType } from "../gameServer/handlers/handlerIndex.js";
 
 class DummyClientProto {
     private gameProtoMessages: { [key: string]: any } = {};
