@@ -169,13 +169,13 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
             break;
           }
         }
-        sendAnimation(room, target, 4);
+        sendAnimation(room, target, 3);
 
         // 스킬 실행2
         setTimeout(async () => {
           await attackTarget(user.id, room.id, 1.5, target.id);
           if (index) monsterAiDatas[room.id][index].animationDelay = 5;
-          sendAnimation(room, target, 4);
+          sendAnimation(room, target, 3);
         }, 800);
 
         break;
@@ -204,7 +204,7 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
 
         break;
 
-      // 이름: 급습 (도적 기본 스킬) , 애니메이션 번호 : 10번
+      // 이름: 급습 (도적 기본 스킬)
       // 설명: MP소모: 3, 적의 급소를 노려 치명적인 공격을 한 방 가한다.
       case CardType.ROGUE_BASIC_SKILL:
         if (!target) return;
@@ -223,7 +223,7 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
             break;
           }
         }
-        sendAnimation(room, target, 6);
+        sendAnimation(room, target, 8);
 
         break;
 
@@ -237,8 +237,9 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
         }
 
         // 버프 스킬 실행
-        await changeStatus(2, user, rooms, room, 0, 2, 2, 15000, CardType.WARRIOR_BASIC_SKILL);
-        sendAnimation(room, user, 9);
+        if (await changeStatus(2, user, rooms, room, 0, 2, 2, 15000, CardType.WARRIOR_BASIC_SKILL)) {
+          sendAnimation(room, user, 6);
+        }
 
         break;
 
@@ -293,8 +294,10 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
         }
 
         // 정령 버프 실행
-        await summonSpiritBuff(4, user, room, rooms, 0.8, 5, 2, 15000, 4000, CardType.ARCHER_EXTENDED_SKILL);
-        sendAnimation(room, user, 9);
+        if (await summonSpiritBuff(4, user, room, rooms, 0.8, 5, 2, 15000, 4000, CardType.ARCHER_EXTENDED_SKILL)) {
+          sendAnimation(room, user, 6);
+        }
+
         break;
 
       // 이름: 그림자의 춤 (도적 강화 스킬), 애니메이션 번호 : ??
@@ -307,8 +310,10 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
         }
 
         // 정령 버프 실행
-        await summonSpiritBuff(4, user, room, rooms, 1.2, 5, 1, 15000, 4000, CardType.ROGUE_EXTENDED_SKILL);
-        sendAnimation(room, user, 9);
+        if (await summonSpiritBuff(4, user, room, rooms, 1.2, 5, 1, 15000, 4000, CardType.ROGUE_EXTENDED_SKILL)) {
+          sendAnimation(room, user, 6);
+        }
+
         break;
 
       // 이름: 천둥의 강타 (전사 강화 스킬), 애니메이션 번호 : ??
@@ -331,7 +336,7 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
             break;
           }
         }
-        sendAnimation(room, user, 7);
+        sendAnimation(room, user, 10);
         break;
 
       // 이름: 불멸의 폭풍
@@ -354,7 +359,7 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
             break;
           }
         }
-        sendAnimation(room, target, 3);
+        sendAnimation(room, target, 4);
 
         break;
 
@@ -368,7 +373,7 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
         await partyBuff(5, user, rooms, room, 0, 3, 3, 15000, CardType.WARRIOR_FINAL_SKILL);
         for (let i = 0; i < room.users.length; i++) {
           if (room.users[i].character.roleType === RoleType.SUR5VAL) {
-            sendAnimation(room, room.users[i], 9);
+            sendAnimation(room, room.users[i], 6);
           }
         }
         break;
@@ -394,8 +399,7 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
             break;
           }
         }
-        sendAnimation(room, target, 6);
-        sendAnimation(room, target, 1);
+        sendAnimation(room, target, 9);
 
         break;
 
@@ -420,8 +424,7 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
             break;
           }
         }
-        sendAnimation(room, target, 7);
-        sendAnimation(room, target, 1);
+        sendAnimation(room, target, 9);
 
         break;
 
@@ -463,7 +466,7 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
         // 스킬 실행
         await attackRagne(user, target, rooms, room, 0.6, 4, 3);
         await attackTarget(user.id, room.id, 0.8, target.id);
-        sendAnimation(room, target, 4);
+        sendAnimation(room, target, 11);
         break;
 
       // 이름: 보스 스킬 더 만들고 싶을 경우
@@ -980,6 +983,8 @@ const changeStatus = async (
     await setRedisData('roomData', nowRooms);
     await userUpdateNotification(nowRoom);
   }, buffTime);
+
+  return true;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1094,7 +1099,7 @@ const summonSpiritBuff = async (
   const characterAttackCool = initGameInfo[0].attackCool;
   if (Date.now() - attacker.character.coolDown < characterAttackCool) {
     console.log('공격 쿨타임 중입니다.');
-    return false;
+    return;
   }
 
   // 마나가 충분한지 검사
@@ -1241,7 +1246,7 @@ const summonSpiritBuff = async (
       // 딜링 및 애니메이션 재생
       const target = targetMonsters[i].monster.character;
       target.hp = Math.max(target.hp - skillUser.character.attack * skillCoeffcient + target.armor, 0);
-      sendAnimation(room, targetMonsters[i].monster, 8);
+      sendAnimation(room, targetMonsters[i].monster, 7);
       for (let j = 0; j < monsterAiDatas[room.id].length; j++) {
         if (monsterAiDatas[room.id][j].id === targetMonsters[i].monster.id) {
           monsterAiDatas[room.id][j].animationDelay = 5;
@@ -1265,6 +1270,8 @@ const summonSpiritBuff = async (
     await setRedisData('roomData', nowRooms);
     await userUpdateNotification(nowRoom);
   }, 200);
+
+  return true;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
