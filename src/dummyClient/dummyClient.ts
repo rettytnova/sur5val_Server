@@ -1,9 +1,9 @@
-// import chalk from 'chalk';
-// import figlet from 'figlet';
+import chalk from 'chalk';
+import figlet from 'figlet';
 import net from 'net';
 import path from 'path';
 import fs from 'fs';
-// import readlineSync from 'readline-sync';
+import readlineSync from 'readline-sync';
 import protobuf from 'protobufjs';
 import { fileURLToPath } from 'url';
 import { packetNames } from '../protobuf/packetNames.js';
