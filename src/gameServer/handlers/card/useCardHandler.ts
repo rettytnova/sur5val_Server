@@ -90,6 +90,36 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
       }
     }
 
+    // 캐릭터 위치 정보 찾기
+    const characterPositions: { [roomId: number]: CharacterPositionData[] } =
+      await getRedisData('characterPositionDatas');
+
+    // 공격 가능 여부 확인
+    for (let i = 0; i < characterPositions[room.id].length; i++) {
+      let characterPos: CharacterPositionData = characterPositions[room.id][i];
+      if (target !== null && characterPos.id === target.id) {
+        if (
+          (-23 <= characterPos.x && characterPos.x <= -12 && 5 <= characterPos.y && characterPos.y <= 10) || // 건물 1
+          (-7 <= characterPos.x && characterPos.x <= 0 && 5 <= characterPos.y && characterPos.y <= 10) || // 건물 2
+          (3 <= characterPos.x && characterPos.x <= 13 && 5 <= characterPos.y && characterPos.y <= 10) || // 건물 3
+          (16 <= characterPos.x && characterPos.x <= 23 && 5 <= characterPos.y && characterPos.y <= 10) || // 건물 4
+          (-23 <= characterPos.x && characterPos.x <= -14 && -9 <= characterPos.y && characterPos.y <= -2.5) || // 건물 5
+          (-12 <= characterPos.x && characterPos.x <= -2.5 && -9 <= characterPos.y && characterPos.y <= -2.5) || // 건물 6
+          (6 <= characterPos.x && characterPos.x <= 13 && -9 <= characterPos.y && characterPos.y <= -2.5) || // 건물 7
+          (16 <= characterPos.x && characterPos.x <= 23 && -9 <= characterPos.y && characterPos.y <= -2.5) || // 건물 8
+          (-21 <= characterPos.x && characterPos.x <= -20 && 2.5 <= characterPos.y && characterPos.y <= 3.5) || // 부쉬 1
+          (-15 <= characterPos.x && characterPos.x <= -14 && 2.5 <= characterPos.y && characterPos.y <= 3.5) || // 부쉬 2
+          (11 <= characterPos.x && characterPos.x <= 12 && 0.5 <= characterPos.y && characterPos.y <= 1.5) || // 부쉬 3
+          (21 <= characterPos.x && characterPos.x <= 22 && 0.5 <= characterPos.y && characterPos.y <= 1.5) || // 부쉬 4
+          (-2 <= characterPos.x && characterPos.x <= -1 && -8.5 <= characterPos.y && characterPos.y <= -7.5) || // 부쉬 5
+          (4 <= characterPos.x && characterPos.x <= 5 && -8.5 <= characterPos.y && characterPos.y <= -7.5) // 부쉬 6
+        ) {
+          //console.log('대상이 공격 불가능한 위치에 있어 공격자가 공격할 수 없습니다.');
+          return;
+        }
+      }
+    }
+
     // 카드타입 별로 사용 효과 정의 (1~100: 스킬, 101~200: 소모품, 201~: 장비)
     switch (cardType) {
       // 스킬 1 ~ 100 // 스킬 1 ~ 100 // 스킬 1 ~ 100 // 스킬 1 ~ 100 // 스킬 1 ~ 100 // 스킬 1 ~ 100 // 스킬 1 ~ 100 // 스킬 1 ~ 100 //
@@ -117,7 +147,7 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
 
         break;
       }
-      // 이름: 쌍둥이 폭팔 (마법사 기본 스킬) , 애니메이션 번호 : 1번
+      // 이름: 쌍둥이 폭팔 (마법사 기본 스킬)
       // 설명: Mp소모: 2, 신비로운 마법의 에너지가 적은 두 번 타격한다. 두 번째 타격은 적을 더 강하게 공격한다.
       case CardType.MAGICIAN_BASIC_SKILL: {
         // 공격 유효성 검증
@@ -139,19 +169,19 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
             break;
           }
         }
-        sendAnimation(room, target, 1);
+        sendAnimation(room, target, 4);
 
         // 스킬 실행2
         setTimeout(async () => {
           await attackTarget(user.id, room.id, 1.5, target.id);
           if (index) monsterAiDatas[room.id][index].animationDelay = 5;
-          sendAnimation(room, target, 1);
+          sendAnimation(room, target, 4);
         }, 800);
 
         break;
       }
 
-      // 이름: 차지 샷 (궁수 기본 스킬) , 애니메이션 번호 : 4번
+      // 이름: 차지 샷 (궁수 기본 스킬)
       // 설명: MP소모: 2, 활시위에 집중하여 강력한 화살을 한 방 쏘아낸다.
       case CardType.ARCHER_BASIC_SKILL:
         if (!target) return;
@@ -170,7 +200,7 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
             break;
           }
         }
-        // sendAnimation(user, target, 4);
+        sendAnimation(room, target, 5);
 
         break;
 
@@ -193,7 +223,7 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
             break;
           }
         }
-        // sendAnimation(user, target, 10);
+        sendAnimation(room, target, 6);
 
         break;
 
@@ -208,7 +238,7 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
 
         // 버프 스킬 실행
         await changeStatus(2, user, rooms, room, 0, 2, 2, 15000, CardType.WARRIOR_BASIC_SKILL);
-        // sendAnimation(user, user, 7);
+        sendAnimation(room, user, 9);
 
         break;
 
@@ -264,7 +294,7 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
 
         // 정령 버프 실행
         await summonSpiritBuff(4, user, room, rooms, 0.8, 5, 2, 15000, 4000, CardType.ARCHER_EXTENDED_SKILL);
-        // sendAnimation(user, user, ??);
+        sendAnimation(room, user, 9);
         break;
 
       // 이름: 그림자의 춤 (도적 강화 스킬), 애니메이션 번호 : ??
@@ -278,7 +308,7 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
 
         // 정령 버프 실행
         await summonSpiritBuff(4, user, room, rooms, 1.2, 5, 1, 15000, 4000, CardType.ROGUE_EXTENDED_SKILL);
-        // sendAnimation(user, user, ??);
+        sendAnimation(room, user, 9);
         break;
 
       // 이름: 천둥의 강타 (전사 강화 스킬), 애니메이션 번호 : ??
@@ -301,7 +331,7 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
             break;
           }
         }
-        // sendAnimation(user, target, ??);
+        sendAnimation(room, user, 7);
         break;
 
       // 이름: 불멸의 폭풍
@@ -338,7 +368,7 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
         await partyBuff(5, user, rooms, room, 0, 3, 3, 15000, CardType.WARRIOR_FINAL_SKILL);
         for (let i = 0; i < room.users.length; i++) {
           if (room.users[i].character.roleType === RoleType.SUR5VAL) {
-            // sendAnimation(room.users[i], room.users[i], ??);
+            sendAnimation(room, room.users[i], 9);
           }
         }
         break;
@@ -364,7 +394,8 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
             break;
           }
         }
-        // sendAnimation(user, target, ??);
+        sendAnimation(room, target, 6);
+        sendAnimation(room, target, 1);
 
         break;
 
@@ -389,7 +420,8 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
             break;
           }
         }
-        // sendAnimation(user, target, ??);
+        sendAnimation(room, target, 7);
+        sendAnimation(room, target, 1);
 
         break;
 
@@ -431,7 +463,7 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
         // 스킬 실행
         await attackRagne(user, target, rooms, room, 0.6, 4, 3);
         await attackTarget(user.id, room.id, 0.8, target.id);
-        sendAnimation(room, target, 3);
+        sendAnimation(room, target, 4);
         break;
 
       // 이름: 보스 스킬 더 만들고 싶을 경우
@@ -701,7 +733,7 @@ const attackRagne = async (
         }
       }
     }
-    sendAnimation(room, alivePlayers[i][0], 1);
+    sendAnimation(room, alivePlayers[i][0], 2);
   }
 
   await setRedisData('roomData', rooms);
@@ -1209,7 +1241,7 @@ const summonSpiritBuff = async (
       // 딜링 및 애니메이션 재생
       const target = targetMonsters[i].monster.character;
       target.hp = Math.max(target.hp - skillUser.character.attack * skillCoeffcient + target.armor, 0);
-      sendAnimation(room, targetMonsters[i].monster, 1);
+      sendAnimation(room, targetMonsters[i].monster, 8);
       for (let j = 0; j < monsterAiDatas[room.id].length; j++) {
         if (monsterAiDatas[room.id][j].id === targetMonsters[i].monster.id) {
           monsterAiDatas[room.id][j].animationDelay = 5;
