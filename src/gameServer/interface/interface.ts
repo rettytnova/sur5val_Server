@@ -121,9 +121,15 @@ export interface CreateRoomPayload {
   maxUserNum: number;
 }
 
-export interface positionUpdatePayload {
+export interface position {
   x: number;
   y: number;
+}
+
+export interface positionType {
+  x: number;
+  y: number;
+  roleType: string;
 }
 
 export interface FleaMarketItemSelectPayload {
@@ -226,6 +232,14 @@ export interface CharacterPositionData {
   id: number;
   x: number;
   y: number;
+}
+
+export interface SpawnPositionData {
+  mapNumber: number;
+  spawnNumber: number;
+  x: number;
+  y: number;
+  roleType: string;
 }
 
 /* CardSelectRequest 타입 정의 */

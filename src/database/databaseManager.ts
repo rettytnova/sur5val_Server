@@ -1,8 +1,4 @@
-import mysql, {
-  FieldPacket,
-  QueryResult,
-  ResultSetHeader,
-} from 'mysql2/promise';
+import mysql, { FieldPacket, QueryResult, ResultSetHeader } from 'mysql2/promise';
 import { config } from '../config/config.js';
 import fs from 'fs';
 import path from 'path';
@@ -35,15 +31,12 @@ class DatabaseManager {
       database: dbConfig.name,
       waitForConnections: true,
       connectionLimit: 10,
-      queueLimit: 0,
+      queueLimit: 0
     });
 
     const originalQuery = pool.query;
 
-    pool.query = async <T extends QueryResult>(
-      sql: any,
-      params?: any,
-    ): Promise<[T, FieldPacket[]]> => {
+    pool.query = async <T extends QueryResult>(sql: any, params?: any): Promise<[T, FieldPacket[]]> => {
       //쿼리 실행시 로그
       // const date = new Date();
       // console.log(
@@ -77,11 +70,7 @@ class DatabaseManager {
   }
 
   // Query 메서드 추가
-  async query<T extends QueryResult>(
-    poolName: string,
-    sql: string,
-    params?: any,
-  ): Promise<[T, FieldPacket[]]> {
+  async query<T extends QueryResult>(poolName: string, sql: string, params?: any): Promise<[T, FieldPacket[]]> {
     const pool = this.pools[poolName];
     if (!pool) {
       throw new Error(`Pool with name ${poolName} does not exist.`);
@@ -90,11 +79,7 @@ class DatabaseManager {
   }
 
   // Execute 메서드 추가
-  async execute<T extends QueryResult>(
-    poolName: string,
-    sql: string,
-    params?: any,
-  ): Promise<[T, FieldPacket[]]> {
+  async execute<T extends QueryResult>(poolName: string, sql: string, params?: any): Promise<[T, FieldPacket[]]> {
     const pool = this.pools[poolName];
     if (!pool) {
       throw new Error(`Pool with name ${poolName} does not exist.`);
@@ -120,16 +105,10 @@ class DatabaseManager {
    * @param userNickname 사용자 Nickname
    * @returns 사용자 정보 (스네이크케이스로 변환된 객체)
    */
-  findUserByNickname = async (
-    userNickname: string,
-  ): Promise<ResultSetHeader | null> => {
+  findUserByNickname = async (userNickname: string): Promise<ResultSetHeader | null> => {
     try {
       // SQL 쿼리 실행
-      const [rows] = await this.query(
-        'USER_DB',
-        SQL_QUERIES.FIND_USER_BY_NICKNAME,
-        [userNickname],
-      );
+      const [rows] = await this.query('USER_DB', SQL_QUERIES.FIND_USER_BY_NICKNAME, [userNickname]);
 
       // 결과 확인 및 반환
       const result = Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
@@ -147,16 +126,10 @@ class DatabaseManager {
    * @param userEmail 사용자 Email
    * @returns 사용자 정보 (스네이크케이스로 변환된 객체)
    */
-  findUserByEmail = async (
-    userEmail: string,
-  ): Promise<ResultSetHeader | null> => {
+  findUserByEmail = async (userEmail: string): Promise<ResultSetHeader | null> => {
     try {
       // SQL 쿼리 실행
-      const [rows] = await this.query(
-        'USER_DB',
-        SQL_QUERIES.FIND_USER_BY_EMAIL,
-        [userEmail],
-      );
+      const [rows] = await this.query('USER_DB', SQL_QUERIES.FIND_USER_BY_EMAIL, [userEmail]);
 
       // 결과 확인 및 반환
       const result = Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
@@ -175,17 +148,10 @@ class DatabaseManager {
    * @param userPw 사용자 PW
    * @returns 사용자 정보 (스네이크케이스로 변환된 객체)
    */
-  findUserByEmailPw = async (
-    userEmail: string,
-    userPw: string,
-  ): Promise<ResultSetHeader | null> => {
+  findUserByEmailPw = async (userEmail: string, userPw: string): Promise<ResultSetHeader | null> => {
     try {
       // SQL 쿼리 실행
-      const [rows] = await this.query(
-        'USER_DB',
-        SQL_QUERIES.FIND_USER_BY_EMAIL_AND_PW,
-        [userEmail, userPw],
-      );
+      const [rows] = await this.query('USER_DB', SQL_QUERIES.FIND_USER_BY_EMAIL_AND_PW, [userEmail, userPw]);
 
       // 결과 확인 및 반환
       const result = Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
@@ -205,11 +171,7 @@ class DatabaseManager {
    * @param email 사용자 이메일
    * @returns MySQL 실행 결과
    */
-  createUser = async (
-    nickName: string,
-    email: string,
-    password: string,
-  ): Promise<ResultSetHeader> => {
+  createUser = async (nickName: string, email: string, password: string): Promise<ResultSetHeader> => {
     const createdAt = timeFormatting(new Date());
     const MMR = 0;
     const win = 0;
@@ -222,7 +184,25 @@ class DatabaseManager {
       createdAt,
       MMR,
       win,
-      lose,
+      lose
+    ]);
+
+    return result as ResultSetHeader;
+  };
+
+  createSpawnPosition = async (
+    mapNumber: number,
+    spawnNumber: number,
+    x: number,
+    y: number,
+    roleType: string
+  ): Promise<ResultSetHeader> => {
+    const [result] = await this.execute('USER_DB', SQL_QUERIES.INSERT_SPAWN_POSITION, [
+      mapNumber,
+      spawnNumber,
+      x,
+      y,
+      roleType
     ]);
 
     return result as ResultSetHeader;
@@ -260,6 +240,11 @@ class DatabaseManager {
 
   async initGameInfo() {
     const [rows] = await this.pools['USER_DB'].query(SQL_QUERIES.FIND_INIT_GAME_INFO);
+    return rows;
+  }
+
+  async spawnPositionInfo() {
+    const [rows] = await this.pools['USER_DB'].query(SQL_QUERIES.FIND_SPAWN_POSITION_INFO);
     return rows;
   }
 }

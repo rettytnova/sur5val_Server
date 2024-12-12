@@ -1,9 +1,9 @@
 import net from 'net';
 import { getRedisData, getUserIdBySocket, setRedisData } from '../handlerMethod.js';
-import { CharacterPositionData, CustomSocket, positionUpdatePayload, Room, User } from '../../../gameServer/interface/interface.js';
+import { CharacterPositionData, CustomSocket, position, Room, User } from '../../interface/interface.js';
 
 export const positionUpdateHandler = async (socket: net.Socket, payload: Object) => {
-  const update = payload as positionUpdatePayload;
+  const update = payload as position;
   // roomData 찾기
   const userId: number | null = await getUserIdBySocket(socket as CustomSocket);
   if (!userId) {
