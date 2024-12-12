@@ -17,79 +17,65 @@ import { passDebuffHandler } from './user/passDebuffHandler.js';
 import { fleaMarketSelectHandler } from './market/fleaMarketSelectHandler.js';
 import { gameEndHandler } from './game/gameEndHandler.js';
 import { fleaMarketItemSellOpenHandler } from './market/fleaMarketSellOpenHandler.js';
+import { createPositionDataHandler } from './position/createPositionDataHandler.js';
 
 const handlers = {
   [config.packetType.REGISTER_REQUEST]: {
-    handler: registerHandler,
-    protoType: 'request.C2SRegisterRequest'
+    handler: registerHandler
   },
   [config.packetType.LOGIN_REQUEST]: {
-    handler: loginHandler,
-    protoType: 'request.C2SLoginRequest'
+    handler: loginHandler
   },
   [config.packetType.CREATE_ROOM_REQUEST]: {
-    handler: createRoomHandler,
-    protoType: 'request.C2SCreateRoomRequest'
+    handler: createRoomHandler
   },
   [config.packetType.GET_ROOM_LIST_REQUEST]: {
-    handler: getRoomListHandler,
-    protoType: 'request.C2SGetRoomListRequest'
+    handler: getRoomListHandler
   },
   [config.packetType.JOIN_ROOM_REQUEST]: {
-    handler: joinRoomHandler,
-    protoType: 'request.C2SJoinRoomRequest'
+    handler: joinRoomHandler
   },
   [config.packetType.JOIN_RANDOM_ROOM_REQUEST]: {
-    handler: joinRandomRoomHandler,
-    protoType: 'request.C2SJoinRandomRoomRequest'
+    handler: joinRandomRoomHandler
   },
   [config.packetType.LEAVE_ROOM_REQUEST]: {
-    handler: leaveRoomHandler,
-    protoType: 'request.C2SLeaveRoomRequest'
+    handler: leaveRoomHandler
   },
   [config.packetType.GAME_PREPARE_REQUEST]: {
-    handler: gamePrepareHandler,
-    protoType: 'request.C2SGamePrepareRequest'
+    handler: gamePrepareHandler
   },
   [config.packetType.GAME_START_REQUEST]: {
-    handler: gameStartHandler,
-    protoType: 'request.C2SGameStartRequest'
+    handler: gameStartHandler
   },
   [config.packetType.POSITION_UPDATE_REQUEST]: {
-    handler: positionUpdateHandler,
-    protoType: 'request.C2SPositionUpdateRequest'
+    handler: positionUpdateHandler
   },
   [config.packetType.USE_CARD_REQUEST]: {
-    handler: useCardHandler,
-    protoType: 'request.C2SUseCardRequest'
+    handler: useCardHandler
   },
   [config.packetType.FLEA_MARKET_PICK_REQUEST]: {
-    handler: fleaMarketBuyOpenHandler,
-    protoType: 'request.C2SFleaMarketPickRequest'
+    handler: fleaMarketBuyOpenHandler
   },
   [config.packetType.FLEA_MARKET_SELL_REQUEST]: {
-    handler: fleaMarketItemSellOpenHandler,
-    protoType: 'request.C2SFleaMarketSellRequest'
+    handler: fleaMarketItemSellOpenHandler
   },
   [config.packetType.FLEA_MARKET_CARD_PICK_REQUEST]: {
-    handler: fleaMarketSelectHandler,
-    protoType: 'request.C2SFleaMarketCardPickRequest'
+    handler: fleaMarketSelectHandler
   },
   [config.packetType.REACTION_REQUEST]: {
-    handler: gameEndHandler,
-    protoType: 'request.C2SReactionRequest'
+    handler: gameEndHandler
   },
   [config.packetType.DESTORY_CARD_REQUEST]: {
-    handler: destoryCardHandler,
-    protoType: 'request.C2SDestroyCardRequest'
+    handler: destoryCardHandler
   },
   [config.packetType.CARD_SELECT_REQUEST]: {
-    handler: cardSelectHandler,
-    protoType: 'request.C2SCardSelectRequest'
+    handler: cardSelectHandler
   },
   [config.packetType.PASS_DEBUFF_REQUEST]: {
-    handler: passDebuffHandler,
-    protoType: 'request.C2SPassDebuffRequest'
+    handler: passDebuffHandler
+  },
+  [config.packetType.SPAWN_POSITION_SEND_REQUEST]: {
+    handler: createPositionDataHandler
   }
 };
 
@@ -100,13 +86,4 @@ export const getHandlerByPacketType = (packetType: number) => {
   }
 
   return handlers[packetType].handler;
-};
-
-export const getProtoByPacketType = (packetType: number) => {
-  if (!handlers[packetType]) {
-    console.error(`해당 패킷타입의 프로토타입을 찾을 수 없습니다: ID ${packetType}`);
-    return;
-  }
-
-  return handlers[packetType].protoType;
 };
