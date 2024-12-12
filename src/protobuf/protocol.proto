@@ -287,8 +287,9 @@ message C2SCardSelectRequest {
 }
 
 message C2SSpawnPositionSendRequest{
-    double SpawnPositionX = 1;
-    double SpawnPositionY = 2;
+    double spawnPositionX = 1;
+    double spawnPositionY = 2;
+    string roleType = 3;
 }
 
 message S2CCardSelectResponse {
@@ -617,4 +618,6 @@ enum GlobalMessageType
     GLOBAL_MESSAGE_NONE = 0;
     GLOBAL_MESSAGE_ROUND = 1;
     GLOBAL_MESSAGE_COOLTIME = 2;
+    GLOBAL_DEBUG_MODE_ON = 3;
+    GLOBAL_DEBUG_MODE_OFF = 4;
 }

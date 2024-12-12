@@ -99,4 +99,5 @@ message C2SPassDebuffRequest {
 message C2SSpawnPositionSendRequest{
     double SpawnPositionX = 1;
     double SpawnPositionY = 2;
+    string roleType = 3;
 }
