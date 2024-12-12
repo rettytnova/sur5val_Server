@@ -1,5 +1,5 @@
 import { config } from '../../../config/config.js';
-import { Room, User } from '../../../gameServer/interface/interface.js';
+import { Room, User, CharacterPositionData } from '../../../gameServer/interface/interface.js';
 import { sendPacket } from '../../../packet/createPacket.js';
 import { socketSessions } from '../../session/socketSession.js';
 import { getRedisData, setRedisData } from '../handlerMethod.js';
