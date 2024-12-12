@@ -1,5 +1,5 @@
 import DatabaseManager from "../../../../database/databaseManager.js";
-import { CustomSocket } from "../../../../interface/interface.js";
+import { CustomSocket } from "../../../../gameServer/interface/interface.js";
 import ChattingRoom from "../../../class/chattingRoom.js";
 import ChattingServer from "../../../class/chattingServer.js";
 import ChattingUser from "../../../class/chattingUser.js";

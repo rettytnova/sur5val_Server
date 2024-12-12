@@ -1,4 +1,4 @@
-import { CustomSocket } from "../../interface/interface.js";
+import { CustomSocket } from "../../gameServer/interface/interface.js";
 import { v4 as uuidv4 } from 'uuid';
 
 class ChattingUser {

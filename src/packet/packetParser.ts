@@ -1,4 +1,4 @@
-﻿import Server from '../class/server.js';
+﻿import Server from '../gameServer/class/server.js';
 
 export const packetParser = (packetType: Number, payload: Buffer): object => {
   try {

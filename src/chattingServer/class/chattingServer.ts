@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { fileURLToPath } from 'url';
 import protobuf from 'protobufjs';
 import { chattingPacketNames } from '../../chattingProtobuf/chattingPacketNames.js';
-import { CustomSocket } from '../../interface/interface.js';
+import { CustomSocket } from '../../gameServer/interface/interface.js';
 import { chattingOnData } from '../events/chattingOnData.js';
 import { chattingOnEnd } from '../events/chattingOnEnd.js';
 import { chattingOnError } from '../events/chattingOnError.js';

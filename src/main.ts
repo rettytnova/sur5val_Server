@@ -1,5 +1,5 @@
-import Server from './class/server.js';
-import { deleteRedisData } from './handlers/handlerMethod.js';
+import Server from './gameServer/class/server.js';
+import { deleteRedisData } from './gameServer/handlers/handlerMethod.js';
 
 function main() {
   Server.getInstance().start();
