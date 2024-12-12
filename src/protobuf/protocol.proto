@@ -286,6 +286,11 @@ message C2SCardSelectRequest {
     CardType selectCardType = 2; // selectType이  0일 경우 0, / 1, 2, 3일 경우 원하는 장비의 cardType
 }
 
+message C2SSpawnPositionSendRequest{
+    double SpawnPositionX = 1;
+    double SpawnPositionY = 2;
+}
+
 message S2CCardSelectResponse {
     bool success = 1;
     GlobalFailCode failCode = 2;

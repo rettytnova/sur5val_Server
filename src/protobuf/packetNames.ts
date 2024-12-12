@@ -20,7 +20,8 @@
     C2SReactionRequest: 'request.C2SReactionRequest',
     C2SPassDebuffRequest: 'request.C2SPassDebuffRequest',
     C2SDestroyCardRequest: 'request.C2SDestroyCardRequest',
-    C2SCardSelectRequest: 'request.C2SCardSelectRequest'
+    C2SCardSelectRequest: 'request.C2SCardSelectRequest',
+    C2SSpawnPostionSendRequest: 'request.C2SSpawnPostionSendRequest'
   },
   response: {
     S2CRegisterResponse: 'response.S2CRegisterResponse',

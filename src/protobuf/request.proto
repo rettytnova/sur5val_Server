@@ -94,3 +94,9 @@ message C2SPassDebuffRequest {
     int64 targetUserId = 1;
     CardType debuffCardType = 2;
 }
+
+// 스폰 포지션 전송
+message C2SSpawnPositionSendRequest{
+    double SpawnPositionX = 1;
+    double SpawnPositionY = 2;
+}

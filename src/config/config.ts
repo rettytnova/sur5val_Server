@@ -113,7 +113,8 @@ export const config = {
     WARNING_NOTIFICATION: 46,
     ANIMATION_NOTIFICATION: 47,
     GLOBAL_MESSAGE_RESPONSE: 48,
-    FLEA_MARKET_SELL_REQUEST: 49
+    FLEA_MARKET_SELL_REQUEST: 49,
+    SPAWN_POSITION_SEND_REQUEST: 50,
   },
   chattingPacketType: {
     CHATTING_LOGIN_REQUEST: 1,
@@ -197,7 +198,9 @@ export const packetMaps = {
 
   [config.packetType.ANIMATION_NOTIFICATION]: 'animationNotification',
 
-  [config.packetType.GLOBAL_MESSAGE_RESPONSE]: 'globalMessageResponse'
+  [config.packetType.GLOBAL_MESSAGE_RESPONSE]: 'globalMessageResponse',
+
+  [config.packetType.SPAWN_POSITION_SEND_REQUEST]: 'spawnPositionSendRequest'
 };
 
 export const chattingPacketMaps = {
