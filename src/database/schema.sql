@@ -72,3 +72,11 @@ CREATE TABLE IF NOT EXISTS ShopList (
     round INT,
     itemList JSON
 );
+
+CREATE TABLE IF NOT EXISTS SpawnPosition (
+    mapNumber INT,
+    spawnNumber INT,
+    x FLOAT,
+    y FLOAT,
+    roleType VARCHAR(36)
+);

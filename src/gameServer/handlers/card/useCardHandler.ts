@@ -6,7 +6,7 @@ import {
   Room,
   User,
   CharacterPositionData,
-  positionUpdatePayload
+  position
 } from '../../../gameServer/interface/interface.js';
 import { CardType, GlobalFailCode, RoleType } from '../enumTyps.js';
 import { sendPacket } from '../../../packet/createPacket.js';
@@ -687,7 +687,7 @@ const attackRagne = async (
   if (characterPositions === undefined) return;
   const positionDatas: CharacterPositionData[] | undefined = characterPositions[room.id];
   if (positionDatas === undefined) return;
-  let bossPosition: positionUpdatePayload | null = null;
+  let bossPosition: position | null = null;
   for (let i = 0; i < positionDatas.length; i++) {
     if (center.id === positionDatas[i].id) {
       bossPosition = { x: positionDatas[i].x, y: positionDatas[i].y };

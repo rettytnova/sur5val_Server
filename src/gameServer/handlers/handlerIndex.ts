@@ -8,7 +8,7 @@ import { joinRandomRoomHandler } from './room/joinRandomRoomHandler.js';
 import { leaveRoomHandler } from './room/leaveRoomHandler.js';
 import { gamePrepareHandler } from './game/gamePrepareHandler.js';
 import { gameStartHandler } from './game/gameStartHandler.js';
-import { positionUpdateHandler } from './user/positionUpdateHandler.js';
+import { positionUpdateHandler } from './position/positionUpdateHandler.js';
 import { useCardHandler } from './card/useCardHandler.js';
 import { fleaMarketBuyOpenHandler } from './market/fleaMarketBuyOpenHandler.js';
 import { destoryCardHandler } from './card/destoryCardHandler.js';
