@@ -1,7 +1,7 @@
 import { dbManager } from '../../../database/user/user.db.js';
-import { positionType, SpawnPositionData } from '../../interface/interface.js';
+import { CustomSocket, positionType, SpawnPositionData } from '../../interface/interface.js';
 
-export const createPositionDataHandler = async (payload: positionType) => {
+export const createPositionDataHandler = async (socket: CustomSocket, payload: object) => {
   const { x, y, roleType } = payload as positionType; // spawnPositionX, spawnPositionY, roleType
   const positionList: SpawnPositionData[] = await dbManager.spawnPositionInfo();
 
