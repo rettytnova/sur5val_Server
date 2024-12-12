@@ -188,6 +188,9 @@ message GamePacket {
 
         // 플리마켓
         C2SFleaMarketSellRequest fleaMarketSellRequest = 49;
+
+        // 스폰 포지션 전송
+        C2SSpawnPostionSendRequest spawnPositionSendRequest = 50;
     }
 }
 
