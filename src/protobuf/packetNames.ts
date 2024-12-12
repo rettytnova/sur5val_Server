@@ -21,7 +21,7 @@
     C2SPassDebuffRequest: 'request.C2SPassDebuffRequest',
     C2SDestroyCardRequest: 'request.C2SDestroyCardRequest',
     C2SCardSelectRequest: 'request.C2SCardSelectRequest',
-    C2SSpawnPostionSendRequest: 'request.C2SSpawnPostionSendRequest'
+    C2SSpawnPostionSendRequest: 'request.C2SSpawnPositionSendRequest'
   },
   response: {
     S2CRegisterResponse: 'response.S2CRegisterResponse',
