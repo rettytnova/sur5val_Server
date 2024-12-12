@@ -243,8 +243,8 @@ class DatabaseManager {
     return rows;
   }
 
-  async spawnPositionInfo() {
-    const [rows] = await this.pools['USER_DB'].query(SQL_QUERIES.FIND_SPAWN_POSITION_INFO);
+  async spawnPositionInfo(mapNumber: number, roleType: string) {
+    const [rows] = await this.pools['USER_DB'].query(SQL_QUERIES.FIND_SPAWN_POSITION_INFO, [mapNumber, roleType]);
     return rows;
   }
 }

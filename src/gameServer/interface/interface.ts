@@ -127,8 +127,8 @@ export interface position {
 }
 
 export interface positionType {
-  x: number;
-  y: number;
+  spawnPositionX: number;
+  spawnPositionY: number;
   roleType: string;
 }
 
