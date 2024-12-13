@@ -336,7 +336,7 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
             break;
           }
         }
-        sendAnimation(room, user, 10);
+        sendAnimation(room, target, 10);
         break;
 
       // 이름: 불멸의 폭풍
