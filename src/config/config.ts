@@ -114,7 +114,7 @@ export const config = {
     ANIMATION_NOTIFICATION: 47,
     GLOBAL_MESSAGE_RESPONSE: 48,
     FLEA_MARKET_SELL_REQUEST: 49,
-    SPAWN_POSITION_SEND_REQUEST: 50,
+    SPAWN_POSITION_SEND_REQUEST: 50
   },
   chattingPacketType: {
     CHATTING_LOGIN_REQUEST: 1,
@@ -212,98 +212,4 @@ export const chattingPacketMaps = {
   [config.chattingPacketType.CHATTING_LEAVE_ROOM_REQUEST]: 'chattingServerLeaveRoomRequest',
   [config.chattingPacketType.CHATTING_CHAT_SEND_REQUEST]: 'chattingServerChatSendRequest',
   [config.chattingPacketType.CHATTING_CHAT_SEND_RESPONSE]: 'chattingServerChatSendResponse'
-};
-/**
- * x: 11 , y : -8
-x: 5 , y : -8
-x: - 8 , y : -8
-x: -11, y : 0
-x: -4 , y : 0
-x: 7 , y : 1
-x: 22, y : 0
-x: 23, y : -8
-x: -22.5 , y : 0
-x: -21, y : - 10.5
- */
-export const spawnPoint: { [key: number]: { x: number; y: number } } = {
-  1: {
-    x: 11,
-    y: -8
-  },
-  2: {
-    x: 5,
-    y: -8
-  },
-  3: {
-    x: -8,
-    y: -8
-  },
-  4: {
-    x: -11,
-    y: 0
-  },
-  5: {
-    x: -4,
-    y: 0
-  },
-  6: {
-    x: 7,
-    y: 1
-  },
-  7: {
-    x: 22,
-    y: 0
-  },
-  8: {
-    x: 23,
-    y: -8
-  },
-  9: {
-    x: -22.5,
-    y: 0
-  },
-  10: {
-    x: -21,
-    y: -10.5
-  },
-  11: {
-    x: -1.562,
-    y: 6.173
-  },
-  12: {
-    x: -13.857,
-    y: 6.073
-  },
-  13: {
-    x: 5.507,
-    y: 11.963
-  },
-  14: {
-    x: -18.252,
-    y: 12.453
-  },
-  15: {
-    x: -1.752,
-    y: -7.376
-  },
-  16: {
-    x: 21.517,
-    y: -4.826
-  },
-  17: {
-    x: 21.717,
-    y: 3.223
-  },
-  18: {
-    x: 23.877,
-    y: 10.683
-  },
-  19: {
-    x: 15.337,
-    y: -12.296
-  },
-  20: {
-    x: -15.202,
-    y: -4.736
-  }
 };
