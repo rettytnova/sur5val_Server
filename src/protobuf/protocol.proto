@@ -287,8 +287,9 @@ message C2SCardSelectRequest {
 }
 
 message C2SSpawnPositionSendRequest{
-    double SpawnPositionX = 1;
-    double SpawnPositionY = 2;
+    double spawnPositionX = 1;
+    double spawnPositionY = 2;
+    string roleType = 3;
 }
 
 message S2CCardSelectResponse {
@@ -608,7 +609,7 @@ enum AnimationType {
     CHARGESHOT_SKILL_ANIMATION = 5;
     BUFF_SKILL_ANIMATION = 6;
     SPIRIT_ATTACK_ANIMATION = 7;
-    ROGUE_BASIC_SKILL = 8;
+    ROGUE_BASIC_SKILL_ANIMATION = 8;
     MASTER_SKILL_ANIMATION = 9;
     WARRIOR_EXTENDED_SKILL_ANIMATION = 10;
     BOSS_EXTENDED_SKILL_ANIMATION = 11;
@@ -619,4 +620,6 @@ enum GlobalMessageType
     GLOBAL_MESSAGE_NONE = 0;
     GLOBAL_MESSAGE_ROUND = 1;
     GLOBAL_MESSAGE_COOLTIME = 2;
+    GLOBAL_DEBUG_MODE_ON = 3;
+    GLOBAL_DEBUG_MODE_OFF = 4;
 }
