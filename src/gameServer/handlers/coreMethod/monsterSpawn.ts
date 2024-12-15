@@ -111,9 +111,12 @@ export const monsterSpawnStart = async (roomId: number, level: number, idx: numb
         x: monsterSpawnPositionList[monsterIdx].x,
         y: monsterSpawnPositionList[monsterIdx].y
       };
+      monsterIdx++;
     }
     userPositionDatas.push(characterPositionData);
   }
+  playerIdx = 0;
+  monsterIdx = 0;
 
   characterPositionDatas[room.id].unshift(...userPositionDatas);
 
