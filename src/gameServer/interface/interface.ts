@@ -112,6 +112,11 @@ export interface shopListDBData {
   itemList: CardType[];
 }
 
+export interface skillCardDBData {
+  cardType: number;
+  coolTime: number;
+}
+
 export interface joinRoomPayload {
   roomId: number;
 }
