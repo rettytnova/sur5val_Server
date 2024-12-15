@@ -11,5 +11,7 @@ export const SQL_QUERIES = {
   FIND_CONSUMABLE_ITEM_INFO: 'SELECT * FROM ConsumableItem', // 소모품 아이템 테이블 불러오기
   FIND_EQUIP_ITEM_INFO: 'SELECT * FROM EquipItem', // 장비 아이템 테이블 불러오기
   FIND_SPAWN_POSITION_INFO: 'SELECT * FROM SpawnPosition WHERE mapNumber = ? AND roleType = ?',
-  INSERT_SPAWN_POSITION: 'INSERT INTO SpawnPosition (mapNumber, spawnNumber, x, y, roleType) VALUES(?, ?, ?, ?, ?)' // 스폰 위치 저장 (맵번호, 역할) ※역할 : monster, boss, player
+  INSERT_SPAWN_POSITION: 'INSERT INTO SpawnPosition (mapNumber, spawnNumber, x, y, roleType) VALUES(?, ?, ?, ?, ?)', // 스폰 위치 저장 (맵번호, 역할) ※역할 : monster, boss, player
+  INSERT_SKILL_CARD: 'INSERT INTO SkillCardData (cardType, coolTime) VALUES(?, ?)', // 스킬 카드 정보 저장
+  FIND_SKILL_CARD: 'SELECT * FROM SkillCardData WHERE cardType = ?' // 스킬 카드 정보 찾기
 } as const;

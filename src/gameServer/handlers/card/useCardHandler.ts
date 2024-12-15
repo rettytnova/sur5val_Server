@@ -6,6 +6,7 @@ import {
   Room,
   User,
   CharacterPositionData,
+  skillCardDBData,
   position
 } from '../../../gameServer/interface/interface.js';
 import { CardType, GlobalFailCode, RoleType } from '../enumTyps.js';
@@ -18,6 +19,7 @@ import { monsterReward, setCardRewards, setStatRewards } from '../coreMethod/mon
 import { gameEndNotification } from '../notification/gameEnd.js';
 import Server from '../../class/server.js';
 import { shoppingUserIdSessions } from '../../session/shoppingSession.js';
+import { dbManager } from '../../../database/user/user.db.js';
 
 const characterBuffStatus: { [characterId: number]: number[] } = {};
 
@@ -129,7 +131,7 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
       case CardType.SUR5VER_BASIC_SKILL: {
         // 공격 유효성 검증
         if (!target) return;
-        if (!attackPossible(user, target, 0)) return;
+        if (!(await attackPossible(CardType.SUR5VER_BASIC_SKILL, user, target, 0))) return;
 
         // 공격 자원 처리
         user.character.coolDown = Date.now();
@@ -152,7 +154,7 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
       case CardType.MAGICIAN_BASIC_SKILL: {
         // 공격 유효성 검증
         if (!target) return;
-        if (!attackPossible(user, target, 2)) return;
+        if (!(await attackPossible(CardType.MAGICIAN_BASIC_SKILL, user, target, 2))) return;
 
         // 공격 자원 처리
         user.character.coolDown = Date.now();
@@ -185,7 +187,7 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
       // 설명: MP소모: 2, 활시위에 집중하여 강력한 화살을 한 방 쏘아낸다.
       case CardType.ARCHER_BASIC_SKILL:
         if (!target) return;
-        if (!attackPossible(user, target, 2)) return;
+        if (!(await attackPossible(CardType.ARCHER_BASIC_SKILL, user, target, 2))) return;
 
         // 공격 자원 처리
         user.character.coolDown = Date.now();
@@ -208,7 +210,7 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
       // 설명: MP소모: 3, 적의 급소를 노려 치명적인 공격을 한 방 가한다.
       case CardType.ROGUE_BASIC_SKILL:
         if (!target) return;
-        if (!attackPossible(user, target, 3)) return;
+        if (!(await attackPossible(CardType.ROGUE_BASIC_SKILL, user, target, 3))) return;
 
         // 공격 자원 처리
         user.character.coolDown = Date.now();
@@ -248,7 +250,7 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
       case CardType.MAGICIAN_EXTENDED_SKILL: {
         // 공격 유효성 검증
         if (!target) return;
-        if (!attackPossible(user, target, 3)) return;
+        if (!(await attackPossible(CardType.MAGICIAN_EXTENDED_SKILL, user, target, 3))) return;
 
         // 공격 자원 처리
         user.character.coolDown = Date.now();
@@ -321,7 +323,7 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
       case CardType.WARRIOR_EXTENDED_SKILL:
         // 공격 유효성 검증
         if (!target) return;
-        if (!attackPossible(user, target, 3)) return;
+        if (!(await attackPossible(CardType.WARRIOR_EXTENDED_SKILL, user, target, 3))) return;
 
         // 공격 자원 처리
         user.character.coolDown = Date.now();
@@ -344,7 +346,7 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
       case CardType.MAGICIAN_FINAL_SKILL:
         // 공격 유효성 검증
         if (!target) return;
-        if (!attackPossible(user, target, 4)) return;
+        if (!(await attackPossible(CardType.MAGICIAN_FINAL_SKILL, user, target, 4))) return;
 
         // 공격 자원 처리
         user.character.coolDown = Date.now();
@@ -383,7 +385,7 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
       case CardType.ROGUE_FINAL_SKILL:
         // 공격 유효성 검증
         if (!target) return;
-        if (!attackPossible(user, target, 5)) return;
+        if (!(await attackPossible(CardType.ROGUE_FINAL_SKILL, user, target, 5))) return;
 
         // 공격 자원 처리
         user.character.coolDown = Date.now();
@@ -408,7 +410,7 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
       case CardType.WARRIOR_FINAL_SKILL:
         // 공격 유효성 검증
         if (!target) return;
-        if (!attackPossible(user, target, 4)) return;
+        if (!(await attackPossible(CardType.WARRIOR_FINAL_SKILL, user, target, 4))) return;
 
         // 공격 자원 처리
         user.character.coolDown = Date.now();
@@ -439,10 +441,12 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
       case CardType.BOSS_EXTENDED_SKILL:
         // 공격 유효성 검증
         if (!target) return;
-        const initGameInfo = Server.getInstance().initGameInfo;
+        // 캐릭터의 공격 쿨타임 검사
+        const initGameInfo: skillCardDBData = await dbManager.skillCardInfo(cardType);
         if (!initGameInfo) return;
-        const attackCool = initGameInfo[0].attackCool;
-        if (Date.now() - user.character.coolDown < attackCool) {
+
+        const characterAttackCool = initGameInfo.coolTime;
+        if (Date.now() - user.character.coolDown < characterAttackCool) {
           console.log('공격 쿨타임 중입니다.');
           return;
         }
@@ -1094,9 +1098,10 @@ const summonSpiritBuff = async (
   cardType: number
 ) => {
   // 캐릭터의 공격 쿨타임 검사
-  const initGameInfo = Server.getInstance().initGameInfo;
+  const initGameInfo: skillCardDBData = await dbManager.skillCardInfo(cardType);
   if (!initGameInfo) return;
-  const characterAttackCool = initGameInfo[0].attackCool;
+
+  const characterAttackCool = initGameInfo.coolTime;
   if (Date.now() - attacker.character.coolDown < characterAttackCool) {
     console.log('공격 쿨타임 중입니다.');
     return;
@@ -1134,8 +1139,15 @@ const summonSpiritBuff = async (
 
   // 버프 스킬 실행
   const attackSkill = setInterval(async () => {
-    // 해당 스킬의 쿨타임 검사
-    if (Date.now() - lastAttack < attackCool) return;
+    // 캐릭터의 공격 쿨타임 검사
+    const initGameInfo: skillCardDBData = await dbManager.skillCardInfo(cardType);
+    if (!initGameInfo) return;
+
+    const characterAttackCool = initGameInfo.coolTime;
+    if (Date.now() - attacker.character.coolDown < characterAttackCool) {
+      console.log('공격 쿨타임 중입니다.');
+      return;
+    }
 
     // 스킬 지속시간 종료되었는지 확인 및 종료
     if (skillFinishTime < Date.now()) {
@@ -1487,11 +1499,13 @@ const deleteBuff = (user: User, buffType: number) => {
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // 공격 유효성 검증
-const attackPossible = (attacker: User, target: User, needMp: number) => {
-  const initGameInfo = Server.getInstance().initGameInfo;
-  if (!initGameInfo) return;
-  const attackCool = initGameInfo[0].attackCool;
-  if (Date.now() - attacker.character.coolDown < attackCool) {
+const attackPossible = async (cardType: CardType, attacker: User, target: User, needMp: number) => {
+  // 캐릭터의 공격 쿨타임 검사
+  const initGameInfo: skillCardDBData = await dbManager.skillCardInfo(cardType);
+  if (!initGameInfo) return false;
+
+  const characterAttackCool = initGameInfo.coolTime;
+  if (Date.now() - attacker.character.coolDown < characterAttackCool) {
     console.log('공격 쿨타임 중입니다.');
     return false;
   }

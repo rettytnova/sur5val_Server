@@ -208,6 +208,12 @@ class DatabaseManager {
     return result as ResultSetHeader;
   };
 
+  createSkillCard = async (cardType: number, coolTime: number): Promise<ResultSetHeader> => {
+    const [result] = await this.execute('USER_DB', SQL_QUERIES.INSERT_SPAWN_POSITION, [cardType, coolTime]);
+
+    return result as ResultSetHeader;
+  };
+
   async characterInitStatInfo() {
     const [rows] = await this.pools['USER_DB'].query(SQL_QUERIES.FIND_CHARACTER_INIT_STAT_INFO);
     return rows;
@@ -245,6 +251,11 @@ class DatabaseManager {
 
   async spawnPositionInfo(mapNumber: number, roleType: string) {
     const [rows] = await this.pools['USER_DB'].query(SQL_QUERIES.FIND_SPAWN_POSITION_INFO, [mapNumber, roleType]);
+    return rows;
+  }
+
+  async skillCardInfo(cardType: number) {
+    const [rows] = await this.pools['USER_DB'].query(SQL_QUERIES.FIND_SKILL_CARD, [cardType]);
     return rows;
   }
 }
