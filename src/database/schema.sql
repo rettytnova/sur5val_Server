@@ -80,3 +80,8 @@ CREATE TABLE IF NOT EXISTS SpawnPosition (
     y FLOAT,
     roleType VARCHAR(36)
 );
+
+CREATE TABLE IF NOT EXISTS SkillCardData (
+    cardType INT,
+    coolTime INT
+);
