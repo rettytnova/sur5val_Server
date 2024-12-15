@@ -4,6 +4,7 @@ import { RoleType, UserCharacterType } from '../enumTyps.js';
 import { getRedisData, monsterAI, nonSameRandom, setRedisData } from '../handlerMethod.js';
 import { monsterAiDatas } from './monsterMove.js';
 import { dbManager } from '../../../database/user/user.db.js';
+import { randomNumber } from '../../../utils/utils.js';
 
 let monsterNumber = 10000000;
 let positionIndex = 0;
@@ -79,15 +80,23 @@ export const monsterSpawnStart = async (roomId: number, level: number, idx: numb
   //const randomIndex = nonSameRandom(1, 10, room.users.length);
   const userPositionDatas = [];
 
+  let bossIdx = 0;
   let monsterIdx = 0;
   let playerIdx = 0;
   for (let i = 0; i < room.users.length; i++) {
     let characterPositionData: CharacterPositionData = { id: -1, x: -1, y: -1 };
-    if (level === 5 && room.users[i].character.characterType === UserCharacterType.PINK_SLIME) {
+    if (room.users[i].character.roleType === RoleType.BOSS_MONSTER) {
+      if (level === 5) {
+        const bossIdxInBossRound = randomNumber(0, 3);
+        bossIdx = bossIdxInBossRound;
+      } else {
+        const bossIdxInNormalRound = randomNumber(4, bossSpawnPositionList.length - 1);
+        bossIdx = bossIdxInNormalRound;
+      }
       characterPositionData = {
         id: room.users[i].id,
-        x: bossSpawnPositionList[idx].x,
-        y: bossSpawnPositionList[idx].y
+        x: bossSpawnPositionList[bossIdx].x,
+        y: bossSpawnPositionList[bossIdx].y
       };
     } else if (room.users[i].character.roleType === RoleType.SUR5VAL) {
       characterPositionData = {
