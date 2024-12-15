@@ -1139,15 +1139,8 @@ const summonSpiritBuff = async (
 
   // 버프 스킬 실행
   const attackSkill = setInterval(async () => {
-    // 캐릭터의 공격 쿨타임 검사
-    const initGameInfo: skillCardDBData = await dbManager.skillCardInfo(cardType);
-    if (!initGameInfo) return;
-
-    const characterAttackCool = initGameInfo.coolTime;
-    if (Date.now() - attacker.character.coolDown < characterAttackCool) {
-      console.log('공격 쿨타임 중입니다.');
-      return;
-    }
+    // 소환된 정령의 스킬 쿨타임 검사
+    if (Date.now() - lastAttack < attackCool) return;
 
     // 스킬 지속시간 종료되었는지 확인 및 종료
     if (skillFinishTime < Date.now()) {
