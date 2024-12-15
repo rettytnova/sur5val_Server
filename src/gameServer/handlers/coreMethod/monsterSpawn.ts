@@ -3,7 +3,6 @@ import { CharacterPositionData, Room, SpawnPositionData, User } from '../../../g
 import { RoleType, UserCharacterType } from '../enumTyps.js';
 import { getRedisData, monsterAI, nonSameRandom, setRedisData } from '../handlerMethod.js';
 import { monsterAiDatas } from './monsterMove.js';
-import { dbManager } from '../../../database/user/user.db.js';
 import { randomNumber } from '../../../utils/utils.js';
 
 let monsterNumber = 10000000;
@@ -11,124 +10,132 @@ let positionIndex = 0;
 
 // 게임 시작 시 몬스터 스폰 시작
 export const monsterSpawnStart = async (roomId: number, level: number, idx: number) => {
-  const bossSpawnPositionList: SpawnPositionData[] = await dbManager.spawnPositionInfo(1, 'boss');
-  const monsterSpawnPositionList: SpawnPositionData[] = await dbManager.spawnPositionInfo(1, 'monster');
-  const playerSpawnPositionList: SpawnPositionData[] = await dbManager.spawnPositionInfo(1, 'player');
-  // 유저가 속한 room찾기
-  const rooms = await getRedisData('roomData');
-  let room: Room | null = null;
-  for (let i = 0; i < rooms.length; i++) {
-    if (rooms[i].id === roomId) {
-      room = rooms[i];
-    }
-  }
-  if (room === null) return;
+  try {
+    const playerSpawnPositionList = Server.getInstance().playerSpawnPositionList;
+    if (!playerSpawnPositionList) return;
+    const monsterSpawnPositionList = Server.getInstance().monsterSpawnPositionList;
+    if (!monsterSpawnPositionList) return;
+    const bossSpawnPositionList = Server.getInstance().bossSpawnPositionList;
+    if (!bossSpawnPositionList) return;
 
-  // 공격팀 유저 상태 회복시키기
-  for (let i = 0; i < room.users.length; i++) {
-    if (room.users[i].character.roleType === RoleType.SUR5VAL) {
-      room.users[i].character.hp = room.users[i].character.maxHp;
-      room.users[i].character.stateInfo.state = 0;
-      room.users[i].character.aliveState = true;
-      room.users[i].character.coolDown = 0;
-      room.users[i].character.gold += 100 * (level - 1);
-    }
-  }
-
-  // 필요한 데이터 가져오기
-  const initGameInfo = Server.getInstance().initGameInfo;
-  if (!initGameInfo) {
-    console.error('몬스터 스폰 중 initGameInfo를 찾을 수 없습니다.');
-    return;
-  }
-  const characterDB = Server.getInstance().characterStatInfo;
-  if (!characterDB) {
-    console.error('몬스터 스폰 중 / 데이터베이스에서 캐릭터데이터를 찾을 수 없습니다.');
-    return;
-  }
-
-  // 공격팀 유저 마나 회복시키기
-  for (let i = 0; i < room.users.length; i++) {
-    const character = characterDB.find((data) => data.characterType === room.users[i].character.characterType);
-    if (character) {
-      room.users[i].character.mp = Math.min(
-        room.users[i].character.mp + character.mp * initGameInfo[0].mpRestoreRate,
-        character.mp
-      );
-    }
-  }
-
-  // 이전 몬스터의 roomData 삭제
-  for (let i = 0; i < room.users.length; i++) {
-    if (room.users[i].character.roleType === RoleType.WEAK_MONSTER) {
-      room.users.splice(i, 1);
-      i--;
-    }
-  }
-
-  // 이전 몬스터의 characterPositionDatas 삭제
-  let characterPositionDatas = await getRedisData('characterPositionDatas');
-  if (!characterPositionDatas) characterPositionDatas = {};
-  characterPositionDatas[roomId] = [];
-
-  // 유저의 시작 위치 랜덤하게 지정
-  if (!characterPositionDatas) {
-    characterPositionDatas = { [room.id]: [] };
-  } else if (!characterPositionDatas[room.id]) {
-    characterPositionDatas[room.id] = [];
-  }
-  //const randomIndex = nonSameRandom(1, 10, room.users.length);
-  const userPositionDatas = [];
-
-  let bossIdx = 0;
-  let monsterIdx = 0;
-  let playerIdx = 0;
-  for (let i = 0; i < room.users.length; i++) {
-    let characterPositionData: CharacterPositionData = { id: -1, x: -1, y: -1 };
-    if (room.users[i].character.roleType === RoleType.BOSS_MONSTER) {
-      if (level === 5) {
-        const bossIdxInBossRound = randomNumber(0, 3);
-        bossIdx = bossIdxInBossRound;
-      } else {
-        const bossIdxInNormalRound = randomNumber(4, bossSpawnPositionList.length - 1);
-        bossIdx = bossIdxInNormalRound;
+    // 유저가 속한 room찾기
+    const rooms = await getRedisData('roomData');
+    let room: Room | null = null;
+    for (let i = 0; i < rooms.length; i++) {
+      if (rooms[i].id === roomId) {
+        room = rooms[i];
       }
-      characterPositionData = {
-        id: room.users[i].id,
-        x: bossSpawnPositionList[bossIdx].x,
-        y: bossSpawnPositionList[bossIdx].y
-      };
-    } else if (room.users[i].character.roleType === RoleType.SUR5VAL) {
-      characterPositionData = {
-        id: room.users[i].id,
-        x: playerSpawnPositionList[playerIdx].x,
-        y: playerSpawnPositionList[playerIdx].y
-      };
-      playerIdx++;
-    } else if (room.users[i].character.roleType === RoleType.WEAK_MONSTER) {
-      characterPositionData = {
-        id: room.users[i].id,
-        x: monsterSpawnPositionList[monsterIdx].x,
-        y: monsterSpawnPositionList[monsterIdx].y
-      };
-      monsterIdx++;
     }
-    userPositionDatas.push(characterPositionData);
-  }
-  playerIdx = 0;
-  monsterIdx = 0;
+    if (room === null) return;
 
-  characterPositionDatas[room.id].unshift(...userPositionDatas);
+    // 공격팀 유저 상태 회복시키기
+    for (let i = 0; i < room.users.length; i++) {
+      if (room.users[i].character.roleType === RoleType.SUR5VAL) {
+        room.users[i].character.hp = room.users[i].character.maxHp;
+        room.users[i].character.stateInfo.state = 0;
+        room.users[i].character.aliveState = true;
+        room.users[i].character.coolDown = 0;
+        room.users[i].character.gold += 100 * (level - 1);
+      }
+    }
 
-  // 이전 몬스터의 monsterAiDatas 삭제
-  monsterAiDatas[roomId] = [];
-  await setRedisData('roomData', rooms);
-  await setRedisData('characterPositionDatas', characterPositionDatas);
+    // 필요한 데이터 가져오기
+    const initGameInfo = Server.getInstance().initGameInfo;
+    if (!initGameInfo) {
+      console.error('몬스터 스폰 중 initGameInfo를 찾을 수 없습니다.');
+      return;
+    }
+    const characterDB = Server.getInstance().characterStatInfo;
+    if (!characterDB) {
+      console.error('몬스터 스폰 중 / 데이터베이스에서 캐릭터데이터를 찾을 수 없습니다.');
+      return;
+    }
 
-  // 다음 몬스터 생성 함수 실행
-  const initMonster = initGameInfo[0].roundInitMonster;
-  for (let k = 0; k < initMonster; k++) {
-    await monsterSpawn(roomId, level, monsterSpawnPositionList);
+    // 공격팀 유저 마나 회복시키기
+    for (let i = 0; i < room.users.length; i++) {
+      const character = characterDB.find((data) => data.characterType === room.users[i].character.characterType);
+      if (character) {
+        room.users[i].character.mp = Math.min(
+          room.users[i].character.mp + character.mp * initGameInfo[0].mpRestoreRate,
+          character.mp
+        );
+      }
+    }
+
+    // 이전 몬스터의 roomData 삭제
+    for (let i = 0; i < room.users.length; i++) {
+      if (room.users[i].character.roleType === RoleType.WEAK_MONSTER) {
+        room.users.splice(i, 1);
+        i--;
+      }
+    }
+
+    // 이전 몬스터의 characterPositionDatas 삭제
+    let characterPositionDatas = await getRedisData('characterPositionDatas');
+    if (!characterPositionDatas) characterPositionDatas = {};
+    characterPositionDatas[roomId] = [];
+
+    // 유저의 시작 위치 랜덤하게 지정
+    if (!characterPositionDatas) {
+      characterPositionDatas = { [room.id]: [] };
+    } else if (!characterPositionDatas[room.id]) {
+      characterPositionDatas[room.id] = [];
+    }
+    //const randomIndex = nonSameRandom(1, 10, room.users.length);
+    const userPositionDatas = [];
+
+    let bossIdx = 0;
+    let monsterIdx = 0;
+    let playerIdx = 0;
+    for (let i = 0; i < room.users.length; i++) {
+      let characterPositionData: CharacterPositionData = { id: -1, x: -1, y: -1 };
+      if (room.users[i].character.roleType === RoleType.BOSS_MONSTER) {
+        if (level === 5) {
+          const bossIdxInBossRound = randomNumber(0, 3);
+          bossIdx = bossIdxInBossRound;
+        } else {
+          const bossIdxInNormalRound = randomNumber(4, bossSpawnPositionList.length - 1);
+          bossIdx = bossIdxInNormalRound;
+        }
+        characterPositionData = {
+          id: room.users[i].id,
+          x: bossSpawnPositionList[bossIdx].x,
+          y: bossSpawnPositionList[bossIdx].y
+        };
+      } else if (room.users[i].character.roleType === RoleType.SUR5VAL) {
+        characterPositionData = {
+          id: room.users[i].id,
+          x: playerSpawnPositionList[playerIdx].x,
+          y: playerSpawnPositionList[playerIdx].y
+        };
+        playerIdx++;
+      } else if (room.users[i].character.roleType === RoleType.WEAK_MONSTER) {
+        characterPositionData = {
+          id: room.users[i].id,
+          x: monsterSpawnPositionList[monsterIdx].x,
+          y: monsterSpawnPositionList[monsterIdx].y
+        };
+        monsterIdx++;
+      }
+      userPositionDatas.push(characterPositionData);
+    }
+    playerIdx = 0;
+    monsterIdx = 0;
+
+    characterPositionDatas[room.id].unshift(...userPositionDatas);
+
+    // 이전 몬스터의 monsterAiDatas 삭제
+    monsterAiDatas[roomId] = [];
+    await setRedisData('roomData', rooms);
+    await setRedisData('characterPositionDatas', characterPositionDatas);
+
+    // 다음 몬스터 생성 함수 실행
+    const initMonster = initGameInfo[0].roundInitMonster;
+    for (let k = 0; k < initMonster; k++) {
+      await monsterSpawn(roomId, level, monsterSpawnPositionList);
+    }
+  } catch (err) {
+    console.log('::: monsterSpawnStart ::: ', err);
   }
 };
 

@@ -17,7 +17,8 @@ import {
   initGameDBData,
   shopListDBData,
   CharacterInitStatDBData,
-  CharacterLevelUpStatDBData
+  CharacterLevelUpStatDBData,
+  SpawnPositionData
 } from '../interface/interface.js';
 import DatabaseManager from '../../database/databaseManager.js';
 import { connectRedis } from '../../database/redis.js';
@@ -26,7 +27,11 @@ import { onEnd } from '../events/onEnd.js';
 import { onChattingServerOnData } from '../events/onChattingServerOnData.js';
 import { sendChattingPacket } from '../../packet/createPacket.js';
 import { chattingPacketNames } from '../../chattingProtobuf/chattingPacketNames.js';
-
+/**
+ *   const bossSpawnPositionList: SpawnPositionData[] = await dbManager.spawnPositionInfo(1, 'boss');
+  const monsterSpawnPositionList: SpawnPositionData[] = await dbManager.spawnPositionInfo(1, 'monster');
+  const playerSpawnPositionList: SpawnPositionData[] = await dbManager.spawnPositionInfo(1, 'player');
+ */
 class Server {
   private static gInstance: Server | null = null;
   private gameProtoMessages: { [key: string]: any } = {};
@@ -40,6 +45,9 @@ class Server {
   public monsterInfo: MonsterDBData[] | undefined;
   public shopListInfo: shopListDBData[] | undefined;
   public initGameInfo: initGameDBData[] | undefined;
+  public bossSpawnPositionList: SpawnPositionData[] | undefined;
+  public monsterSpawnPositionList: SpawnPositionData[] | undefined;
+  public playerSpawnPositionList: SpawnPositionData[] | undefined;
 
   private chattingServerSocket: net.Socket;
   private chattingServerReconnect: number;
@@ -214,7 +222,12 @@ class Server {
     if (!this.shopListInfo) throw new Error('shopListInfo 정보를 불러오는데 실패하였습니다.');
     this.initGameInfo = await DatabaseManager.getInstance().initGameInfo();
     if (!this.initGameInfo) throw new Error('initGameInfo 정보를 불러오는데 실패하였습니다.');
-
+    this.bossSpawnPositionList = await DatabaseManager.getInstance().spawnPositionInfo(1, 'boss');
+    if (!this.bossSpawnPositionList) throw new Error('bossSpawnPositionList 정보를 불러오는데 실패하였습니다.');
+    this.monsterSpawnPositionList = await DatabaseManager.getInstance().spawnPositionInfo(1, 'monster');
+    if (!this.monsterSpawnPositionList) throw new Error('monsterSpawnPositionList 정보를 불러오는데 실패하였습니다.');
+    this.playerSpawnPositionList = await DatabaseManager.getInstance().spawnPositionInfo(1, 'player');
+    if (!this.playerSpawnPositionList) throw new Error('playerSpawnPositionList 정보를 불러오는데 실패하였습니다.');
     this.connect();
   }
 }
