@@ -7,14 +7,14 @@ import protobuf from 'protobufjs';
 import { chattingPacketNames } from '../../chattingProtobuf/chattingPacketNames.js';
 import { CustomSocket } from '../../gameServer/interface/interface.js';
 import { chattingOnData } from '../events/chattingOnData.js';
-import { chattingOnEnd } from '../events/chattingOnEnd.js';
 import { chattingOnError } from '../events/chattingOnError.js';
-import { CHATTING_ROOM_MAX, config } from '../../config/config.js';
+import { config } from '../../config/config.js';
 import ChattingRoom from './chattingRoom.js';
-import { Job, SendPacketData } from '../interface/chattingServerInterface.js';
+import { Job } from '../interface/chattingServerInterface.js';
 import ChattingUser from './chattingUser.js';
 import { Worker } from 'worker_threads';
 import { getChattingServerJobHandlerByJobType } from '../handlers/jobHandlers/jobHandlerIndex.js';
+import { chattingOnClose } from '../events/chattingOnClose.js';
 
 class ChattingServer {
     private static gInstance: ChattingServer | null = null;
@@ -130,7 +130,7 @@ class ChattingServer {
         customSocket.buffer = Buffer.alloc(0);
 
         customSocket.on('data', chattingOnData(customSocket));
-        customSocket.on('end', chattingOnEnd(customSocket));
+        customSocket.on('close', chattingOnClose(customSocket));
         customSocket.on('error', chattingOnError(customSocket));
     }
 
