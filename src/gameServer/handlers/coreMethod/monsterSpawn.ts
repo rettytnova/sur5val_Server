@@ -1,32 +1,19 @@
 import Server from '../../class/server.js';
-import { spawnPoint } from '../../../config/config.js';
-import { CharacterPositionData, Room, User } from '../../../gameServer/interface/interface.js';
+import { CharacterPositionData, Room, SpawnPositionData, User } from '../../../gameServer/interface/interface.js';
 import { RoleType, UserCharacterType } from '../enumTyps.js';
 import { getRedisData, monsterAI, nonSameRandom, setRedisData } from '../handlerMethod.js';
 import { monsterAiDatas } from './monsterMove.js';
-
-let idx = -1;
-const position = [
-  [-17, 11.5],
-  [-17, -1.1],
-  [-17, -11.3],
-  [17, 11.5],
-  [17, -1.1],
-  [17, -11.3],
-  [1.5, 8],
-  [1.5, -8],
-  [-9.5, -1.1],
-  [9.5, -1.1],
-  [4.5, 1.1],
-  [-1.5, 1.1],
-  [1.5, -4.5]
-];
+import { dbManager } from '../../../database/user/user.db.js';
+import { randomNumber } from '../../../utils/utils.js';
 
 let monsterNumber = 10000000;
 let positionIndex = 0;
 
 // 게임 시작 시 몬스터 스폰 시작
 export const monsterSpawnStart = async (roomId: number, level: number, idx: number) => {
+  const bossSpawnPositionList: SpawnPositionData[] = await dbManager.spawnPositionInfo(1, 'boss');
+  const monsterSpawnPositionList: SpawnPositionData[] = await dbManager.spawnPositionInfo(1, 'monster');
+  const playerSpawnPositionList: SpawnPositionData[] = await dbManager.spawnPositionInfo(1, 'player');
   // 유저가 속한 room찾기
   const rooms = await getRedisData('roomData');
   let room: Room | null = null;
@@ -90,52 +77,47 @@ export const monsterSpawnStart = async (roomId: number, level: number, idx: numb
   } else if (!characterPositionDatas[room.id]) {
     characterPositionDatas[room.id] = [];
   }
-  const randomIndex = nonSameRandom(1, 10, room.users.length);
+  //const randomIndex = nonSameRandom(1, 10, room.users.length);
   const userPositionDatas = [];
-  for (let i = 0; i < room.users.length; i++) {
-    const randomSpawnPoint = spawnPoint[randomIndex[i]];
 
+  let bossIdx = 0;
+  let monsterIdx = 0;
+  let playerIdx = 0;
+  for (let i = 0; i < room.users.length; i++) {
     let characterPositionData: CharacterPositionData = { id: -1, x: -1, y: -1 };
-    if (level === 5 && room.users[i].character.characterType === UserCharacterType.PINK_SLIME) {
-      switch (idx) {
-        case 0:
-          characterPositionData = {
-            id: room.users[i].id,
-            x: -22.5,
-            y: -1.14001215
-          };
-          break;
-        case 1:
-          characterPositionData = {
-            id: room.users[i].id,
-            x: 1.38865852,
-            y: -9.18549061
-          };
-          break;
-        case 2:
-          characterPositionData = {
-            id: room.users[i].id,
-            x: 22.0167046,
-            y: -1.156556
-          };
-          break;
-        case 3:
-          characterPositionData = {
-            id: room.users[i].id,
-            x: 1.54476261,
-            y: 9.82438946
-          };
-          break;
+    if (room.users[i].character.roleType === RoleType.BOSS_MONSTER) {
+      if (level === 5) {
+        const bossIdxInBossRound = randomNumber(0, 3);
+        bossIdx = bossIdxInBossRound;
+      } else {
+        const bossIdxInNormalRound = randomNumber(4, bossSpawnPositionList.length - 1);
+        bossIdx = bossIdxInNormalRound;
       }
-    } else {
       characterPositionData = {
         id: room.users[i].id,
-        x: randomSpawnPoint.x,
-        y: randomSpawnPoint.y
+        x: bossSpawnPositionList[bossIdx].x,
+        y: bossSpawnPositionList[bossIdx].y
       };
+    } else if (room.users[i].character.roleType === RoleType.SUR5VAL) {
+      characterPositionData = {
+        id: room.users[i].id,
+        x: playerSpawnPositionList[playerIdx].x,
+        y: playerSpawnPositionList[playerIdx].y
+      };
+      playerIdx++;
+    } else if (room.users[i].character.roleType === RoleType.WEAK_MONSTER) {
+      characterPositionData = {
+        id: room.users[i].id,
+        x: monsterSpawnPositionList[monsterIdx].x,
+        y: monsterSpawnPositionList[monsterIdx].y
+      };
+      monsterIdx++;
     }
     userPositionDatas.push(characterPositionData);
   }
+  playerIdx = 0;
+  monsterIdx = 0;
+
   characterPositionDatas[room.id].unshift(...userPositionDatas);
 
   // 이전 몬스터의 monsterAiDatas 삭제
@@ -146,13 +128,13 @@ export const monsterSpawnStart = async (roomId: number, level: number, idx: numb
   // 다음 몬스터 생성 함수 실행
   const initMonster = initGameInfo[0].roundInitMonster;
   for (let k = 0; k < initMonster; k++) {
-    await monsterSpawn(roomId, level);
+    await monsterSpawn(roomId, level, monsterSpawnPositionList);
   }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // 몬스터 생성 함수
-const monsterSpawn = async (roomId: number, level: number) => {
+const monsterSpawn = async (roomId: number, level: number, positionList: SpawnPositionData[]) => {
   // 몬스터 초기 데이터 값 가져오기
   const monsterDBInfo = Server.getInstance().monsterInfo;
   if (!monsterDBInfo) {
@@ -216,13 +198,13 @@ const monsterSpawn = async (roomId: number, level: number) => {
   } else if (!characterPositionDatas[roomId]) {
     characterPositionDatas[roomId] = [];
   }
-  positionIndex = (positionIndex + 1) % position.length;
+  positionIndex = (positionIndex + 1) % positionList.length;
 
   // 생성한 위치 정보 서버에 저장하기
   characterPositionDatas[roomId].push({
     id: monsterNumber,
-    x: position[positionIndex][0],
-    y: position[positionIndex][1]
+    x: positionList[positionIndex].x,
+    y: positionList[positionIndex].y
   });
 
   // 생성한 몬스터가 움직일 방향과 거리 만들어주기 + 공격 쿨 만들어주기
@@ -231,8 +213,8 @@ const monsterSpawn = async (roomId: number, level: number) => {
   monsterAI(
     roomId,
     monsterNumber,
-    position[positionIndex][0],
-    position[positionIndex][1],
+    positionList[positionIndex].x,
+    positionList[positionIndex].y,
     monsterData.attackCool / 2,
     monsterData.attackRange
   );
