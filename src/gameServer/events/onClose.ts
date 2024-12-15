@@ -4,6 +4,8 @@ import { CustomSocket } from '../interface/interface.js';
 import { socketSessions } from '../session/socketSession.js';
 
 export const onClose = (socket: CustomSocket) => async () => {
+  console.log(`게임서버 연결 종료 ${socket.remoteAddress}:${socket.remotePort}`);
+
   const endUserId: number | null = await getUserIdBySocket(socket);
   if (endUserId) {
     // 강제종료 했을 경우 방에서 나가기 처리
