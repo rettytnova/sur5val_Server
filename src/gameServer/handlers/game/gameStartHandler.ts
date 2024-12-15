@@ -68,6 +68,7 @@ export const gameStartHandler = async (socket: CustomSocket, payload: Object) =>
       const initGameInfo = Server.getInstance().initGameInfo;
       if (!initGameInfo) return;
       const inGameTime = initGameInfo[0].normalRoundTime;
+      //const inGameTime = 10000;
       const normalRound = initGameInfo[0].normalRoundNumber;
       const bossGameTime = initGameInfo[0].bossRoundTime;
       await setRedisData('roomData', rooms);
@@ -161,7 +162,7 @@ export const bossPhaseNotification = async (level: number, roomId: number, sendT
     const initGameInfo = Server.getInstance().initGameInfo;
     if (!initGameInfo) return;
     const bossGameTime = initGameInfo[0].bossRoundTime;
-    const gameStateData = { phaseType: PhaseType.DAY, nextPhaseAt: Date.now() + bossGameTime };
+    const gameStateData = { phaseType: PhaseType.EVENING, nextPhaseAt: Date.now() + bossGameTime };
     const notifiData = {
       gameState: gameStateData,
       users: room.users,

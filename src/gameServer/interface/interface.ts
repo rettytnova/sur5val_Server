@@ -289,3 +289,7 @@ export interface CardEffectNotification {
   userId: number;
   success: boolean;
 }
+
+export interface GameEndPayload {
+  reactionType: number;
+}
