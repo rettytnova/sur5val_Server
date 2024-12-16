@@ -7,6 +7,8 @@ export const chattingLeaveRoomJobHandler = (job: Job): void => {
 
     const leaveChattingRoomId = chattingLeaveRoomUser.getJoinRoomId();
 
+    console.log(`채팅 방 나가기 ${chattingLeaveRoomUser.getEmail()}`);
+
     const leaveChattingRoom = ChattingServer.getInstance().getRoomByRoomId(leaveChattingRoomId);
     if (leaveChattingRoom === undefined) {
         console.log("퇴장하려는 채팅방이 없음");

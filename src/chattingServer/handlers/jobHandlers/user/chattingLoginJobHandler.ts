@@ -17,6 +17,8 @@ export const chattingLoginJobHandler = async (job: Job): Promise<void> => {
 
     const loginUserNickName = user.nickname as string;
 
+    console.log(`채팅 로그인 성공 email ${userEmail} ninkname ${loginUserNickName}`);
+
     const newChattingUser = new ChattingUser(userSocket, userEmail, loginUserNickName);
     ChattingServer.getInstance().getUsers().push(newChattingUser);
 
