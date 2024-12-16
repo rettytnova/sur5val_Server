@@ -35,8 +35,10 @@ class ChattingServer {
 
     private sendWorker: Worker;
 
+    public connectingClientCount: number;
     private constructor() {
-        this.server = net.createServer(this.clientConnection);
+        this.connectingClientCount = 0;
+        this.server = net.createServer(this.clientConnection.bind(this));
 
         this.sendWorker = new Worker('./dist/chattingServer/worker/sendWorker.js');
 
@@ -122,8 +124,10 @@ class ChattingServer {
     clientConnection(socket: net.Socket) {
         const customSocket = socket as CustomSocket;
 
+        this.connectingClientCount++;
+
         console.log(
-            `Chatting Client Connected from: ${customSocket.remoteAddress}:${customSocket.remotePort}`
+            `Chatting 클라이언트 연결 from: ${customSocket.remoteAddress}:${customSocket.remotePort} 연결 중인 클라 ${ChattingServer.getInstance().connectingClientCount}`
         );
 
         customSocket.id = uuidv4();

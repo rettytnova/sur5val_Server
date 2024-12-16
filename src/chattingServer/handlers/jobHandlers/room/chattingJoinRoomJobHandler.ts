@@ -7,6 +7,8 @@ export const chattingJoinRoomJobHandler = (job: Job): void => {
     const chattingJoinRoomUser = job.payload[0] as ChattingUser;
     const chattingRoomOwnerEmail = job.payload[1] as string;
 
+    console.log(`채팅 방 참여 ${chattingRoomOwnerEmail}`);
+
     const chattingRoom = ChattingServer.getInstance().getRoomByOwnerEmail(chattingRoomOwnerEmail);
     if (chattingRoom === undefined) {
         console.log("참여할 채팅 방이 없음");

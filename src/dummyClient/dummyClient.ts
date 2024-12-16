@@ -124,7 +124,7 @@ let gDummyRoomId = 0;
 
 let gDummyClientProto: DummyClientProto;
 
-const onDataRegisterResponseListener = (socket: CustomSocket, resolve: (value?: void) => void) => (data: Buffer) => {
+const onDataGameRegisterResponseListener = (socket: CustomSocket, resolve: (value?: void) => void) => (data: Buffer) => {
   socket.buffer = Buffer.concat([socket.buffer, data]);
 
   const initialHeaderLength = VERSION_START;
@@ -177,10 +177,64 @@ const onDataRegisterResponseListener = (socket: CustomSocket, resolve: (value?: 
   }
 }
 
+const onDataGameLoginResponseListener = (socket: CustomSocket, resolve: (value?: void) => void) => (data: Buffer) => {
+  socket.buffer = Buffer.concat([socket.buffer, data]);
+
+  const initialHeaderLength = VERSION_START;
+
+  while (socket.buffer.length > initialHeaderLength) {
+    let offset: number = 0;
+
+    const packetType = socket.buffer.readUInt16BE(offset);
+    offset += config.packet.typeLength;
+
+    const versionLength = socket.buffer.readUInt8(offset);
+    offset += config.packet.versionLength;
+
+    const totalHeaderLength = TOTAL_LENGTH + versionLength;
+
+    while (socket.buffer.length >= totalHeaderLength) {
+      const version = socket.buffer.toString('utf8', offset, offset + versionLength);
+      offset += versionLength;
+      if (version !== CLIENT_VERSION) {
+        console.error('버전이 다릅니다.');
+        break;
+      }
+
+      const sequence = socket.buffer.readUInt32BE(offset);
+      offset += config.packet.sequenceLength;
+
+      const payloadLength = socket.buffer.readUInt32BE(offset);
+      offset += config.packet.payloadLength;
+
+      const length = totalHeaderLength + payloadLength;
+      if (socket.buffer.length >= length) {
+        let payload = socket.buffer.subarray(offset, offset + payloadLength);
+
+        const gamePacket = gDummyClientProto.getProtoMessages().packet.GamePacket;
+        const decodedGamePacket = gamePacket.decode(payload);
+        const payloadField = gamePacket.oneofs['payload'].oneof.find(
+          (field: any) => decodedGamePacket[field] != null
+        );
+        const parsedData = decodedGamePacket[payloadField];
+
+        socket.buffer = socket.buffer.subarray(offset + payloadLength);
+
+        switch (packetType) {
+          case config.packetType.LOGIN_RESPONSE:
+            resolve();
+            break;
+        }
+      }
+    }
+  }
+}
+
 export class UserClient {
   private id: number;
   private email: string | null;
   private nickname: string | null;
+
   private character: CharacterData | null;
 
   public gameClientSocket: any;
@@ -189,16 +243,20 @@ export class UserClient {
   private gameRoomId: number;
   private chattingRoomId: number;
 
+  private gameDataListener: ((data: Buffer) => void) | null;
+  private chattingDataListener: ((data: Buffer) => void) | null;
+
   constructor() {
     this.id = 0;
     this.email = null;
     this.nickname = null;
     this.character = null;
 
-    this.gameClientSocket = new net.Socket();
-    this.chattingClientSocket = new net.Socket();
     this.gameRoomId = 0;
     this.chattingRoomId = 0;
+
+    this.gameDataListener = null;
+    this.chattingDataListener = null;
   }
 
   getId() {
@@ -292,12 +350,28 @@ export class UserClient {
     ]);
   }
 
+  RemoveGameDataListener() {
+    this.gameClientSocket.removeListener('data', this.gameDataListener);
+    this.gameDataListener = null;
+    // const dataListeners = this.gameClientSocket.listenerCount('data');
+    // console.log("dataListener Count", dataListeners);
+  }
+
+  RemoveChatingDataListener() {
+    this.chattingClientSocket.removeListener('data', this.chattingDataListener);
+    this.chattingDataListener = null;
+    // const dataListeners = this.chattingClientSocket.listenerCount('data');
+    // console.log("dataListener Count", dataListeners);
+  }
+
   Connect() {
     return new Promise<void>((resolve, reject) => {
       const promises: Promise<void>[] = [];
 
       promises.push(
         new Promise<void>((res, rej) => {
+          this.gameClientSocket = new net.Socket();
+
           this.gameClientSocket.connect(5555, '127.0.0.1', () => {
             //console.log('게임 서버와 연결');
 
@@ -379,6 +453,7 @@ export class UserClient {
 
       promises.push(
         new Promise<void>((res, rej) => {
+          this.chattingClientSocket = new net.Socket();
           // 채팅 서버 연결
           this.chattingClientSocket.connect(5556, '127.0.0.1', () => {
             //console.log('채팅 서버와 연결');
@@ -386,6 +461,57 @@ export class UserClient {
             this.chattingClientSocket.buffer = Buffer.alloc(0);
 
             this.chattingClientSocket.on('data', (data: Buffer) => {
+              this.chattingClientSocket.buffer = Buffer.concat([this.chattingClientSocket.buffer, data]);
+
+              const initialHeaderLength = VERSION_START;
+
+              while (this.chattingClientSocket.buffer.length > initialHeaderLength) {
+                let offset: number = 0;
+
+                const packetType = this.chattingClientSocket.buffer.readUInt16BE(offset);
+                offset += config.packet.typeLength;
+
+                const versionLength = this.chattingClientSocket.buffer.readUInt8(offset);
+                offset += config.packet.versionLength;
+
+                const totalHeaderLength = TOTAL_LENGTH + versionLength;
+
+                while (this.chattingClientSocket.buffer.length >= totalHeaderLength) {
+                  const version = this.chattingClientSocket.buffer.toString('utf8', offset, offset + versionLength);
+                  offset += versionLength;
+                  if (version !== CLIENT_VERSION) {
+                    console.error('버전이 다릅니다.');
+                    break;
+                  }
+
+                  const sequence = this.chattingClientSocket.buffer.readUInt32BE(offset);
+                  offset += config.packet.sequenceLength;
+
+                  const payloadLength = this.chattingClientSocket.buffer.readUInt32BE(offset);
+                  offset += config.packet.payloadLength;
+
+                  const length = totalHeaderLength + payloadLength;
+                  if (this.chattingClientSocket.buffer.length >= length) {
+                    let payload = this.chattingClientSocket.buffer.subarray(offset, offset + payloadLength);
+
+                    const chattingPacket = gDummyClientProto.getChattingProtoMessages().packet.ChattingPacket;
+                    const decodedChattingPacket = chattingPacket.decode(payload);
+                    const payloadField = chattingPacket.oneofs['payload'].oneof.find(
+                      (field: any) => decodedChattingPacket[field] != null
+                    );
+
+                    const parsedData = decodedChattingPacket[payloadField];
+
+                    this.chattingClientSocket.buffer = this.chattingClientSocket.buffer.subarray(offset + payloadLength);
+
+                    switch (packetType) {
+                      case config.chattingPacketType.CHATTING_LOGIN_RESPONSE:
+                        console.log("로그인 응답 옴");
+                        break;
+                    }
+                  }
+                }
+              }
             });
 
             res();
@@ -414,9 +540,6 @@ export class UserClient {
           new Promise<void>((res, rej) => {
             this.gameClientSocket.on("close", () => {
               console.log("게임 서버 소켓 연결이 종료되었습니다.");
-              this.gameClientSocket = null;
-              this.gameClientSocket = new net.Socket();
-
               // const dataListeners = this.gameClientSocket.listenerCount('data');
               // const endListeners = this.gameClientSocket.listenerCount('end');
               // const closeListeners = this.gameClientSocket.listenerCount('close');
@@ -436,8 +559,6 @@ export class UserClient {
           new Promise<void>((res, rej) => {
             this.chattingClientSocket.on("close", () => {
               console.log("채팅 서버 소켓 연결이 종료되었습니다.");
-              this.chattingClientSocket = null;
-              this.chattingClientSocket = new net.Socket();
               res();
             });
 
@@ -464,21 +585,35 @@ export class UserClient {
 
       this.gameClientSocket.write(registerGameServerPacket);
 
-      this.gameClientSocket.on('data', (data: Buffer) => {
-        onDataRegisterResponseListener(this.gameClientSocket, resolve)(data);
-      });
+      this.gameDataListener = onDataGameRegisterResponseListener(this.gameClientSocket, resolve);
+
+      this.gameClientSocket.on('data', this.gameDataListener);
     });
   }
 
-  GameServerLoginSend() {
-    const loginGameServerPacket = this.CreateGamePacket(config.packetType.LOGIN_REQUEST, '1.0.0', 1, {
-      email: `dummy_${gDummyLoginClientId}@naver.com`,
-      password: `!Dummy${gDummyLoginClientId}`
+  ServerLoginSend() {
+    return new Promise<void>((resolve, reject) => {
+      const loginGameServerPacket = this.CreateGamePacket(config.packetType.LOGIN_REQUEST, '1.0.0', 1, {
+        email: `dummy_${gDummyLoginClientId}@naver.com`,
+        password: `!Dummy${gDummyLoginClientId}`
+      });
+
+      gDummyLoginClientId++;
+
+      this.gameClientSocket.write(loginGameServerPacket);
+
+      this.gameDataListener = onDataGameLoginResponseListener(this.gameClientSocket, resolve);
+      this.gameClientSocket.on('data', this.gameDataListener);
+
+      const loginChattingServerPacket = this.CreateChattingPacket(
+        config.chattingPacketType.CHATTING_LOGIN_REQUEST, '1.0.0', 1, {
+        email: `dummy_${gDummyChattingLoginClientId}@naver.com`,
+      });
+
+      gDummyChattingLoginClientId++;
+
+      this.chattingClientSocket.write(loginChattingServerPacket);
     });
-
-    gDummyLoginClientId++;
-
-    this.gameClientSocket.write(loginGameServerPacket);
   }
 
   GameServerGetRoomList() {
@@ -492,17 +627,6 @@ export class UserClient {
 
       this.gameClientSocket.write(getRoomListGameServerPacket);
     }, 1000);
-  }
-
-  ChattingLoginSend() {
-    const loginChattingServerPacket = this.CreateChattingPacket(
-      config.chattingPacketType.CHATTING_LOGIN_REQUEST, '1.0.0', 1, {
-      email: `dummy_${gDummyChattingLoginClientId}@naver.com`,
-    });
-
-    gDummyChattingLoginClientId++;
-
-    this.chattingClientSocket.write(loginChattingServerPacket);
   }
 }
 
@@ -555,6 +679,14 @@ function handleUserInput() {
   }
 }
 
+async function GameDataListenerRemove() {
+  await Promise.all(gDummyClients.map((dummy: UserClient) => dummy.RemoveGameDataListener()));
+}
+
+async function ChattingDataListenerRemove() {
+  await Promise.all(gDummyClients.map((dummy: UserClient) => dummy.RemoveChatingDataListener()));
+}
+
 async function DummyClientCreate() {
   console.clear();
 
@@ -572,13 +704,13 @@ async function DummyClientCreate() {
       })
     ).then(() => {
       console.log(chalk.green(`더미 생성완료 ... [${gDummyClients.length}]`));
+      DummyClientConnect();
     });
   }
   else {
-    console.log(`생성한 더미 [${gDummyClients.length}]개를 접속 종료하고 생성하세요`);
+    console.log(`생성한 더미 [${gDummyClients}]의 접속을 종료하고 생성하세요`);
+    DummyClientConnect();
   }
-
-  DummyClientLobbyScreen();
 }
 
 function DummyClientConnect() {
@@ -594,7 +726,7 @@ function DummyClientConnect() {
     }
 
     DummyClientLobbyScreen();
-  }, 1000);
+  }, 500);
 }
 
 function DummyClientRegister() {
@@ -603,21 +735,23 @@ function DummyClientRegister() {
 
   setTimeout(async () => {
     await Promise.all(gDummyClients.map((dummy: UserClient) => dummy.GameServerRegisterSend()));
-    console.log(`더미 클라 [${gDummyClients.length}]회원가입 전송 완료`);
+    console.log(`더미 클라 회원가입 전송 완료`);
+    await GameDataListenerRemove();
     DummyClientLobbyScreen();
-  }, 1000);
+  }, 500);
 }
 
 function DummyClientLogin() {
   console.clear();
   console.log(chalk.white(`[생성한 더미 클라로 로그인을 진행합니다.] ${gDummyClients.length}`));
 
-  setTimeout(() => {
-    gDummyClients.forEach(async (dummy: UserClient) => {
-      dummy.GameServerLoginSend();
-      dummy.ChattingLoginSend();
-    });
-  }, 2000);
+  setTimeout(async () => {
+    await Promise.all(gDummyClients.map((dummy: UserClient) => dummy.ServerLoginSend()));
+    console.log(chalk.green(`[더미 클라 로그인 전송 완료]`));
+    await GameDataListenerRemove();
+
+    DummyClientLobbyScreen();
+  }, 500);
 }
 
 async function DummyClientDisconnect() {
@@ -634,10 +768,15 @@ async function DummyClientDisconnect() {
       })
     );
     gDummyClients = [];
+
+    gDummyRegisterClientId = 0;
+    gDummyLoginClientId = 0;
+    gDummyChattingLoginClientId = 0;
+
     console.log(chalk.green('[모든 클라이언트의 접속 종료 완료.]'));
 
   } else {
-    console.log("더미를 생성하고 접속을 종료하세요");
+    console.log(chalk.redBright("더미를 생성하고 접속을 종료하세요"));
   }
 
   DummyClientLobbyScreen();
