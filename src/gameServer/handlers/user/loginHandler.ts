@@ -169,7 +169,7 @@ export const loginHandler = async (socket: CustomSocket, payload: Object): Promi
           const normalRound = initGameInfo[0].normalRoundNumber;
           const leftTime = (inGameTime * normalRound - (Date.now() - inGameTimeSessions[rooms[i].id])) % inGameTime;
           const characterPositionDatas = await getRedisData('characterPositionDatas');
-          const gameStateData = { phaseType: PhaseType.DAY, nextPhaseAt: Date.now() + leftTime };
+          const gameStateData = { phaseType: PhaseType.NORMAL_ROUND_1, nextPhaseAt: Date.now() + leftTime };
           const notifiData = {
             gameState: gameStateData,
             users: rooms[i].users as User[],

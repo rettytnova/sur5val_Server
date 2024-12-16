@@ -35,9 +35,12 @@ export type RoomStateType = (typeof RoomStateType)[keyof typeof RoomStateType];
 // 인게임 페이즈
 export const PhaseType = Object.freeze({
   NONE_PHASE: 0,
-  DAY: 1,
-  EVENING: 2,
-  END: 3
+  NORMAL_ROUND_1: 1,
+  NORMAL_ROUND_2: 2,
+  NORMAL_ROUND_3: 3,
+  NORMAL_ROUND_4: 4,
+  BOSS_ROUND: 5,
+  END: 6
 });
 export type PhaseType = (typeof PhaseType)[keyof typeof PhaseType];
 
