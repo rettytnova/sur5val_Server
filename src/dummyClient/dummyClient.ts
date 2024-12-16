@@ -7,14 +7,17 @@ import readlineSync from 'readline-sync';
 import protobuf from 'protobufjs';
 import { fileURLToPath } from 'url';
 import { packetNames } from '../protobuf/packetNames.js';
-import { CLIENT_VERSION, config, packetMaps, TOTAL_LENGTH, VERSION_START } from '../config/config.js';
+import { chattingPacketMaps, CLIENT_VERSION, config, packetMaps, TOTAL_LENGTH, VERSION_START } from '../config/config.js';
 import { chattingPacketNames } from '../chattingProtobuf/chattingPacketNames.js';
-import { Room } from '../gameServer/interface/interface.js';
+import { CustomSocket, Room } from '../gameServer/interface/interface.js';
+import { getDummyClientResponseHandlerByPacketType } from './responseHandlers/responseHandlerIndex.js';
+
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 class DummyClientProto {
   private gameProtoMessages: { [key: string]: any } = {};
   private chattingProtoMessage: { [key: string]: any } = {};
-  constructor() {}
+  constructor() { }
 
   getDir(dirPath: string): string {
     const __filename = fileURLToPath(import.meta.url);
@@ -91,10 +94,18 @@ class DummyClientProto {
   }
 }
 
-const gDummyClients: UserClient[] = [];
+let gDummyClients: UserClient[] = [];
 let gDummyGameRooms: DummyGameRoom[] = [];
 
-class DummyGameRoom {
+export const getGDummyGameRooms = () => {
+  return gDummyGameRooms;
+};
+
+export const setGDummyGameRoomsInit = () => {
+  gDummyGameRooms = [];
+};
+
+export class DummyGameRoom {
   private roomData: Room;
 
   constructor(roomData: Room) {
@@ -108,21 +119,75 @@ class DummyGameRoom {
 
 let gDummyRegisterClientId = 0;
 let gDummyLoginClientId = 0;
+let gDummyChattingLoginClientId = 0;
 let gDummyRoomId = 0;
 
-class UserClient {
+let gDummyClientProto: DummyClientProto;
+
+const onDataRegisterResponseListener = (socket: CustomSocket, resolve: (value?: void) => void) => (data: Buffer) => {
+  socket.buffer = Buffer.concat([socket.buffer, data]);
+
+  const initialHeaderLength = VERSION_START;
+
+  while (socket.buffer.length > initialHeaderLength) {
+    let offset: number = 0;
+
+    const packetType = socket.buffer.readUInt16BE(offset);
+    offset += config.packet.typeLength;
+
+    const versionLength = socket.buffer.readUInt8(offset);
+    offset += config.packet.versionLength;
+
+    const totalHeaderLength = TOTAL_LENGTH + versionLength;
+
+    while (socket.buffer.length >= totalHeaderLength) {
+      const version = socket.buffer.toString('utf8', offset, offset + versionLength);
+      offset += versionLength;
+      if (version !== CLIENT_VERSION) {
+        console.error('버전이 다릅니다.');
+        break;
+      }
+
+      const sequence = socket.buffer.readUInt32BE(offset);
+      offset += config.packet.sequenceLength;
+
+      const payloadLength = socket.buffer.readUInt32BE(offset);
+      offset += config.packet.payloadLength;
+
+      const length = totalHeaderLength + payloadLength;
+      if (socket.buffer.length >= length) {
+        let payload = socket.buffer.subarray(offset, offset + payloadLength);
+
+        const gamePacket = gDummyClientProto.getProtoMessages().packet.GamePacket;
+        const decodedGamePacket = gamePacket.decode(payload);
+        const payloadField = gamePacket.oneofs['payload'].oneof.find(
+          (field: any) => decodedGamePacket[field] != null
+        );
+        const parsedData = decodedGamePacket[payloadField];
+
+        socket.buffer = socket.buffer.subarray(offset + payloadLength);
+
+        switch (packetType) {
+          case config.packetType.REGISTER_RESPONSE:
+            resolve();
+            break;
+        }
+      }
+    }
+  }
+}
+
+export class UserClient {
   private id: number;
   private email: string | null;
   private nickname: string | null;
   private character: CharacterData | null;
 
-  private gameClientSocket: any;
-  private chattingClientSocket: any;
+  public gameClientSocket: any;
+  public chattingClientSocket: any;
 
   private gameRoomId: number;
   private chattingRoomId: number;
-
-  private dummyClientProto: DummyClientProto;
 
   constructor() {
     this.id = 0;
@@ -132,13 +197,32 @@ class UserClient {
 
     this.gameClientSocket = new net.Socket();
     this.chattingClientSocket = new net.Socket();
-    this.dummyClientProto = new DummyClientProto();
     this.gameRoomId = 0;
     this.chattingRoomId = 0;
   }
 
-  async ProtoGet() {
-    await this.dummyClientProto.initializeProto();
+  getId() {
+    return this.id;
+  }
+
+  setId(id: number) {
+    this.id = id;
+  }
+
+  getEmail() {
+    return this.email;
+  }
+
+  setEmail(email: string) {
+    this.email = email;
+  }
+
+  getNickname() {
+    return this.nickname;
+  }
+
+  setNickname(nickname: string) {
+    this.nickname = nickname;
   }
 
   CreateGamePacket(gamePacketType: number, version: string, sequence: number, payload: object) {
@@ -155,7 +239,7 @@ class UserClient {
     const sequenceBuffer = Buffer.alloc(config.packet.sequenceLength);
     sequenceBuffer.writeUint32BE(sequence, 0);
 
-    const gamePacket = this.dummyClientProto.getProtoMessages().packet.GamePacket;
+    const gamePacket = gDummyClientProto.getProtoMessages().packet.GamePacket;
     const packet: { [key: string]: object } = {};
 
     packet[packetMaps[gamePacketType]] = payload;
@@ -188,10 +272,11 @@ class UserClient {
     const sequenceBuffer = Buffer.alloc(config.packet.sequenceLength);
     sequenceBuffer.writeUint32BE(sequence, 0);
 
-    const chattingPacket = this.dummyClientProto.getChattingProtoMessages().packet.ChattingPacket;
+    const chattingPacket = gDummyClientProto.getChattingProtoMessages().packet.ChattingPacket;
+
     const packet: { [key: string]: object } = {};
 
-    packet[packetMaps[chattingPacketType]] = payload;
+    packet[chattingPacketMaps[chattingPacketType]] = payload;
     const payloadBuffer = chattingPacket.encode(packet).finish();
 
     const payloadLengthBuffer = Buffer.alloc(config.packet.payloadLength);
@@ -209,177 +294,166 @@ class UserClient {
 
   Connect() {
     return new Promise<void>((resolve, reject) => {
-      // 게임 서버 연결
-      this.gameClientSocket.connect(5555, '127.0.0.1', () => {
-        console.log('게임 서버와 연결');
+      const promises: Promise<void>[] = [];
 
-        this.gameClientSocket.buffer = Buffer.alloc(0);
+      promises.push(
+        new Promise<void>((res, rej) => {
+          this.gameClientSocket.connect(5555, '127.0.0.1', () => {
+            //console.log('게임 서버와 연결');
 
-        this.gameClientSocket.on('data', (data: Buffer) => {
-          this.gameClientSocket.buffer = Buffer.concat([this.gameClientSocket.buffer, data]);
+            this.gameClientSocket.buffer = Buffer.alloc(0);
 
-          const initialHeaderLength = VERSION_START;
+            this.gameClientSocket.on('data', (data: Buffer) => {
+              this.gameClientSocket.buffer = Buffer.concat([this.gameClientSocket.buffer, data]);
 
-          while (this.gameClientSocket.buffer.length > initialHeaderLength) {
-            let offset: number = 0;
+              const initialHeaderLength = VERSION_START;
 
-            const packetType = this.gameClientSocket.buffer.readUInt16BE(offset);
-            offset += config.packet.typeLength;
+              while (this.gameClientSocket.buffer.length > initialHeaderLength) {
+                let offset: number = 0;
 
-            const versionLength = this.gameClientSocket.buffer.readUInt8(offset);
-            offset += config.packet.versionLength;
+                const packetType = this.gameClientSocket.buffer.readUInt16BE(offset);
+                offset += config.packet.typeLength;
 
-            const totalHeaderLength = TOTAL_LENGTH + versionLength;
+                const versionLength = this.gameClientSocket.buffer.readUInt8(offset);
+                offset += config.packet.versionLength;
 
-            while (this.gameClientSocket.buffer.length >= totalHeaderLength) {
-              const version = this.gameClientSocket.buffer.toString('utf8', offset, offset + versionLength);
-              offset += versionLength;
-              if (version !== CLIENT_VERSION) {
-                console.error('버전이 다릅니다.');
-                break;
-              }
+                const totalHeaderLength = TOTAL_LENGTH + versionLength;
 
-              const sequence = this.gameClientSocket.buffer.readUInt32BE(offset);
-              offset += config.packet.sequenceLength;
+                while (this.gameClientSocket.buffer.length >= totalHeaderLength) {
+                  const version = this.gameClientSocket.buffer.toString('utf8', offset, offset + versionLength);
+                  offset += versionLength;
+                  if (version !== CLIENT_VERSION) {
+                    console.error('버전이 다릅니다.');
+                    break;
+                  }
 
-              const payloadLength = this.gameClientSocket.buffer.readUInt32BE(offset);
-              offset += config.packet.payloadLength;
+                  const sequence = this.gameClientSocket.buffer.readUInt32BE(offset);
+                  offset += config.packet.sequenceLength;
 
-              const length = totalHeaderLength + payloadLength;
-              if (this.gameClientSocket.buffer.length >= length) {
-                let payload = this.gameClientSocket.buffer.subarray(offset, offset + payloadLength);
+                  const payloadLength = this.gameClientSocket.buffer.readUInt32BE(offset);
+                  offset += config.packet.payloadLength;
 
-                const protoGameMessages = this.dummyClientProto.getProtoMessages();
-                const gamePacket = protoGameMessages.packet.GamePacket;
-                const decodedGamePacket = gamePacket.decode(payload);
-                const payloadField = gamePacket.oneofs['payload'].oneof.find(
-                  (field: any) => decodedGamePacket[field] != null
-                );
-                const parsedData = decodedGamePacket[payloadField];
+                  const length = totalHeaderLength + payloadLength;
+                  if (this.gameClientSocket.buffer.length >= length) {
+                    let payload = this.gameClientSocket.buffer.subarray(offset, offset + payloadLength);
 
-                this.gameClientSocket.buffer = this.gameClientSocket.buffer.subarray(offset + payloadLength);
+                    const gamePacket = gDummyClientProto.getProtoMessages().packet.GamePacket;
+                    const decodedGamePacket = gamePacket.decode(payload);
+                    const payloadField = gamePacket.oneofs['payload'].oneof.find(
+                      (field: any) => decodedGamePacket[field] != null
+                    );
+                    const parsedData = decodedGamePacket[payloadField];
 
-                //console.log(parsedData);
-                switch (packetType) {
-                  case config.packetType.REGISTER_RESPONSE:
-                    if (!parsedData.success) {
-                      console.log(`회원가입 실패 ${parsedData.message}`);
-                    } else {
-                      console.log(`회원가입 성공 ${parsedData.message}`);
+                    this.gameClientSocket.buffer = this.gameClientSocket.buffer.subarray(offset + payloadLength);
+
+                    try {
+                      const responseHandler = getDummyClientResponseHandlerByPacketType(packetType);
+                      responseHandler?.(this, parsedData);
                     }
-                    break;
-                  case config.packetType.LOGIN_RESPONSE:
-                    if (parsedData.success === true) {
-                      this.GameServerGetRoomList();
-
-                      this.id = parsedData.myInfo.id;
-                      this.email = parsedData.myInfo.email;
-                      this.nickname = parsedData.myInfo.nickname;
-
-                      console.log(`더미 로그인 성공 id : ${this.id} email ${this.email} nickName ${this.nickname}`);
+                    catch (error) {
+                      console.error(error);
                     }
-                    break;
-                  case config.packetType.CREATE_ROOM_RESPONSE:
-                    if (parsedData.success === true) {
-                      console.log('방 생성 성공', parsedData.room.id);
-                    } else {
-                      console.log('방 생성 실패');
-                    }
-                    break;
-                  case config.packetType.GET_ROOM_LIST_RESPONSE:
-                    gDummyGameRooms = [];
-
-                    const rooms = parsedData.rooms;
-                    if (rooms.length === 0) {
-                      this.GameServerCreateRoom();
-                    } else {
-                      rooms.forEach((room: any) => {
-                        const dummyGameRoom = new DummyGameRoom(room);
-                        gDummyGameRooms.push(dummyGameRoom);
-                      });
-                    }
-                    break;
-                  case config.packetType.JOIN_ROOM_RESPONSE:
-                    break;
-                  case config.packetType.JOIN_RANDOM_ROOM_RESPONSE:
-                    break;
-                  case config.packetType.JOIN_ROOM_NOTIFICATION:
-                    break;
-                  case config.packetType.LEAVE_ROOM_RESPONSE:
-                    break;
-                  case config.packetType.LEAVE_ROOM_NOTIFICATION:
-                    break;
-                  case config.packetType.GAME_PREPARE_RESPONSE:
-                    break;
-                  case config.packetType.GAME_PREPARE_NOTIFICATION:
-                    break;
-                  case config.packetType.GAME_START_RESPONSE:
-                    break;
-                  case config.packetType.GAME_START_NOTIFICATION:
-                    break;
-                  case config.packetType.POSITION_UPDATE_NOTIFICATION:
-                    break;
-                  case config.packetType.USE_CARD_RESPONSE:
-                    break;
-                  case config.packetType.USER_UPDATE_NOTIFICATION:
-                    break;
-                  case config.packetType.EQUIP_CARD_NOTIFICATION:
-                    break;
-                  case config.packetType.CARD_EFFECT_NOTIFICATION:
-                    break;
-                  case config.packetType.FLEA_MARKET_CARD_PICK_RESPONSE:
-                    break;
-                  case config.packetType.FLEA_MARKET_PICK_RESPONSE:
-                    break;
-                  case config.packetType.FLEA_MARKET_CARD_PICK_RESPONSE:
-                    break;
-                  case config.packetType.USER_UPDATE_NOTIFICATION:
-                    break;
-                  case config.packetType.PHASE_UPDATE_NOTIFICATION:
-                    break;
-                  case config.packetType.REACTION_RESPONSE:
-                    break;
-                  case config.packetType.DESTORY_CARD_RESPONSE:
-                    break;
-                  case config.packetType.GAME_END_NOTIFICATION:
-                    break;
-                  case config.packetType.CARD_SELECT_RESPONSE:
-                    break;
-                  case config.packetType.PASS_DEBUFF_RESPONSE:
-                    break;
-                  case config.packetType.WARNING_NOTIFICATION:
-                    break;
-                  case config.packetType.ANIMATION_NOTIFICATION:
-                    break;
-                  case config.packetType.GLOBAL_MESSAGE_RESPONSE:
-                    break;
+                  }
                 }
               }
-            }
-          }
-        });
+            });
 
-        resolve(); // 연결이 완료되면 resolve 호출
-      });
+            // const dataListeners = this.gameClientSocket.listenerCount('data');
+            // const endListeners = this.gameClientSocket.listenerCount('end');
+            // const errorListeners = this.gameClientSocket.listenerCount('error');
+            // const closeListeners = this.gameClientSocket.listenerCount('close');
+            // console.log(`d ${dataListeners} en ${endListeners} c ${closeListeners} er ${errorListeners}`);
 
-      this.gameClientSocket.on('error', (err: NodeJS.ErrnoException) => {
-        console.log(`게임 서버 소켓에러 ${err.message}`);
-      });
+            res();
+          });
 
-      // 채팅 서버 연결
-      this.chattingClientSocket.connect(5556, '127.0.0.1', () => {
-        console.log('채팅 서버와 연결');
-        resolve(); // 연결이 완료되면 resolve 호출
-      });
+          this.gameClientSocket.on('close', () => {
+          });
 
-      this.chattingClientSocket.on('error', (err: NodeJS.ErrnoException) => {
-        console.log(`채팅 서버 소켓에러 ${err.message}`);
-      });
+          this.gameClientSocket.on('error', (err: NodeJS.ErrnoException) => {
+            console.log(`게임 서버 소켓에러 ${err.message}`);
+            rej(err);
+          });
+        })
+      )
+
+      promises.push(
+        new Promise<void>((res, rej) => {
+          // 채팅 서버 연결
+          this.chattingClientSocket.connect(5556, '127.0.0.1', () => {
+            //console.log('채팅 서버와 연결');
+
+            this.chattingClientSocket.buffer = Buffer.alloc(0);
+
+            this.chattingClientSocket.on('data', (data: Buffer) => {
+            });
+
+            res();
+          });
+
+          this.chattingClientSocket.on('close', () => {
+          });
+
+          this.chattingClientSocket.on('error', (err: NodeJS.ErrnoException) => {
+            console.log(`채팅 서버 소켓에러 ${err.message}`);
+            rej(err);
+          });
+        })
+      )
+
+      Promise.all(promises).then(() => resolve()).catch((err) => reject(err));
+    });
+  }
+
+  Disconnect() {
+    return new Promise<void>((resolve, reject) => {
+      const promises: Promise<void>[] = [];
+
+      if (this.gameClientSocket) {
+        promises.push(
+          new Promise<void>((res, rej) => {
+            this.gameClientSocket.on("close", () => {
+              console.log("게임 서버 소켓 연결이 종료되었습니다.");
+              this.gameClientSocket = null;
+              this.gameClientSocket = new net.Socket();
+
+              // const dataListeners = this.gameClientSocket.listenerCount('data');
+              // const endListeners = this.gameClientSocket.listenerCount('end');
+              // const closeListeners = this.gameClientSocket.listenerCount('close');
+              // console.log(`d ${dataListeners} e ${endListeners} c ${closeListeners}`);
+              res();
+            });
+
+            this.gameClientSocket.end();
+          })
+        )
+      } else {
+        console.log("게임 서버 소켓이 이미 종료된 상태입니다.");
+      }
+
+      if (this.chattingClientSocket) {
+        promises.push(
+          new Promise<void>((res, rej) => {
+            this.chattingClientSocket.on("close", () => {
+              console.log("채팅 서버 소켓 연결이 종료되었습니다.");
+              this.chattingClientSocket = null;
+              this.chattingClientSocket = new net.Socket();
+              res();
+            });
+
+            this.chattingClientSocket.end();
+          })
+        )
+      } else {
+        console.log("채팅 서버 소켓이 이미 종료된 상태입니다.");
+      }
+
+      Promise.all(promises).then(() => resolve());
     });
   }
 
   GameServerRegisterSend() {
-    setTimeout(() => {
+    return new Promise<void>((resolve, reject) => {
       const registerGameServerPacket = this.CreateGamePacket(config.packetType.REGISTER_REQUEST, '1.0.0', 1, {
         email: `dummy_${gDummyRegisterClientId}@naver.com`,
         nickname: `dummy_${gDummyRegisterClientId}`,
@@ -389,20 +463,22 @@ class UserClient {
       gDummyRegisterClientId++;
 
       this.gameClientSocket.write(registerGameServerPacket);
-    }, 1000);
+
+      this.gameClientSocket.on('data', (data: Buffer) => {
+        onDataRegisterResponseListener(this.gameClientSocket, resolve)(data);
+      });
+    });
   }
 
   GameServerLoginSend() {
-    setTimeout(() => {
-      const registerGameServerPacket = this.CreateGamePacket(config.packetType.LOGIN_REQUEST, '1.0.0', 1, {
-        email: `dummy_${gDummyLoginClientId}@naver.com`,
-        password: `!Dummy${gDummyLoginClientId}`
-      });
+    const loginGameServerPacket = this.CreateGamePacket(config.packetType.LOGIN_REQUEST, '1.0.0', 1, {
+      email: `dummy_${gDummyLoginClientId}@naver.com`,
+      password: `!Dummy${gDummyLoginClientId}`
+    });
 
-      gDummyLoginClientId++;
+    gDummyLoginClientId++;
 
-      this.gameClientSocket.write(registerGameServerPacket);
-    }, 2000);
+    this.gameClientSocket.write(loginGameServerPacket);
   }
 
   GameServerGetRoomList() {
@@ -418,75 +494,21 @@ class UserClient {
     }, 1000);
   }
 
-  GameServerCreateRoom() {
-    const createRoomGameServerPacket = this.CreateGamePacket(config.packetType.CREATE_ROOM_REQUEST, '1.0.0', 1, {
-      name: `더미 방_${gDummyRoomId}`,
-      maxUserNum: 5
+  ChattingLoginSend() {
+    const loginChattingServerPacket = this.CreateChattingPacket(
+      config.chattingPacketType.CHATTING_LOGIN_REQUEST, '1.0.0', 1, {
+      email: `dummy_${gDummyChattingLoginClientId}@naver.com`,
     });
 
-    gDummyRoomId++;
+    gDummyChattingLoginClientId++;
 
-    this.gameClientSocket.write(createRoomGameServerPacket);
+    this.chattingClientSocket.write(loginChattingServerPacket);
   }
+}
 
-  ChattingLoginSend() {
-    setTimeout(() => {
-      const registerChattingServerPacket = this.CreateChattingPacket(
-        config.chattingPacketType.CHATTING_LOGIN_REQUEST,
-        '1.0.0',
-        1,
-        {
-          email: 'test01'
-        }
-      );
-
-      this.chattingClientSocket.write(registerChattingServerPacket);
-    }, 2000);
-  }
-
-  ChattingRoomCreate() {
-    const ChattingRoomCreatePacket = this.CreateChattingPacket(
-      config.chattingPacketType.CHATTING_CREATE_ROOM_REQUEST,
-      '1.0.0',
-      1,
-      {}
-    );
-
-    this.chattingClientSocket.write(ChattingRoomCreatePacket);
-  }
-
-  ChattingRoomJoin() {
-    const ChattingJoinRoomPacket = this.CreateChattingPacket(
-      config.chattingPacketType.CHATTING_JOIN_ROOM_REQUEST,
-      '1.0.0',
-      1,
-      { ownerEmail: 'test01' }
-    );
-
-    this.chattingClientSocket.write(ChattingJoinRoomPacket);
-  }
-
-  ChattingRoomLeave() {
-    const ChattingRoomLeavePacket = this.CreateChattingPacket(
-      config.chattingPacketType.CHATTING_LEAVE_ROOM_REQUEST,
-      '1.0.0',
-      1,
-      {}
-    );
-    this.chattingClientSocket.write(ChattingRoomLeavePacket);
-  }
-
-  ChattingSend(chatMessage: string) {
-    const ChattingSendPacket = this.CreateChattingPacket(
-      config.chattingPacketType.CHATTING_CHAT_SEND_REQUEST,
-      '1.0.0',
-      1,
-      {
-        chatMessage
-      }
-    );
-    this.chattingClientSocket.write(ChattingSendPacket);
-  }
+async function dummyClientProtoInit() {
+  gDummyClientProto = new DummyClientProto();
+  await gDummyClientProto.initializeProto();
 }
 
 function displayLobby() {
@@ -506,50 +528,57 @@ function displayLobby() {
   console.log(chalk.yellowBright.bold('더미 클라이언트 작동 시작'));
   console.log('');
   console.log(chalk.red('1. ') + chalk.white('더미 클라 생성'));
-  console.log(chalk.red('2. ') + chalk.white('더미 클라 서버 접속'));
-  console.log(chalk.red('3. ') + chalk.white('더미 클라 회원가입'));
-  console.log(chalk.red('4. ') + chalk.white('더미 클라 로그인'));
+  console.log(chalk.red('2. ') + chalk.white('더미 클라 회원가입'));
+  console.log(chalk.red('3. ') + chalk.white('더미 클라 로그인'));
+  console.log(chalk.red('4. ') + chalk.white('더미 클라 시작'));
+  console.log(chalk.red('5. ') + chalk.white('더미 클라 접속 종료'));
 }
 
 function handleUserInput() {
-  const choice = readlineSync.question('입력 : ');
+  const choice = readlineSync.question('Select : ');
 
   switch (choice) {
     case '1':
       DummyClientCreate();
       break;
     case '2':
-      DummyClientConnect();
-      break;
-    case '3':
       DummyClientRegister();
       break;
-    case '4':
+    case '3':
       DummyClientLogin();
+      break;
+    case '4':
+      break;
+    case '5':
+      DummyClientDisconnect();
       break;
   }
 }
 
 async function DummyClientCreate() {
   console.clear();
-  console.log(chalk.white('[더미 클라를 생성 합니다.]'));
-  console.log(chalk.white('[더미 클라의 개수를 입력하세요.]'));
-  const dummyClientCount = readlineSync.question('클라 개수 : ');
 
-  console.log(chalk.green('더미 생성중 ... '));
+  if (gDummyClients.length === 0) {
+    console.log(chalk.white('[더미 클라를 생성 합니다.]'));
+    console.log(chalk.white('[더미 클라의 개수를 입력하세요.]'));
+    const dummyClientCount = readlineSync.question('Client Count : ');
 
-  await Promise.all(
-    Array.from({ length: parseInt(dummyClientCount) }, async (_, i) => {
-      const newDummyClient = new UserClient();
-      await newDummyClient.ProtoGet();
-      gDummyClients.push(newDummyClient);
-    })
-  ).then(() => {
-    console.log(chalk.green(`더미 생성완료 ... [${gDummyClients.length}]`));
-    setTimeout(() => {
-      DummyClientStart();
-    }, 1000);
-  });
+    console.log(chalk.green('더미 생성중 ... '));
+
+    await Promise.all(
+      Array.from({ length: parseInt(dummyClientCount) }, async (_, i) => {
+        const newDummyClient = new UserClient();
+        gDummyClients.push(newDummyClient);
+      })
+    ).then(() => {
+      console.log(chalk.green(`더미 생성완료 ... [${gDummyClients.length}]`));
+    });
+  }
+  else {
+    console.log(`생성한 더미 [${gDummyClients.length}]개를 접속 종료하고 생성하세요`);
+  }
+
+  DummyClientLobbyScreen();
 }
 
 function DummyClientConnect() {
@@ -557,46 +586,71 @@ function DummyClientConnect() {
   console.log(chalk.white('[생성한 더미 클라로 게임서버와 채팅서버에 접속합니다.]'));
 
   setTimeout(async () => {
-    await Promise.all(gDummyClients.map((dummy: UserClient) => dummy.Connect()));
-    console.log(`더미 클라 [${gDummyClients.length}] 접속 완료`);
-    console.clear();
-    DummyClientStart();
-  }, 2000);
+    try {
+      await Promise.all(gDummyClients.map((dummy: UserClient) => dummy.Connect()));
+    }
+    catch (err: any) {
+
+    }
+
+    DummyClientLobbyScreen();
+  }, 1000);
 }
 
 function DummyClientRegister() {
   console.clear();
   console.log(chalk.white('[생성한 더미 클라로 회원가입을 진행합니다.]'));
 
-  setTimeout(() => {
-    gDummyClients.forEach((dummy: UserClient) => {
-      dummy.GameServerRegisterSend();
-    });
-  }, 2000);
-
-  setTimeout(() => {
-    DummyClientStart();
-  }, 5000);
+  setTimeout(async () => {
+    await Promise.all(gDummyClients.map((dummy: UserClient) => dummy.GameServerRegisterSend()));
+    console.log(`더미 클라 [${gDummyClients.length}]회원가입 전송 완료`);
+    DummyClientLobbyScreen();
+  }, 1000);
 }
 
 function DummyClientLogin() {
   console.clear();
-  console.log(chalk.white('[생성한 더미 클라로 로그인을 진행합니다.]'));
+  console.log(chalk.white(`[생성한 더미 클라로 로그인을 진행합니다.] ${gDummyClients.length}`));
 
   setTimeout(() => {
-    gDummyClients.forEach((dummy: UserClient) => {
+    gDummyClients.forEach(async (dummy: UserClient) => {
       dummy.GameServerLoginSend();
+      dummy.ChattingLoginSend();
     });
   }, 2000);
-
-  setTimeout(() => {
-    DummyClientStart();
-  }, 5000);
 }
 
-function DummyClientStart() {
+async function DummyClientDisconnect() {
+  console.clear();
+
+  if (gDummyClients.length > 0) {
+    console.log(chalk.white('[서버와 접속을 종료합니다.]'));
+
+    await Promise.all(
+      gDummyClients.map(async (dummy: UserClient, index: number) => {
+        //console.log(`[클라 ${index}] Disconnect 시작`);
+        await dummy.Disconnect();
+        //console.log(`[클라 ${index}] Disconnect 완료`);
+      })
+    );
+    gDummyClients = [];
+    console.log(chalk.green('[모든 클라이언트의 접속 종료 완료.]'));
+
+  } else {
+    console.log("더미를 생성하고 접속을 종료하세요");
+  }
+
+  DummyClientLobbyScreen();
+}
+
+function DummyClientLobbyScreen() {
   displayLobby();
   handleUserInput();
 }
 
-DummyClientStart();
+async function DummyClientLobbyStart() {
+  await dummyClientProtoInit();
+  DummyClientLobbyScreen();
+}
+
+DummyClientLobbyStart();
