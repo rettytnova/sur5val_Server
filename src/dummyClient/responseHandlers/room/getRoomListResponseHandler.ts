@@ -7,7 +7,7 @@ export const getRoomListResponseHandler = (userClient: UserClient, payload: any)
 
     const rooms = payload.rooms;
     if (rooms.length === 0) {
-        userClient.GameServerCreateRoom();
+
     }
     else {
         rooms.forEach((room: any) => {
