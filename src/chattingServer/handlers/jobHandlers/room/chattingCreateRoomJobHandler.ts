@@ -8,6 +8,8 @@ import { Job } from "../../../interface/chattingServerInterface.js";
 export const chattingCreateRoomJobHandler = (job: Job): void => {
     const chattingUser = job.payload[0] as ChattingUser;
 
+    console.log(`채팅 방 생성 ${chattingUser.getEmail()}`);
+
     const roomId = ChattingServer.getInstance().getRoomId();
     ChattingServer.getInstance().increaseRoomId();
 
