@@ -35,13 +35,13 @@ const characterBuffStatus: { [characterId: number]: number[] } = {};
 export const useCardHandler = async (socket: CustomSocket, payload: Object): Promise<void> => {
   // response 데이터 초기화 ----------------------------------------------------------------------
   const { cardType, targetUserId: targetUserIdRaw } = payload as UseCardRequest;
-  console.log(cardType);
+
   const targetUserId = Number(targetUserIdRaw);
   let responseData: UseCardResponse = {
     success: true,
     failCode: GlobalFailCode.NONE
   };
-
+  console.log('cardType: ', cardType);
   try {
     // redisUser 정보 찾기
     const userId: number | null = await getUserIdBySocket(socket);
@@ -52,7 +52,7 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
 
     // room 정보 찾기
     const rooms: Room[] | undefined = await getRedisData('roomData');
-    if (rooms === undefined) {
+    if (!rooms || rooms.length === 0) {
       console.error('서버에 Rooms정보가 존재하지 않습니다.');
       return;
     }
@@ -64,7 +64,7 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
         }
       }
     }
-    if (!room) {
+    if (!room || !room.users) {
       console.error('카드 사용자가 속한 room 정보를 찾을 수 없습니다.');
       return;
     }
@@ -74,9 +74,10 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
     for (let i = 0; i < room.users.length; i++) {
       if (room.users[i].id === userId) {
         user = room.users[i];
+        break;
       }
     }
-    if (user === null) return;
+    if (!user || !user.character) return;
     if (user.character.aliveState === false || user.character.hp <= 0) {
       console.log(
         `죽어있는 대상은 행동을 할 수 없습니다. 상태: ${user.character.aliveState}, 체력: ${user.character.hp}`
@@ -92,32 +93,62 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
       }
     }
 
-    // 캐릭터 위치 정보 찾기
-    const characterPositions: { [roomId: number]: CharacterPositionData[] } =
-      await getRedisData('characterPositionDatas');
-
-    // 공격 가능 여부 확인
-    for (let i = 0; i < characterPositions[room.id].length; i++) {
-      let characterPos: CharacterPositionData = characterPositions[room.id][i];
-      if (target !== null && characterPos.id === target.id) {
-        if (
-          (-23 <= characterPos.x && characterPos.x <= -12 && 5 <= characterPos.y && characterPos.y <= 10) || // 건물 1
-          (-7 <= characterPos.x && characterPos.x <= 0 && 5 <= characterPos.y && characterPos.y <= 10) || // 건물 2
-          (3 <= characterPos.x && characterPos.x <= 13 && 5 <= characterPos.y && characterPos.y <= 10) || // 건물 3
-          (16 <= characterPos.x && characterPos.x <= 23 && 5 <= characterPos.y && characterPos.y <= 10) || // 건물 4
-          (-23 <= characterPos.x && characterPos.x <= -14 && -9 <= characterPos.y && characterPos.y <= -2.5) || // 건물 5
-          (-12 <= characterPos.x && characterPos.x <= -2.5 && -9 <= characterPos.y && characterPos.y <= -2.5) || // 건물 6
-          (6 <= characterPos.x && characterPos.x <= 13 && -9 <= characterPos.y && characterPos.y <= -2.5) || // 건물 7
-          (16 <= characterPos.x && characterPos.x <= 23 && -9 <= characterPos.y && characterPos.y <= -2.5) || // 건물 8
-          (-21 <= characterPos.x && characterPos.x <= -20 && 2.5 <= characterPos.y && characterPos.y <= 3.5) || // 부쉬 1
-          (-15 <= characterPos.x && characterPos.x <= -14 && 2.5 <= characterPos.y && characterPos.y <= 3.5) || // 부쉬 2
-          (11 <= characterPos.x && characterPos.x <= 12 && 0.5 <= characterPos.y && characterPos.y <= 1.5) || // 부쉬 3
-          (21 <= characterPos.x && characterPos.x <= 22 && 0.5 <= characterPos.y && characterPos.y <= 1.5) || // 부쉬 4
-          (-2 <= characterPos.x && characterPos.x <= -1 && -8.5 <= characterPos.y && characterPos.y <= -7.5) || // 부쉬 5
-          (4 <= characterPos.x && characterPos.x <= 5 && -8.5 <= characterPos.y && characterPos.y <= -7.5) // 부쉬 6
-        ) {
-          //console.log('대상이 공격 불가능한 위치에 있어 공격자가 공격할 수 없습니다.');
-          return;
+    if (user.character.roleType === RoleType.SUR5VAL) {
+      // 캐릭터 위치 정보 찾기
+      const characterPositions: { [roomId: number]: CharacterPositionData[] } =
+        await getRedisData('characterPositionDatas');
+      // 공격 가능 여부 확인
+      for (let i = 0; i < characterPositions[room.id].length; i++) {
+        let userPos: CharacterPositionData = characterPositions[room.id][i];
+        if (user !== null && userPos.id === user.id) {
+          if (
+            // 공격자가 실외에 위치해 있는 경우
+            !(-23 <= userPos.x && userPos.x <= -12 && 5 <= userPos.y && userPos.y <= 10) && // 건물 1
+            !(-7 <= userPos.x && userPos.x <= 0 && 5 <= userPos.y && userPos.y <= 10) && // 건물 2
+            !(3 <= userPos.x && userPos.x <= 13 && 5 <= userPos.y && userPos.y <= 10) && // 건물 3
+            !(16 <= userPos.x && userPos.x <= 23 && 5 <= userPos.y && userPos.y <= 10) && // 건물 4
+            !(-23 <= userPos.x && userPos.x <= -14 && -9 <= userPos.y && userPos.y <= -2.5) && // 건물 5
+            !(-12 <= userPos.x && userPos.x <= -2.5 && -9 <= userPos.y && userPos.y <= -2.5) && // 건물 6
+            !(6 <= userPos.x && userPos.x <= 13 && -9 <= userPos.y && userPos.y <= -2.5) && // 건물 7
+            !(16 <= userPos.x && userPos.x <= 23 && -9 <= userPos.y && userPos.y <= -2.5) && // 건물 8
+            !(-21 <= userPos.x && userPos.x <= -20 && 2.5 <= userPos.y && userPos.y <= 3.5) && // 부쉬 1
+            !(-15 <= userPos.x && userPos.x <= -14 && 2.5 <= userPos.y && userPos.y <= 3.5) && // 부쉬 2
+            !(11 <= userPos.x && userPos.x <= 12 && 0.5 <= userPos.y && userPos.y <= 1.5) && // 부쉬 3
+            !(21 <= userPos.x && userPos.x <= 22 && 0.5 <= userPos.y && userPos.y <= 1.5) && // 부쉬 4
+            !(-2 <= userPos.x && userPos.x <= -1 && -8.5 <= userPos.y && userPos.y <= -7.5) && // 부쉬 5
+            !(4 <= userPos.x && userPos.x <= 5 && -8.5 <= userPos.y && userPos.y <= -7.5) // 부쉬 6
+          ) {
+            for (let j = 0; j < characterPositions[room.id].length; j++) {
+              let characterPos: CharacterPositionData = characterPositions[room.id][j];
+              if (target !== null && characterPos.id === target.id) {
+                if (
+                  (-23 <= characterPos.x && characterPos.x <= -12 && 5 <= characterPos.y && characterPos.y <= 10) || // 건물 1
+                  (-7 <= characterPos.x && characterPos.x <= 0 && 5 <= characterPos.y && characterPos.y <= 10) || // 건물 2
+                  (3 <= characterPos.x && characterPos.x <= 13 && 5 <= characterPos.y && characterPos.y <= 10) || // 건물 3
+                  (16 <= characterPos.x && characterPos.x <= 23 && 5 <= characterPos.y && characterPos.y <= 10) || // 건물 4
+                  (-23 <= characterPos.x && characterPos.x <= -14 && -9 <= characterPos.y && characterPos.y <= -2.5) || // 건물 5
+                  (-12 <= characterPos.x && characterPos.x <= -2.5 && -9 <= characterPos.y && characterPos.y <= -2.5) || // 건물 6
+                  (6 <= characterPos.x && characterPos.x <= 13 && -9 <= characterPos.y && characterPos.y <= -2.5) || // 건물 7
+                  (16 <= characterPos.x && characterPos.x <= 23 && -9 <= characterPos.y && characterPos.y <= -2.5) || // 건물 8
+                  (-21 <= characterPos.x && characterPos.x <= -20 && 2.5 <= characterPos.y && characterPos.y <= 3.5) || // 부쉬 1
+                  (-15 <= characterPos.x && characterPos.x <= -14 && 2.5 <= characterPos.y && characterPos.y <= 3.5) || // 부쉬 2
+                  (11 <= characterPos.x && characterPos.x <= 12 && 0.5 <= characterPos.y && characterPos.y <= 1.5) || // 부쉬 3
+                  (21 <= characterPos.x && characterPos.x <= 22 && 0.5 <= characterPos.y && characterPos.y <= 1.5) || // 부쉬 4
+                  (-2 <= characterPos.x && characterPos.x <= -1 && -8.5 <= characterPos.y && characterPos.y <= -7.5) || // 부쉬 5
+                  (4 <= characterPos.x && characterPos.x <= 5 && -8.5 <= characterPos.y && characterPos.y <= -7.5) // 부쉬 6
+                ) {
+                  // 타겟이 실내에 위치해 있는 경우
+                  return;
+                } else {
+                  // 타겟이 실외에 위치해 있는 경우
+                  break;
+                }
+              }
+            }
+          } else {
+            // 공격자가 실내에 위치해 있는 경우
+            break;
+          }
         }
       }
     }
@@ -468,8 +499,8 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
         user.character.mp -= 10;
 
         // 스킬 실행
-        await attackRagne(user, target, rooms, room, 0.6, 4, 3);
-        await attackTarget(user.id, room.id, 0.8, target.id);
+        let isRange = await attackRagne(user, target, rooms, room, 0.6, 4, 3);
+        if (isRange) await attackTarget(user.id, room.id, 0.8, target.id);
         sendAnimation(room, target, 11);
         break;
 
@@ -679,7 +710,7 @@ const attackRagne = async (
   skillCoeffcient: number,
   range: number,
   maxTarget: number
-) => {
+): Promise<Boolean> => {
   // 살아있는 플레이어 추출
   const alivePlayers: [User, number][] = [];
   for (let i = 0; i < room.users.length; i++) {
@@ -691,9 +722,9 @@ const attackRagne = async (
   // 중심 위치 조회
   const characterPositions: { [roomId: number]: CharacterPositionData[] | undefined } | undefined =
     await getRedisData('characterPositionDatas');
-  if (characterPositions === undefined) return;
+  if (characterPositions === undefined) return false;
   const positionDatas: CharacterPositionData[] | undefined = characterPositions[room.id];
-  if (positionDatas === undefined) return;
+  if (positionDatas === undefined) return false;
   let bossPosition: position | null = null;
   for (let i = 0; i < positionDatas.length; i++) {
     if (center.id === positionDatas[i].id) {
@@ -701,7 +732,7 @@ const attackRagne = async (
       break;
     }
   }
-  if (!bossPosition) return;
+  if (!bossPosition) return false;
 
   // 보스와의 거리가 너무 먼 alivePlayer를 splice 처리
   for (let i = 0; i < alivePlayers.length; i++) {
@@ -726,25 +757,91 @@ const attackRagne = async (
   }
 
   // 남아있는 alivePlayer 공격 및 애니메이션 재생
+  let isAttack: boolean = false;
   for (let i = 0; i < alivePlayers.length; i++) {
-    const damage = Math.max(attacker.character.attack * skillCoeffcient - alivePlayers[i][0].character.armor, 0);
-    alivePlayers[i][0].character.hp -= Math.round(damage);
-    if (alivePlayers[i][0].character.hp <= 0) {
-      alivePlayers[i][0].character.aliveState = false;
-      alivePlayers[i][0].character.stateInfo.state = 15;
-      alivePlayers[i][0].character.hp = 0;
-      for (let i = 0; i < shoppingUserIdSessions[room.id].length; i++) {
-        if (shoppingUserIdSessions[room.id][i][0] === attacker.id) {
-          shoppingUserIdSessions[room.id].splice(i, 1);
+    // 공격 가능 여부 확인
+    for (let j = 0; j < (characterPositions[room.id] as CharacterPositionData[]).length; j++) {
+      let attackerPos: CharacterPositionData = (characterPositions[room.id] as CharacterPositionData[])[j];
+      console.log('attacker.id: ', attacker.id);
+      console.log('attackerPos.id: ', attackerPos.id);
+      if (attacker !== null && attackerPos.id === attacker.id) {
+        if (
+          // 공격자가 실외에 위치해 있는 경우
+          !(-23 <= attackerPos.x && attackerPos.x <= -12 && 5 <= attackerPos.y && attackerPos.y <= 10) && // 건물 1
+          !(-7 <= attackerPos.x && attackerPos.x <= 0 && 5 <= attackerPos.y && attackerPos.y <= 10) && // 건물 2
+          !(3 <= attackerPos.x && attackerPos.x <= 13 && 5 <= attackerPos.y && attackerPos.y <= 10) && // 건물 3
+          !(16 <= attackerPos.x && attackerPos.x <= 23 && 5 <= attackerPos.y && attackerPos.y <= 10) && // 건물 4
+          !(-23 <= attackerPos.x && attackerPos.x <= -14 && -9 <= attackerPos.y && attackerPos.y <= -2.5) && // 건물 5
+          !(-12 <= attackerPos.x && attackerPos.x <= -2.5 && -9 <= attackerPos.y && attackerPos.y <= -2.5) && // 건물 6
+          !(6 <= attackerPos.x && attackerPos.x <= 13 && -9 <= attackerPos.y && attackerPos.y <= -2.5) && // 건물 7
+          !(16 <= attackerPos.x && attackerPos.x <= 23 && -9 <= attackerPos.y && attackerPos.y <= -2.5) && // 건물 8
+          !(-21 <= attackerPos.x && attackerPos.x <= -20 && 2.5 <= attackerPos.y && attackerPos.y <= 3.5) && // 부쉬 1
+          !(-15 <= attackerPos.x && attackerPos.x <= -14 && 2.5 <= attackerPos.y && attackerPos.y <= 3.5) && // 부쉬 2
+          !(11 <= attackerPos.x && attackerPos.x <= 12 && 0.5 <= attackerPos.y && attackerPos.y <= 1.5) && // 부쉬 3
+          !(21 <= attackerPos.x && attackerPos.x <= 22 && 0.5 <= attackerPos.y && attackerPos.y <= 1.5) && // 부쉬 4
+          !(-2 <= attackerPos.x && attackerPos.x <= -1 && -8.5 <= attackerPos.y && attackerPos.y <= -7.5) && // 부쉬 5
+          !(4 <= attackerPos.x && attackerPos.x <= 5 && -8.5 <= attackerPos.y && attackerPos.y <= -7.5) // 부쉬 6
+        ) {
+          for (let k = 0; k < (characterPositions[room.id] as CharacterPositionData[]).length; k++) {
+            let characterPos: CharacterPositionData = (characterPositions[room.id] as CharacterPositionData[])[k];
+            console.log('alivePlayers[i][0].id: ', alivePlayers[i][0].id);
+            console.log('characterPos.id: ', characterPos.id);
+            if (alivePlayers[i][0] !== null && characterPos.id === alivePlayers[i][0].id) {
+              if (
+                (-23 <= characterPos.x && characterPos.x <= -12 && 5 <= characterPos.y && characterPos.y <= 10) || // 건물 1
+                (-7 <= characterPos.x && characterPos.x <= 0 && 5 <= characterPos.y && characterPos.y <= 10) || // 건물 2
+                (3 <= characterPos.x && characterPos.x <= 13 && 5 <= characterPos.y && characterPos.y <= 10) || // 건물 3
+                (16 <= characterPos.x && characterPos.x <= 23 && 5 <= characterPos.y && characterPos.y <= 10) || // 건물 4
+                (-23 <= characterPos.x && characterPos.x <= -14 && -9 <= characterPos.y && characterPos.y <= -2.5) || // 건물 5
+                (-12 <= characterPos.x && characterPos.x <= -2.5 && -9 <= characterPos.y && characterPos.y <= -2.5) || // 건물 6
+                (6 <= characterPos.x && characterPos.x <= 13 && -9 <= characterPos.y && characterPos.y <= -2.5) || // 건물 7
+                (16 <= characterPos.x && characterPos.x <= 23 && -9 <= characterPos.y && characterPos.y <= -2.5) || // 건물 8
+                (-21 <= characterPos.x && characterPos.x <= -20 && 2.5 <= characterPos.y && characterPos.y <= 3.5) || // 부쉬 1
+                (-15 <= characterPos.x && characterPos.x <= -14 && 2.5 <= characterPos.y && characterPos.y <= 3.5) || // 부쉬 2
+                (11 <= characterPos.x && characterPos.x <= 12 && 0.5 <= characterPos.y && characterPos.y <= 1.5) || // 부쉬 3
+                (21 <= characterPos.x && characterPos.x <= 22 && 0.5 <= characterPos.y && characterPos.y <= 1.5) || // 부쉬 4
+                (-2 <= characterPos.x && characterPos.x <= -1 && -8.5 <= characterPos.y && characterPos.y <= -7.5) || // 부쉬 5
+                (4 <= characterPos.x && characterPos.x <= 5 && -8.5 <= characterPos.y && characterPos.y <= -7.5) // 부쉬 6
+              ) {
+                // 타겟이 실내에 위치해 있는 경우
+                isAttack = false;
+              } else {
+                // 타겟이 실외에 위치해 있는 경우
+                isAttack = true;
+                break;
+              }
+            }
+          }
+        } else {
+          // 공격자가 실내에 위치해 있는 경우
+          isAttack = true;
           break;
         }
       }
     }
-    sendAnimation(room, alivePlayers[i][0], 2);
+
+    if (isAttack) {
+      const damage = Math.max(attacker.character.attack * skillCoeffcient - alivePlayers[i][0].character.armor, 0);
+      alivePlayers[i][0].character.hp -= Math.round(damage);
+      if (alivePlayers[i][0].character.hp <= 0) {
+        alivePlayers[i][0].character.aliveState = false;
+        alivePlayers[i][0].character.stateInfo.state = 15;
+        alivePlayers[i][0].character.hp = 0;
+        for (let i = 0; i < shoppingUserIdSessions[room.id].length; i++) {
+          if (shoppingUserIdSessions[room.id][i][0] === attacker.id) {
+            shoppingUserIdSessions[room.id].splice(i, 1);
+            break;
+          }
+        }
+      }
+      sendAnimation(room, alivePlayers[i][0], 2);
+    }
   }
 
   await setRedisData('roomData', rooms);
   await userUpdateNotification(room);
+
+  return true;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

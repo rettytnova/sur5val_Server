@@ -9,7 +9,7 @@ let monsterNumber = 10000000;
 let positionIndex = 0;
 
 // 게임 시작 시 몬스터 스폰 시작
-export const monsterSpawnStart = async (roomId: number, level: number, idx: number) => {
+export const monsterSpawnStart = async (roomId: number, level: number, bossIdx: number) => {
   try {
     const playerSpawnPositionList = Server.getInstance().playerSpawnPositionList;
     if (!playerSpawnPositionList) return;
@@ -84,18 +84,13 @@ export const monsterSpawnStart = async (roomId: number, level: number, idx: numb
     //const randomIndex = nonSameRandom(1, 10, room.users.length);
     const userPositionDatas = [];
 
-    let bossIdx = 0;
     let monsterIdx = 0;
     let playerIdx = 0;
     for (let i = 0; i < room.users.length; i++) {
       let characterPositionData: CharacterPositionData = { id: -1, x: -1, y: -1 };
       if (room.users[i].character.roleType === RoleType.BOSS_MONSTER) {
-        if (level === 5) {
-          const bossIdxInBossRound = randomNumber(0, 3);
-          bossIdx = bossIdxInBossRound;
-        } else {
-          const bossIdxInNormalRound = randomNumber(4, bossSpawnPositionList.length - 1);
-          bossIdx = bossIdxInNormalRound;
+        if (bossIdx === -1) {
+          bossIdx = randomNumber(4, bossSpawnPositionList.length - 1);
         }
         characterPositionData = {
           id: room.users[i].id,

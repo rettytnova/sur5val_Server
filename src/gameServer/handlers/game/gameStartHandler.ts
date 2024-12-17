@@ -118,7 +118,23 @@ export const normalPhaseNotification = async (level: number, roomId: number, sen
     const initGameInfo = Server.getInstance().initGameInfo;
     if (!initGameInfo) return;
     const inGameTime = initGameInfo[0].normalRoundTime;
-    const gameStateData = { phaseType: PhaseType.DAY, nextPhaseAt: Date.now() + inGameTime };
+
+    let phaseType: PhaseType = PhaseType.NONE_PHASE;
+    switch (level) {
+      case 1:
+        phaseType = PhaseType.NORMAL_ROUND_1;
+        break;
+      case 2:
+        phaseType = PhaseType.NORMAL_ROUND_2;
+        break;
+      case 3:
+        phaseType = PhaseType.NORMAL_ROUND_3;
+        break;
+      case 4:
+        phaseType = PhaseType.NORMAL_ROUND_4;
+        break;
+    }
+    const gameStateData = { phaseType: phaseType, nextPhaseAt: Date.now() + inGameTime };
     const notifiData = {
       gameState: gameStateData,
       users: room.users,
@@ -162,7 +178,7 @@ export const bossPhaseNotification = async (level: number, roomId: number, sendT
     const initGameInfo = Server.getInstance().initGameInfo;
     if (!initGameInfo) return;
     const bossGameTime = initGameInfo[0].bossRoundTime;
-    const gameStateData = { phaseType: PhaseType.EVENING, nextPhaseAt: Date.now() + bossGameTime };
+    const gameStateData = { phaseType: PhaseType.BOSS_ROUND, nextPhaseAt: Date.now() + bossGameTime };
     const notifiData = {
       gameState: gameStateData,
       users: room.users,
