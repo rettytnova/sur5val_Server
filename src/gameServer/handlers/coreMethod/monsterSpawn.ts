@@ -7,6 +7,7 @@ import { randomNumber } from '../../../utils/utils.js';
 
 let monsterNumber = 10000000;
 let positionIndex = 0;
+let monsterIdx = 0;
 
 // 게임 시작 시 몬스터 스폰 시작
 export const monsterSpawnStart = async (roomId: number, level: number, bossIdx: number) => {
@@ -84,7 +85,6 @@ export const monsterSpawnStart = async (roomId: number, level: number, bossIdx: 
     //const randomIndex = nonSameRandom(1, 10, room.users.length);
     const userPositionDatas = [];
 
-    let monsterIdx = 0;
     let playerIdx = 0;
     for (let i = 0; i < room.users.length; i++) {
       let characterPositionData: CharacterPositionData = { id: -1, x: -1, y: -1 };
@@ -111,11 +111,11 @@ export const monsterSpawnStart = async (roomId: number, level: number, bossIdx: 
           y: monsterSpawnPositionList[monsterIdx].y
         };
         monsterIdx++;
+        monsterIdx = monsterIdx % monsterSpawnPositionList.length;
       }
       userPositionDatas.push(characterPositionData);
     }
     playerIdx = 0;
-    monsterIdx = 0;
 
     characterPositionDatas[room.id].unshift(...userPositionDatas);
 
