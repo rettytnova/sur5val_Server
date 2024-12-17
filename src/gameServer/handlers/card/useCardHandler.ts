@@ -784,8 +784,6 @@ const attackRagne = async (
           for (let j = 0; i < (characterPositions[room.id] as CharacterPositionData[]).length; j++) {
             let characterPos: CharacterPositionData = (characterPositions[room.id] as CharacterPositionData[])[j];
             if (alivePlayers[i][0] !== null && characterPos.id === alivePlayers[i][0].id) {
-              console.log('alivePlayers[', i, '][0]: ', alivePlayers[i][0]);
-              console.log('characterPos: ', characterPos);
               if (
                 (-23 <= characterPos.x && characterPos.x <= -12 && 5 <= characterPos.y && characterPos.y <= 10) || // 건물 1
                 (-7 <= characterPos.x && characterPos.x <= 0 && 5 <= characterPos.y && characterPos.y <= 10) || // 건물 2
