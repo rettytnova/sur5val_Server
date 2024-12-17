@@ -35,7 +35,7 @@ const characterBuffStatus: { [characterId: number]: number[] } = {};
 export const useCardHandler = async (socket: CustomSocket, payload: Object): Promise<void> => {
   // response 데이터 초기화 ----------------------------------------------------------------------
   const { cardType, targetUserId: targetUserIdRaw } = payload as UseCardRequest;
-  console.log(cardType);
+
   const targetUserId = Number(targetUserIdRaw);
   let responseData: UseCardResponse = {
     success: true,
@@ -52,7 +52,7 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
 
     // room 정보 찾기
     const rooms: Room[] | undefined = await getRedisData('roomData');
-    if (rooms === undefined) {
+    if (!rooms || rooms.length === 0) {
       console.error('서버에 Rooms정보가 존재하지 않습니다.');
       return;
     }
@@ -64,7 +64,7 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
         }
       }
     }
-    if (!room) {
+    if (!room || !room.users) {
       console.error('카드 사용자가 속한 room 정보를 찾을 수 없습니다.');
       return;
     }
@@ -74,9 +74,10 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
     for (let i = 0; i < room.users.length; i++) {
       if (room.users[i].id === userId) {
         user = room.users[i];
+        break;
       }
     }
-    if (user === null) return;
+    if (!user || !user.character) return;
     if (user.character.aliveState === false || user.character.hp <= 0) {
       console.log(
         `죽어있는 대상은 행동을 할 수 없습니다. 상태: ${user.character.aliveState}, 체력: ${user.character.hp}`
@@ -117,7 +118,7 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
             !(-2 <= userPos.x && userPos.x <= -1 && -8.5 <= userPos.y && userPos.y <= -7.5) && // 부쉬 5
             !(4 <= userPos.x && userPos.x <= 5 && -8.5 <= userPos.y && userPos.y <= -7.5) // 부쉬 6
           ) {
-            for (let j = 0; i < characterPositions[room.id].length; j++) {
+            for (let j = 0; j < characterPositions[room.id].length; j++) {
               let characterPos: CharacterPositionData = characterPositions[room.id][j];
               if (target !== null && characterPos.id === target.id) {
                 if (
@@ -136,19 +137,16 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
                   (-2 <= characterPos.x && characterPos.x <= -1 && -8.5 <= characterPos.y && characterPos.y <= -7.5) || // 부쉬 5
                   (4 <= characterPos.x && characterPos.x <= 5 && -8.5 <= characterPos.y && characterPos.y <= -7.5) // 부쉬 6
                 ) {
-                  // 타겟이 실내에 있는 경우
-                  console.log('실외->실내');
+                  // 타겟이 실내에 위치해 있는 경우
                   return;
                 } else {
-                  // 타겟이 실외에 있는 경우
-                  console.log('실외->실외');
+                  // 타겟이 실외에 위치해 있는 경우
                   break;
                 }
               }
             }
-            break;
           } else {
-            console.log('공격자가 실내에 있는 경우');
+            // 공격자가 실내에 위치해 있는 경우
             break;
           }
         }
@@ -759,10 +757,13 @@ const attackRagne = async (
   }
 
   // 남아있는 alivePlayer 공격 및 애니메이션 재생
+  let isAttack: boolean = false;
   for (let i = 0; i < alivePlayers.length; i++) {
     // 공격 가능 여부 확인
-    for (let i = 0; i < (characterPositions[room.id] as CharacterPositionData[]).length; i++) {
-      let attackerPos: CharacterPositionData = (characterPositions[room.id] as CharacterPositionData[])[i];
+    for (let j = 0; j < (characterPositions[room.id] as CharacterPositionData[]).length; j++) {
+      let attackerPos: CharacterPositionData = (characterPositions[room.id] as CharacterPositionData[])[j];
+      console.log('attacker.id: ', attacker.id);
+      console.log('attackerPos.id: ', attackerPos.id);
       if (attacker !== null && attackerPos.id === attacker.id) {
         if (
           // 공격자가 실외에 위치해 있는 경우
@@ -781,8 +782,10 @@ const attackRagne = async (
           !(-2 <= attackerPos.x && attackerPos.x <= -1 && -8.5 <= attackerPos.y && attackerPos.y <= -7.5) && // 부쉬 5
           !(4 <= attackerPos.x && attackerPos.x <= 5 && -8.5 <= attackerPos.y && attackerPos.y <= -7.5) // 부쉬 6
         ) {
-          for (let j = 0; i < (characterPositions[room.id] as CharacterPositionData[]).length; j++) {
-            let characterPos: CharacterPositionData = (characterPositions[room.id] as CharacterPositionData[])[j];
+          for (let k = 0; k < (characterPositions[room.id] as CharacterPositionData[]).length; k++) {
+            let characterPos: CharacterPositionData = (characterPositions[room.id] as CharacterPositionData[])[k];
+            console.log('alivePlayers[i][0].id: ', alivePlayers[i][0].id);
+            console.log('characterPos.id: ', characterPos.id);
             if (alivePlayers[i][0] !== null && characterPos.id === alivePlayers[i][0].id) {
               if (
                 (-23 <= characterPos.x && characterPos.x <= -12 && 5 <= characterPos.y && characterPos.y <= 10) || // 건물 1
@@ -799,29 +802,40 @@ const attackRagne = async (
                 (21 <= characterPos.x && characterPos.x <= 22 && 0.5 <= characterPos.y && characterPos.y <= 1.5) || // 부쉬 4
                 (-2 <= characterPos.x && characterPos.x <= -1 && -8.5 <= characterPos.y && characterPos.y <= -7.5) || // 부쉬 5
                 (4 <= characterPos.x && characterPos.x <= 5 && -8.5 <= characterPos.y && characterPos.y <= -7.5) // 부쉬 6
-              )
-                return false;
-              else break;
+              ) {
+                // 타겟이 실내에 위치해 있는 경우
+                isAttack = false;
+              } else {
+                // 타겟이 실외에 위치해 있는 경우
+                isAttack = true;
+                break;
+              }
             }
           }
-          break;
-        } else break;
-      }
-    }
-    const damage = Math.max(attacker.character.attack * skillCoeffcient - alivePlayers[i][0].character.armor, 0);
-    alivePlayers[i][0].character.hp -= Math.round(damage);
-    if (alivePlayers[i][0].character.hp <= 0) {
-      alivePlayers[i][0].character.aliveState = false;
-      alivePlayers[i][0].character.stateInfo.state = 15;
-      alivePlayers[i][0].character.hp = 0;
-      for (let i = 0; i < shoppingUserIdSessions[room.id].length; i++) {
-        if (shoppingUserIdSessions[room.id][i][0] === attacker.id) {
-          shoppingUserIdSessions[room.id].splice(i, 1);
+        } else {
+          // 공격자가 실내에 위치해 있는 경우
+          isAttack = true;
           break;
         }
       }
     }
-    sendAnimation(room, alivePlayers[i][0], 2);
+
+    if (isAttack) {
+      const damage = Math.max(attacker.character.attack * skillCoeffcient - alivePlayers[i][0].character.armor, 0);
+      alivePlayers[i][0].character.hp -= Math.round(damage);
+      if (alivePlayers[i][0].character.hp <= 0) {
+        alivePlayers[i][0].character.aliveState = false;
+        alivePlayers[i][0].character.stateInfo.state = 15;
+        alivePlayers[i][0].character.hp = 0;
+        for (let i = 0; i < shoppingUserIdSessions[room.id].length; i++) {
+          if (shoppingUserIdSessions[room.id][i][0] === attacker.id) {
+            shoppingUserIdSessions[room.id].splice(i, 1);
+            break;
+          }
+        }
+      }
+      sendAnimation(room, alivePlayers[i][0], 2);
+    }
   }
 
   await setRedisData('roomData', rooms);
