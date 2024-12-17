@@ -1,5 +1,7 @@
 import { getRedis } from '../../database/redis.js';
 import { CustomSocket, Room } from '../../gameServer/interface/interface.js';
+import GameRoom from '../class/room.js';
+import Server from '../class/server.js';
 import { socketSessions } from '../session/socketSession.js';
 import { directionChangeBasic, directionChangeRandom, monsterAiDatas, moveSpeed } from './coreMethod/monsterMove.js';
 
@@ -40,6 +42,20 @@ export const getUserIdBySocket = async (socket: CustomSocket) => {
   return null;
 };
 
+// socket으로 유저 데이터 가져오기 ex: getUserBySocket(socket)
+export const getUserBySocket = (socket: CustomSocket) => {
+  const users = Server.getInstance().getUsers();
+  if (users) {
+    for (let i = 0; i < users.length; i++) {
+      if (socketSessions[users[i].getId()] === socket) {
+        return Server.getInstance().getUser(users[i].getId());
+      }
+    }
+  }
+
+  return null;
+};
+
 // userid로 방 찾기
 export const getRoomByUserId = async (userId: number) => {
   const rooms: Room[] = await getRedisData('roomData');
@@ -49,6 +65,15 @@ export const getRoomByUserId = async (userId: number) => {
   }
   return room;
 };
+
+export const getRoomByUserIdTwo = (userId: number) => {
+  const rooms: GameRoom[] = Server.getInstance().getRooms();
+  const room = rooms.find((room) => room.getUsers().some((user) => user.getId() === userId));
+  if (!room) {
+    return null;
+  }
+  return room;
+}
 
 // 몬스터 이동 방향 및 거리 설정 / 0:위, 1: 오른쪽, 2: 아래, 3: 왼쪽
 export const monsterAI = (

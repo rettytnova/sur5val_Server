@@ -27,6 +27,9 @@ import { onEnd } from '../events/onEnd.js';
 import { onChattingServerOnData } from '../events/onChattingServerOnData.js';
 import { sendChattingPacket } from '../../packet/createPacket.js';
 import { chattingPacketNames } from '../../chattingProtobuf/chattingPacketNames.js';
+import GameRoom from './room.js';
+import UserSessions from './userSessions.js';
+import PositionSessions from './positionSessions.js';
 /**
  *   const bossSpawnPositionList: SpawnPositionData[] = await dbManager.spawnPositionInfo(1, 'boss');
   const monsterSpawnPositionList: SpawnPositionData[] = await dbManager.spawnPositionInfo(1, 'monster');
@@ -52,10 +55,18 @@ class Server {
   private chattingServerSocket: net.Socket;
   private chattingServerReconnect: number;
 
+  private users: UserSessions[];
+  private rooms: GameRoom[];
+  private characterPositions: PositionSessions[];
+
   private constructor() {
     this.server = net.createServer(this.clientConnection);
     this.chattingServerSocket = new net.Socket();
     this.chattingServerReconnect = 0;
+
+    this.users = [];
+    this.rooms = [];
+    this.characterPositions = [];
   }
 
   static getInstance() {
@@ -64,6 +75,22 @@ class Server {
     }
 
     return Server.gInstance;
+  }
+
+  getUsers() {
+    return this.users;
+  }
+
+  getRooms() {
+    return this.rooms;
+  }
+
+  getUser(id: number) {
+    return this.users.find((user: UserSessions) => user.getId() === id);
+  }
+
+  getPositions() {
+    return this.characterPositions;
   }
 
   connect() {
