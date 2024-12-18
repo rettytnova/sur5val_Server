@@ -30,6 +30,7 @@ import { chattingPacketNames } from '../../chattingProtobuf/chattingPacketNames.
 import GameRoom from './room.js';
 import UserSessions from './userSessions.js';
 import PositionSessions from './positionSessions.js';
+import MarketSessions from './marketSessions.js';
 /**
  *   const bossSpawnPositionList: SpawnPositionData[] = await dbManager.spawnPositionInfo(1, 'boss');
   const monsterSpawnPositionList: SpawnPositionData[] = await dbManager.spawnPositionInfo(1, 'monster');
@@ -58,6 +59,7 @@ class Server {
   private users: UserSessions[];
   private rooms: GameRoom[];
   private characterPositions: PositionSessions[];
+  private markets: MarketSessions[];
 
   private constructor() {
     this.server = net.createServer(this.clientConnection);
@@ -67,6 +69,7 @@ class Server {
     this.users = [];
     this.rooms = [];
     this.characterPositions = [];
+    this.markets = [];
   }
 
   static getInstance() {
@@ -90,9 +93,17 @@ class Server {
     return this.rooms;
   }
 
+  getMarkets() {
+    return this.markets;
+  }
+
   setRooms(rooms: GameRoom[]) {
     this.rooms = [];
     this.rooms = rooms;
+  }
+
+  setMarkets(markets: MarketSessions[]) {
+    this.markets = markets;
   }
 
   getRoomByRoomId(findRoomId: number) {
