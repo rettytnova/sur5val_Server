@@ -44,7 +44,8 @@ export const loginHandler = async (socket: CustomSocket, payload: Object): Promi
       responseData.success = false;
       responseData.message = '이 유저는 존재하지 않습니다.';
       responseData.failCode = GlobalFailCode.AUTHENTICATION_FAILED;
-      throw new Error(responseData.message);
+      console.error(responseData.message);
+      return;
     }
 
     // 비밀번호 유효성 검사 (bcrypt 비교)
@@ -53,7 +54,8 @@ export const loginHandler = async (socket: CustomSocket, payload: Object): Promi
       responseData.success = false;
       responseData.message = '비밀번호를 틀렸습니다.';
       responseData.failCode = GlobalFailCode.AUTHENTICATION_FAILED;
-      throw new Error(responseData.message);
+      console.error(responseData.message);
+      return;
     }
 
     // 이미 로그인 했는지 확인
