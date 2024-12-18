@@ -1,5 +1,5 @@
 ﻿import { GlobalFailCode, RoomStateType, UserCharacterType } from '../enumTyps.js';
-import { CustomSocket } from '../../../gameServer/interface/interface.js';
+import { CustomSocket } from '../../interface/interface.js';
 import { config } from '../../../config/config.js';
 import { sendPacket } from '../../../packet/createPacket.js';
 import { convertSendRoomData, getRoomByUserId, getUserBySocket } from '../handlerMethod.js';

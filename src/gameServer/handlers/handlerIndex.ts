@@ -10,7 +10,7 @@ import { getRoomListHandler } from './room/getRoomListHandler.js';
 import { joinRoomHandler } from './room/joinRoomHandler.js';
 import { joinRandomRoomHandler } from './room/joinRandomRoomHandler.js';
 import { leaveRoomHandler } from './room/leaveRoomHandler.js';
-import { gamePrepareHandler } from './game/gamePrepareHandlers.js';
+import { gamePrepareHandler } from './game/gamePrepareHandler.js';
 import { gameStartHandler } from './game/gameStartHandler.js';
 import { positionUpdateHandler } from './position/positionUpdateHandler.js';
 import { useCardHandler } from './card/useCardHandler.js';

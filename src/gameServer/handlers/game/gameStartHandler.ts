@@ -68,10 +68,9 @@ export const gameStartHandler = (socket: CustomSocket, payload: Object) => {
       room.setRoomState(RoomStateType.INGAME);
       const initGameInfo = Server.getInstance().initGameInfo;
       if (!initGameInfo) return;
-      const inGameTime = 5000;
-      //const inGameTime = 10000;
+      const inGameTime = initGameInfo[0].normalRoundTime;
       const normalRound = initGameInfo[0].normalRoundNumber;
-      const bossGameTime = 5000;
+      const bossGameTime = initGameInfo[0].bossRoundTime;
 
       for (let i = 0; i < normalRound; i++) {
         normalPhaseNotification(i + 1, room.getRoomId(), inGameTime * i);
