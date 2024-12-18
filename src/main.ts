@@ -9,4 +9,3 @@ deleteRedisData('roomData');
 deleteRedisData('userData');
 deleteRedisData('characterPositionDatas');
 deleteRedisData('fleaMarketCards');
-deleteRedisData('userStatusData');
