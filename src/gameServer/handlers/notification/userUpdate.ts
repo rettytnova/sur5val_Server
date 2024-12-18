@@ -1,67 +1,83 @@
 import { config } from '../../../config/config.js';
-import { Room, User } from '../../../gameServer/interface/interface.js';
 import { sendPacket } from '../../../packet/createPacket.js';
+import MarketSessions from '../../class/marketSessions.js';
+import GameRoom from '../../class/room.js';
+import Server from '../../class/server.js';
+import UserSessions from '../../class/userSessions.js';
+import { User } from '../../interface/interface.js';
 import { shoppingUserIdSessions } from '../../session/shoppingSession.js';
 import { socketSessions } from '../../session/socketSession.js';
-import { getRedisData, getUserIdBySocket } from '../handlerMethod.js';
+import { getUserBySocket } from '../handlerMethod.js';
 
-export const userUpdateNotification = async (room: Room | null) => {
+// 유저 상태 업데이트 전달
+export const userUpdateNotification = (room: GameRoom | null) => {
   if (!room) {
     console.log('userUpdateNoti userSocket 방이 없음');
     return;
   }
 
-  room.users.forEach((user) => {
-    const userSocket = socketSessions[user.id];
+  // notification 보내기
+  const sendUsers: User[] = [];
+  room.getUsers().forEach((user: UserSessions) => {
+    sendUsers.push(user.getUserInfo());
+  });
+  room.getUsers().forEach((user: UserSessions) => {
+    const userSocket = socketSessions[user.getId()];
 
     if (userSocket) {
       sendPacket(userSocket, config.packetType.USER_UPDATE_NOTIFICATION, {
-        user: room.users
+        user: sendUsers
       });
     }
   });
 
   // 쇼핑중인 유저들에게 쇼핑 화면 다시 보여주기
-  let redisFleaMarketCards: { [roomId: number]: number[] } | undefined = await getRedisData('fleaMarketCards');
-  if (!redisFleaMarketCards) {
-    console.error('fleaMarketItemSelect 레디스에 상점 카드가 없음');
+  const itemLists: MarketSessions | undefined = Server.getInstance()
+    .getMarkets()
+    .find((markets) => markets.getRoomId() === room.getRoomId());
+  if (itemLists === undefined) {
+    console.error('마켓 정보를 찾아오지 못함', Server.getInstance().getMarkets());
     return;
   }
-  for (let i = 0; i < shoppingUserIdSessions[room.id].length; i++) {
-    const shoppingUserSocket = socketSessions[shoppingUserIdSessions[room.id][i][0]];
-    if (shoppingUserIdSessions[room.id][i][1]) {
+  for (let i = 0; i < shoppingUserIdSessions[room.getRoomId()].length; i++) {
+    const shoppingUserSocket = socketSessions[shoppingUserIdSessions[room.getRoomId()][i][0]];
+
+    // 구매중인 유저의 구매화면 유지시키기
+    if (shoppingUserIdSessions[room.getRoomId()][i][1]) {
       sendPacket(shoppingUserSocket, config.packetType.FLEA_MARKET_PICK_RESPONSE, {
-        fleaMarketCardTypes: redisFleaMarketCards[room.id]
+        fleaMarketCardTypes: itemLists.getItemLists()
       });
+
+      // 판매중이 유저의 판매화면 유지시키기
     } else {
-      const userId: number | null = await getUserIdBySocket(shoppingUserSocket);
-      if (!userId) {
-        console.error('fleaMarketItemSelect 레디스에 유저가 없음');
+      const user: UserSessions | null | undefined = getUserBySocket(shoppingUserSocket);
+      if (!user) {
+        console.error('유저 정보 찾지 못함');
         return;
       }
-      let cardPickUser: User | null = null;
-      for (let i = 0; i < room.users.length; i++) {
-        if (room.users[i].id === userId) {
-          cardPickUser = room.users[i];
+      let sellingUser: UserSessions | null = null;
+      for (let i = 0; i < room.getUsers().length; i++) {
+        if (room.getUsers()[i].getId() === user.getId()) {
+          sellingUser = room.getUsers()[i];
           break;
         }
       }
 
-      if (cardPickUser === null) {
-        console.error('fleaMarketItemSelect 유저가 없음');
+      if (sellingUser === null) {
+        console.error('판매중인 유저의 유저정보를 찾을 수 없음');
         return;
       }
 
-      if (!cardPickUser.character || cardPickUser.character.hp === 0 || !cardPickUser.character.handCards) {
-        console.error('fleaMarketItemSelect 캐릭터 에러');
+      if (!sellingUser.getCharacter() || sellingUser.getCharacter().hp === 0 || !sellingUser.getCharacter().handCards) {
+        console.error('판매 캐릭터 상태가 판매를 진행할 수 없음');
         return;
       }
 
       const cards: number[] = [];
-      for (let i = 0; i < cardPickUser.character.handCards.length; i++) {
-        if (cardPickUser.character.handCards[i].type > 200 && cardPickUser.character.handCards[i].count > 0) {
-          cards.push(cardPickUser.character.handCards[i].type + 2000);
-          cardPickUser.character.handCards[i].count--;
+      for (let i = 0; i < sellingUser.getCharacter().handCards.length; i++) {
+        if (sellingUser.getCharacter().handCards[i].type > 200 && sellingUser.getCharacter().handCards[i].count > 0) {
+          cards.push(sellingUser.getCharacter().handCards[i].type + 2000);
+          sellingUser.getCharacter().handCards[i].count--;
           i--;
           if (cards.length >= 7) break;
         }

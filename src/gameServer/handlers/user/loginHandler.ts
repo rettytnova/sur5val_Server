@@ -1,14 +1,17 @@
-import { CustomSocket, User, LoginRequest, LoginResponse } from '../../interface/interface.js';
+import { CustomSocket, LoginRequest, LoginResponse, Room } from '../../interface/interface.js';
 import jwt, { SignOptions } from 'jsonwebtoken';
 import { sendPacket } from '../../../packet/createPacket.js';
 import { config } from '../../../config/config.js';
-import { getRedisData, setRedisData } from '../handlerMethod.js';
 import { dbManager } from '../../../database/user/user.db.js';
 import { GlobalFailCode, PhaseType, RoleType } from '../enumTyps.js';
 import { socketSessions } from '../../session/socketSession.js';
 import { inGameTimeSessions } from '../../session/inGameTimeSession.js';
 import Server from '../../class/server.js';
 import bcrypt from 'bcrypt';
+import UserSessions from '../../class/userSessions.js';
+import GameRoom from '../../class/room.js';
+import PositionSessions from '../../class/positionSessions.js';
+import { convertSendRoomData } from '../handlerMethod.js';
 
 const { jwtToken, packetType } = config;
 
@@ -23,7 +26,7 @@ const { jwtToken, packetType } = config;
  */
 export const loginHandler = async (socket: CustomSocket, payload: Object): Promise<void> => {
   const { email, password } = payload as LoginRequest;
-  // 데이터 초기화 ----------------------------------------------------------------------
+
   let responseData: LoginResponse = {
     success: true,
     message: '',
@@ -31,6 +34,7 @@ export const loginHandler = async (socket: CustomSocket, payload: Object): Promi
     myInfo: null,
     failCode: GlobalFailCode.NONE
   };
+
   const userByEmail: any = await dbManager.findUserByEmail(email);
   try {
     // 유효성 검사 ----------------------------------------------------------------------
@@ -52,15 +56,16 @@ export const loginHandler = async (socket: CustomSocket, payload: Object): Promi
       throw new Error(responseData.message);
     }
 
-    // 이미 로그인 했는지 Redis의 캐싱 기록 검사
-    const userDatas: User[] | null = await getRedisData('userData');
-    if (userDatas) {
-      const userData = userDatas.find((userData: User) => userData.id === userByEmail.id);
+    // 이미 로그인 했는지 확인
+    const users: UserSessions[] | null = Server.getInstance().getUsers();
+    if (users) {
+      const userData = users.find((userData: UserSessions) => userData.getId() === userByEmail.id);
       if (userData) {
         responseData.success = false;
         responseData.message = '이미 로그인한 유저입니다.';
         responseData.failCode = GlobalFailCode.AUTHENTICATION_FAILED;
-        throw new Error(responseData.message);
+        console.error(responseData.message);
+        return;
       }
     }
 
@@ -106,51 +111,14 @@ export const loginHandler = async (socket: CustomSocket, payload: Object): Promi
       }
     };
 
-    // 이미 게임 중인 상태일 경우 해당 게임으로 이동
-    // setTimeout(async () => {
-    //   const rooms = await getRedisData('roomData');
-    //   if (rooms) {
-    //     for (let i = 0; i < rooms.length; i++) {
-    //       for (let j = 0; j < rooms[i].users.length; j++) {
-    //         if (rooms[i].users[j].id === userByEmail.id) {
-    //           const initGameInfo = Server.getInstance().initGameInfo;
-    //           if (!initGameInfo) return;
-    //           const inGameTime = initGameInfo[0].normalRoundTime;
-    //           const normalRound = initGameInfo[0].normalRoundNumber;
-    //           const leftTime = (inGameTime * normalRound - (Date.now() - inGameTimeSessions[rooms[i].id])) % inGameTime;
-    //           const characterPositionDatas = await getRedisData('characterPositionDatas');
-    //           const gameStateData = { phaseType: PhaseType.DAY, nextPhaseAt: Date.now() + leftTime };
-    //           const notifiData = {
-    //             gameState: gameStateData,
-    //             users: rooms[i].users,
-    //             characterPositions: characterPositionDatas[rooms[i].id]
-    //           };
-    //           sendPacket(socket, config.packetType.GAME_START_NOTIFICATION, notifiData);
-    //           setTimeout(() => {
-    //             console.log(rooms);
-    //             sendPacket(socket, config.packetType.USER_UPDATE_NOTIFICATION, {
-    //               user: rooms[i].users
-    //             });
-    //           }, 100);
-    //         }
-    //       }
-    //     }
-    //   }
-    // }, 100);
+    const newGameUser = new UserSessions(responseData.myInfo);
+    Server.getInstance().getUsers().push(newGameUser);
 
-    // Redis에 데이터 보내기
-    if (!userDatas) {
-      await setRedisData('userData', [responseData.myInfo]);
-    } else {
-      userDatas.push(responseData.myInfo);
-      await setRedisData('userData', userDatas);
-    }
-
-    // socketSession에 socket 저장하기
     socketSessions[userByEmail.id] = socket;
 
-    // 로그 처리 ----------------------------------------------------------------------
-    console.info(`로그인 성공 : ${userByEmail.id}`);
+    console.info(
+      `로그인 성공 id : ${userByEmail.id} email : ${userByEmail.email} 로그인 중인 클라 ${Server.getInstance().getUsers().length}`
+    );
   } catch (error) {
     console.error(`loginRequestHandler ${error as Error}`);
   }
@@ -158,29 +126,40 @@ export const loginHandler = async (socket: CustomSocket, payload: Object): Promi
   // 클라이언트에 데이터 보내기
   sendPacket(socket, packetType.LOGIN_RESPONSE, responseData);
 
-  const rooms = await getRedisData('roomData');
-  if (rooms) {
-    for (let i = 0; i < rooms.length; i++) {
-      for (let j = 0; j < rooms[i].users.length; j++) {
-        if (rooms[i].users[j].id === userByEmail.id) {
-          const initGameInfo = Server.getInstance().initGameInfo;
-          if (!initGameInfo) return;
-          const inGameTime = initGameInfo[0].normalRoundTime;
-          const normalRound = initGameInfo[0].normalRoundNumber;
-          const leftTime = (inGameTime * normalRound - (Date.now() - inGameTimeSessions[rooms[i].id])) % inGameTime;
-          const characterPositionDatas = await getRedisData('characterPositionDatas');
-          const gameStateData = { phaseType: PhaseType.DAY, nextPhaseAt: Date.now() + leftTime };
-          const notifiData = {
-            gameState: gameStateData,
-            users: rooms[i].users as User[],
-            characterPositions: characterPositionDatas[rooms[i].id]
-          };
-          sendPacket(socket, config.packetType.GAME_START_NOTIFICATION, notifiData);
-          sendPacket(socket, config.packetType.USER_UPDATE_NOTIFICATION, {
-            user: rooms[i].users
-          });
-        }
+  const rooms = Server.getInstance().getRooms();
+  const room = rooms.find((room: GameRoom) =>
+    room.getUsers().some((roomUser: UserSessions) => roomUser.getId() === userByEmail.id)
+  );
+  if (room) {
+    const initGameInfo = Server.getInstance().initGameInfo;
+    if (!initGameInfo) {
+      return;
+    }
+    const inGameTime = initGameInfo[0].normalRoundTime;
+    const normalRound = initGameInfo[0].normalRoundNumber;
+    const leftTime = (inGameTime * normalRound - (Date.now() - inGameTimeSessions[room.getRoomId()])) % inGameTime;
+    const characterPositions = Server.getInstance().getPositions();
+    if (characterPositions.length > 0) {
+      const characterPosition = characterPositions.find(
+        (characterPosition: PositionSessions) => characterPosition.getPositionRoomId() === room.getRoomId()
+      );
+      if (!characterPosition) {
+        return;
       }
+      const roomData: Room = convertSendRoomData(room);
+      const gameStateData = { phaseType: PhaseType.NORMAL_ROUND_1, nextPhaseAt: Date.now() + leftTime };
+      const notifiData = {
+        gameState: gameStateData,
+        users: roomData.users,
+        characterPositions: characterPosition.getCharacterPositions()
+      };
+
+      sendPacket(socket, config.packetType.GAME_START_NOTIFICATION, notifiData);
+      sendPacket(socket, config.packetType.USER_UPDATE_NOTIFICATION, {
+        user: roomData.users
+      });
+    } else {
+      console.error('characterPositions데이터를 찾지 못하였습니다.');
     }
   }
 };

@@ -160,9 +160,9 @@ message GamePacket {
         // 페이즈 업데이트
         S2CPhaseUpdateNotification phaseUpdateNotification = 36;
 
-        // 리액션
-        C2SReactionRequest reactionRequest = 37;
-        S2CReactionResponse reactionResponse = 38;
+        // 보스라운드 & 게임 종료
+        C2SResultRequest resultRequest = 37;
+        S2CBossRoundResponse  bossRoundResponse = 38;
 
         // 턴 종료시 (phaseType 3) 카드 버리기
         C2SDestroyCardRequest destroyCardRequest = 39;
@@ -345,14 +345,17 @@ enum RoomStateType {
 
 enum PhaseType {
     NONE_PHASE = 0;
-    DAY = 1;
-    EVENING = 2;
-    END = 3;
+    NORMAL_ROUND_1 = 1;
+    NORMAL_ROUND_2 = 2;
+    NORMAL_ROUND_3 = 3;
+    NORMAL_ROUND_4 = 4;
+    BOSS_ROUND = 5;
+    END = 6;
 }
 
-enum ReactionType {
-    NONE_REACTION = 0;
-    NOT_USE_CARD = 1;
+enum ResultType {
+    SURVIVOR_WIN = 0;
+    BOSS_WIN = 1;
 }
 
 enum SelectCardType {
@@ -377,8 +380,7 @@ enum AnimationType {
     BOSS_EXTENDED_SKILL_ANIMATION = 11;
 }
 
-enum GlobalMessageType
-{
+enum GlobalMessageType {
     GLOBAL_MESSAGE_NONE = 0;
     GLOBAL_MESSAGE_ROUND = 1;
     GLOBAL_MESSAGE_COOLTIME = 2;

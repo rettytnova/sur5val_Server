@@ -17,7 +17,8 @@ import {
   initGameDBData,
   shopListDBData,
   CharacterInitStatDBData,
-  CharacterLevelUpStatDBData
+  CharacterLevelUpStatDBData,
+  SpawnPositionData
 } from '../interface/interface.js';
 import DatabaseManager from '../../database/databaseManager.js';
 import { connectRedis } from '../../database/redis.js';
@@ -26,7 +27,15 @@ import { onEnd } from '../events/onEnd.js';
 import { onChattingServerOnData } from '../events/onChattingServerOnData.js';
 import { sendChattingPacket } from '../../packet/createPacket.js';
 import { chattingPacketNames } from '../../chattingProtobuf/chattingPacketNames.js';
-
+import GameRoom from './room.js';
+import UserSessions from './userSessions.js';
+import PositionSessions from './positionSessions.js';
+import MarketSessions from './marketSessions.js';
+/**
+ *   const bossSpawnPositionList: SpawnPositionData[] = await dbManager.spawnPositionInfo(1, 'boss');
+  const monsterSpawnPositionList: SpawnPositionData[] = await dbManager.spawnPositionInfo(1, 'monster');
+  const playerSpawnPositionList: SpawnPositionData[] = await dbManager.spawnPositionInfo(1, 'player');
+ */
 class Server {
   private static gInstance: Server | null = null;
   private gameProtoMessages: { [key: string]: any } = {};
@@ -40,14 +49,30 @@ class Server {
   public monsterInfo: MonsterDBData[] | undefined;
   public shopListInfo: shopListDBData[] | undefined;
   public initGameInfo: initGameDBData[] | undefined;
+  public bossSpawnPositionList: SpawnPositionData[] | undefined;
+  public monsterSpawnPositionList: SpawnPositionData[] | undefined;
+  public playerSpawnPositionList: SpawnPositionData[] | undefined;
 
   private chattingServerSocket: net.Socket;
   private chattingServerReconnect: number;
 
+  private users: UserSessions[];
+  private rooms: GameRoom[];
+  private characterPositions: PositionSessions[];
+  private markets: MarketSessions[];
+
+  public connectingClientCount: number;
+
   private constructor() {
-    this.server = net.createServer(this.clientConnection);
+    this.connectingClientCount = 0;
+    this.server = net.createServer(this.clientConnection.bind(this));
     this.chattingServerSocket = new net.Socket();
     this.chattingServerReconnect = 0;
+
+    this.users = [];
+    this.rooms = [];
+    this.characterPositions = [];
+    this.markets = [];
   }
 
   static getInstance() {
@@ -56,6 +81,49 @@ class Server {
     }
 
     return Server.gInstance;
+  }
+
+  getUsers() {
+    return this.users;
+  }
+
+  setUsers(users: UserSessions[]) {
+    this.users = [];
+    this.users = users;
+  }
+
+  getRooms() {
+    return this.rooms;
+  }
+
+  getMarkets() {
+    return this.markets;
+  }
+
+  setRooms(rooms: GameRoom[]) {
+    this.rooms = [];
+    this.rooms = rooms;
+  }
+
+  setMarkets(markets: MarketSessions[]) {
+    this.markets = markets;
+  }
+
+  getRoomByRoomId(findRoomId: number) {
+    return this.rooms.find((room: GameRoom) => room.getRoomId() === findRoomId);
+  }
+
+  getUser(id: number) {
+    return this.users.find((user: UserSessions) => user.getId() === id);
+  }
+
+  getPositions() {
+    return this.characterPositions;
+  }
+
+  setPositions(characterPositions: PositionSessions[]) {
+    this.characterPositions = [];
+    this.characterPositions = characterPositions;
   }
 
   connect() {
@@ -175,7 +243,11 @@ class Server {
   clientConnection(socket: net.Socket) {
     const customSocket = socket as CustomSocket;
 
-    console.log(`Client connected from: ${socket.remoteAddress}:${socket.remotePort}`);
+    this.connectingClientCount++;
+
+    console.log(
+      `Game 클라 연결 from: ${socket.remoteAddress}:${socket.remotePort} 연결 중인 클라 ${this.connectingClientCount}`
+    );
 
     customSocket.id = uuidv4();
     customSocket.buffer = Buffer.alloc(0);
@@ -214,7 +286,12 @@ class Server {
     if (!this.shopListInfo) throw new Error('shopListInfo 정보를 불러오는데 실패하였습니다.');
     this.initGameInfo = await DatabaseManager.getInstance().initGameInfo();
     if (!this.initGameInfo) throw new Error('initGameInfo 정보를 불러오는데 실패하였습니다.');
-
+    this.bossSpawnPositionList = await DatabaseManager.getInstance().spawnPositionInfo(1, 'boss');
+    if (!this.bossSpawnPositionList) throw new Error('bossSpawnPositionList 정보를 불러오는데 실패하였습니다.');
+    this.monsterSpawnPositionList = await DatabaseManager.getInstance().spawnPositionInfo(1, 'monster');
+    if (!this.monsterSpawnPositionList) throw new Error('monsterSpawnPositionList 정보를 불러오는데 실패하였습니다.');
+    this.playerSpawnPositionList = await DatabaseManager.getInstance().spawnPositionInfo(1, 'player');
+    if (!this.playerSpawnPositionList) throw new Error('playerSpawnPositionList 정보를 불러오는데 실패하였습니다.');
     this.connect();
   }
 }
