@@ -64,7 +64,8 @@ export const loginHandler = async (socket: CustomSocket, payload: Object): Promi
         responseData.success = false;
         responseData.message = '이미 로그인한 유저입니다.';
         responseData.failCode = GlobalFailCode.AUTHENTICATION_FAILED;
-        throw new Error(responseData.message);
+        console.error(responseData.message);
+        return;
       }
     }
 
