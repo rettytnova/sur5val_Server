@@ -1,8 +1,7 @@
-import { CustomSocket, User, LoginRequest, LoginResponse } from '../../interface/interface.js';
+import { CustomSocket, LoginRequest, LoginResponse } from '../../interface/interface.js';
 import jwt, { SignOptions } from 'jsonwebtoken';
 import { sendPacket } from '../../../packet/createPacket.js';
 import { config } from '../../../config/config.js';
-import { getRedisData, setRedisData } from '../handlerMethod.js';
 import { dbManager } from '../../../database/user/user.db.js';
 import { GlobalFailCode, PhaseType, RoleType } from '../enumTyps.js';
 import { socketSessions } from '../../session/socketSession.js';
@@ -11,6 +10,7 @@ import Server from '../../class/server.js';
 import bcrypt from 'bcrypt';
 import UserSessions from '../../class/userSessions.js';
 import GameRoom from '../../class/room.js';
+import PositionSessions from '../../class/positionSessions.js';
 
 const { jwtToken, packetType } = config;
 
@@ -132,17 +132,24 @@ export const loginHandlerTwo = async (socket: CustomSocket, payload: Object): Pr
         const inGameTime = initGameInfo[0].normalRoundTime;
         const normalRound = initGameInfo[0].normalRoundNumber;
         const leftTime = (inGameTime * normalRound - (Date.now() - inGameTimeSessions[room.getRoomId()])) % inGameTime;
-        const characterPositionDatas = await getRedisData('characterPositionDatas');
-        const gameStateData = { phaseType: PhaseType.NORMAL_ROUND_1, nextPhaseAt: Date.now() + leftTime };
-        const notifiData = {
-            gameState: gameStateData,
-            users: room.getUsers(),
-            characterPositions: characterPositionDatas[room.getRoomId()]
-        };
+        const characterPositions = Server.getInstance().getPositions();
+        if (characterPositions.length > 0) {
+            const characterPosition = characterPositions.find((characterPosition: PositionSessions) => characterPosition.getPositionUserId() === room.getRoomId());
+            if (!characterPosition) {
+                return;
+            }
 
-        sendPacket(socket, config.packetType.GAME_START_NOTIFICATION, notifiData);
-        sendPacket(socket, config.packetType.USER_UPDATE_NOTIFICATION, {
-            user: room.getUsers()
-        });
+            const gameStateData = { phaseType: PhaseType.NORMAL_ROUND_1, nextPhaseAt: Date.now() + leftTime };
+            const notifiData = {
+                gameState: gameStateData,
+                users: room.getUsers(),
+                characterPositions: characterPosition
+            };
+
+            sendPacket(socket, config.packetType.GAME_START_NOTIFICATION, notifiData);
+            sendPacket(socket, config.packetType.USER_UPDATE_NOTIFICATION, {
+                user: room.getUsers()
+            });
+        }
     }
 };

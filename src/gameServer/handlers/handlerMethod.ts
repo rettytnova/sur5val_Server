@@ -1,7 +1,8 @@
 import { getRedis } from '../../database/redis.js';
-import { CustomSocket, Room } from '../../gameServer/interface/interface.js';
+import { CustomSocket, Room, User } from '../../gameServer/interface/interface.js';
 import GameRoom from '../class/room.js';
 import Server from '../class/server.js';
+import UserSessions from '../class/userSessions.js';
 import { socketSessions } from '../session/socketSession.js';
 import { directionChangeBasic, directionChangeRandom, monsterAiDatas, moveSpeed } from './coreMethod/monsterMove.js';
 
@@ -73,6 +74,38 @@ export const getRoomByUserIdTwo = (userId: number) => {
     return null;
   }
   return room;
+}
+
+// UserSession을 User로 변환
+export const convertSendUserData = (user: UserSessions) => {
+  const sendUser: User = {
+    id: user.getId(),
+    email: user.getEmail(),
+    nickname: user.getNickname(),
+    character: user.getCharacter()
+  }
+
+  return sendUser;
+}
+
+// GameRoom을 Room으로 변환
+export const convertSendRoomData = (room: GameRoom) => {
+  const sendUsers: User[] = [];
+  room.getUsers().forEach((user: UserSessions) => {
+    sendUsers.push(user.getUserInfo());
+  });
+
+  const sendRoom: Room = {
+    id: room.getRoomId(),
+    ownerId: room.getRoomOwnerId(),
+    ownerEmail: room.getRoomOwnerEmail(),
+    name: room.getRoomName(),
+    maxUserNum: room.getRoomMaxUser(),
+    state: room.getRoomState(),
+    users: sendUsers
+  }
+
+  return sendRoom;
 }
 
 // 몬스터 이동 방향 및 거리 설정 / 0:위, 1: 오른쪽, 2: 아래, 3: 왼쪽

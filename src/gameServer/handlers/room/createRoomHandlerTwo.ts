@@ -4,7 +4,7 @@ import { CreateRoomPayload, CustomSocket, Room, RoomTwo, User } from '../../inte
 import { GlobalFailCode, RoomStateType } from '../enumTyps.js';
 import Server from '../../class/server.js';
 import GameRoom from '../../class/room.js';
-import { getUserBySocket } from '../handlerMethod.js';
+import { convertSendRoomData, getUserBySocket } from '../handlerMethod.js';
 import UserSessions from '../../class/userSessions.js';
 
 let gRoomId: number = 1;
@@ -22,6 +22,8 @@ export const createRoomHandlerTwo = async (socket: CustomSocket, payload: Object
     let sendRoomInfo;
 
     const createRoomPayload = payload as CreateRoomPayload;
+
+    createRoomPayload.maxUserNum = 5;
 
     const user = getUserBySocket(socket);
     if (!user) {
@@ -60,11 +62,8 @@ export const createRoomHandlerTwo = async (socket: CustomSocket, payload: Object
                 return;
             }
 
-            let isExistRoom = false;
-
             const room = rooms.find((room: GameRoom) => room.getRoomOwnerId() === user.getId());
             if (!room) {
-
                 const users: UserSessions[] = [];
                 users.push(user);
 
@@ -82,22 +81,7 @@ export const createRoomHandlerTwo = async (socket: CustomSocket, payload: Object
                 newGameRoom.setUsers(users);
                 Server.getInstance().getRooms().push(newGameRoom);
 
-                const sendUsers: User[] = [];
-                users.forEach((user: UserSessions) => {
-                    sendUsers.push(user.getUserInfo());
-                });
-
-                sendRoomInfo = {
-                    id: gRoomId,
-                    ownerId: user.getId(),
-                    ownerEmail: user.getEmail(),
-                    name: createRoomPayload.name,
-                    maxUserNum: createRoomPayload.maxUserNum,
-                    state: RoomStateType.WAIT,
-                    users: sendUsers
-                }
-
-                console.log(sendRoomInfo);
+                sendRoomInfo = convertSendRoomData(newGameRoom);
 
                 gRoomId++;
             }

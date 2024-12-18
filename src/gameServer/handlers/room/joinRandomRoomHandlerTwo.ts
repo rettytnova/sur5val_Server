@@ -4,92 +4,84 @@ import { CustomSocket } from '../../interface/interface.js';
 import { sendPacket } from '../../../packet/createPacket.js';
 import { GlobalFailCode, RoomStateType } from '../enumTyps.js';
 import GameRoom from '../../class/room.js';
-import { getUserBySocket } from '../handlerMethod.js';
-import UserSessions from '../../class/userSessions.js';
+import { convertSendRoomData, convertSendUserData, getRoomByUserIdTwo, getUserBySocket } from '../handlerMethod.js';
 import { socketSessions } from '../../session/socketSession.js';
 
 export const joinRandomRoomHandlerTwo = async (socket: CustomSocket) => {
+    const joinRandomFailSendData = {
+        success: false,
+        room: {},
+        failCode: GlobalFailCode.JOIN_ROOM_FAILED
+    };
+
     const rooms = Server.getInstance().getRooms();
     if (!rooms) {
+        console.log("joinRandomRoomHandler rooms가 없음");
+        sendPacket(socket, config.packetType.JOIN_RANDOM_ROOM_RESPONSE, joinRandomFailSendData);
+        return;
+    }
+
+    if (rooms.length === 0) {
+        console.log("joinRandomRoomHandler rooms count 0");
+        sendPacket(socket, config.packetType.JOIN_RANDOM_ROOM_RESPONSE, joinRandomFailSendData);
         return;
     }
 
     const user = getUserBySocket(socket);
     if (!user) {
-        console.error('요청한 클라이언트의 userData가 존재하지 않습니다.');
-        const sendData = {
-            success: false,
-            room: {},
-            failCode: GlobalFailCode.JOIN_ROOM_FAILED
-        };
-        sendPacket(socket, config.packetType.JOIN_ROOM_RESPONSE, sendData);
+        console.error('joinRandomRoomHandlerTwo user 없음');
+        sendPacket(socket, config.packetType.JOIN_RANDOM_ROOM_RESPONSE, joinRandomFailSendData);
         return;
     }
 
-    const isAleadyJoinRoom = rooms.find((room: GameRoom) => room.getUsers().find((roomUser: UserSessions) => roomUser.getId() === user.getId()));
+    const isAleadyJoinRoom = getRoomByUserIdTwo(user.getId());
     if (isAleadyJoinRoom) {
-        console.error('이미 참여중인 방이 존재합니다.');
-        const sendData = {
-            success: false,
-            room: {},
-            failCode: GlobalFailCode.JOIN_ROOM_FAILED
-        };
-        sendPacket(socket, config.packetType.JOIN_ROOM_RESPONSE, sendData);
-    }
-
-    let roomFound = false;
-    for (let i = 0; i < rooms.length; i++) {
-        if (rooms[i].getRoomMaxUser() > rooms[i].getUsers().length) {
-            if (rooms[i].getRoomState() !== RoomStateType.WAIT) {
-                const sendData = {
-                    success: false,
-                    room: {},
-                    failCode: GlobalFailCode.JOIN_ROOM_FAILED
-                };
-                sendPacket(socket, config.packetType.JOIN_ROOM_RESPONSE, sendData);
-                return;
-            }
-
-            rooms[i].getUsers().push(user);
-
-            Server.getInstance().chattingServerSend(
-                config.chattingPacketType.CHATTING_JOIN_ROOM_REQUEST, { email: user.getEmail(), ownerEmail: rooms[i].getRoomOwnerEmail() });
-
-            const sendData = {
-                success: true,
-                room: rooms[i],
-                failCode: GlobalFailCode.NONE
-            };
-
-            sendPacket(socket, config.packetType.JOIN_RANDOM_ROOM_RESPONSE, sendData);
-
-            for (let j = 0; j < rooms[i].getUsers().length; j++) {
-                const roomUser = rooms[i].getUsers()[j];
-
-                sendPacket(socketSessions[roomUser.getId()], config.packetType.JOIN_ROOM_NOTIFICATION, {
-                    joinUser: roomUser
-                });
-            }
-
-            roomFound = true;
-            break;
-        }
-    }
-
-    if (!roomFound) {
-        const sendData = {
-            success: false,
-            room: {},
-            failCode: GlobalFailCode.ROOM_NOT_FOUND
-        };
-        sendPacket(socket, config.packetType.JOIN_RANDOM_ROOM_RESPONSE, sendData);
+        console.error(`joinRandomRoomHandlerTwo 이미 참여중인 방이 존재합니다. id ${isAleadyJoinRoom.getRoomId()}`);
+        sendPacket(socket, config.packetType.JOIN_RANDOM_ROOM_RESPONSE, joinRandomFailSendData);
     }
     else {
-        const sendData = {
-            success: false,
-            room: {},
-            failCode: GlobalFailCode.ROOM_NOT_FOUND
-        };
-        sendPacket(socket, config.packetType.JOIN_ROOM_RESPONSE, sendData);
+        const randomRoom = rooms.find((room: GameRoom) => room.getRoomMaxUser() > room.getUsers().length);
+        if (!randomRoom) {
+            sendPacket(socket, config.packetType.JOIN_RANDOM_ROOM_RESPONSE, joinRandomFailSendData);
+            return;
+        }
+
+        if (randomRoom.getRoomState() !== RoomStateType.WAIT) {
+            sendPacket(socket, config.packetType.JOIN_RANDOM_ROOM_RESPONSE, joinRandomFailSendData);
+            return;
+        }
+
+        randomRoom.getUsers().push(user);
+
+        const joinRandomSuccessSendData = {
+            success: true,
+            room: convertSendRoomData(randomRoom),
+            failCode: GlobalFailCode.NONE
+        }
+
+        sendPacket(socket, config.packetType.JOIN_ROOM_RESPONSE, joinRandomSuccessSendData);
+
+        Server.getInstance().chattingServerSend(
+            config.chattingPacketType.CHATTING_JOIN_ROOM_REQUEST, { email: user.getEmail(), ownerEmail: randomRoom.getRoomOwnerEmail() });
+
+        for (let i = 0; i < randomRoom.getUsers().length; i++) {
+            const roomUser = randomRoom.getUsers()[i];
+            if (!roomUser) {
+                console.log("joinRandomRoomHandler roomUser를 찾을 수 없습니다.");
+                break;
+            }
+
+            const roomUserSocket = socketSessions[roomUser.getId()];
+            if (!roomUserSocket) {
+                console.log("joinRandomRoomHandler roomUserSocket을 찾을 수 없습니다.");
+                break;
+            }
+
+            sendPacket(roomUserSocket, config.packetType.JOIN_ROOM_NOTIFICATION,
+                {
+                    joinUser: convertSendUserData(user)
+                }
+            );
+        }
     }
 };

@@ -16,8 +16,16 @@ class GameRoom {
         return this.roomInfo.ownerId;
     }
 
+    setRoomOwnerId(newOwnerId: number) {
+        this.roomInfo.ownerId = newOwnerId;
+    }
+
     getRoomOwnerEmail() {
         return this.roomInfo.ownerEmail;
+    }
+
+    setRoomOwnerEmail(newOwnerEmail: string) {
+        this.roomInfo.ownerEmail = newOwnerEmail;
     }
 
     setUsers(users: UserSessions[]) {
@@ -34,6 +42,10 @@ class GameRoom {
 
     getRoomMaxUser() {
         return this.roomInfo.maxUserNum;
+    }
+
+    getRoomName() {
+        return this.roomInfo.name;
     }
 }
 

@@ -81,8 +81,22 @@ class Server {
     return this.users;
   }
 
+  setUsers(users: UserSessions[]) {
+    this.users = [];
+    this.users = users;
+  }
+
   getRooms() {
     return this.rooms;
+  }
+
+  setRooms(rooms: GameRoom[]) {
+    this.rooms = [];
+    this.rooms = rooms;
+  }
+
+  getRoomByRoomId(findRoomId: number) {
+    return this.rooms.find((room: GameRoom) => room.getRoomId() === findRoomId);
   }
 
   getUser(id: number) {
