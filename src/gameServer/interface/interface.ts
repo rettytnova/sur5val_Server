@@ -302,5 +302,5 @@ export interface CardEffectNotification {
 }
 
 export interface GameEndPayload {
-  resultType: number;
+  reactionType: number;
 }

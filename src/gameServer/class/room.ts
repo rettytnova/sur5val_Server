@@ -1,52 +1,57 @@
-import { RoomTwo } from "../interface/interface.js";
-import UserSessions from "./userSessions.js";
+import { RoomStateType } from '../handlers/enumTyps.js';
+import { RoomTwo } from '../interface/interface.js';
+import UserSessions from './userSessions.js';
 
 class GameRoom {
-    private roomInfo: RoomTwo;
+  private roomInfo: RoomTwo;
 
-    constructor(roomInfo: RoomTwo) {
-        this.roomInfo = roomInfo;
-    }
+  constructor(roomInfo: RoomTwo) {
+    this.roomInfo = roomInfo;
+  }
 
-    getRoomId() {
-        return this.roomInfo.id;
-    }
+  getRoomId() {
+    return this.roomInfo.id;
+  }
 
-    getRoomOwnerId() {
-        return this.roomInfo.ownerId;
-    }
+  getRoomOwnerId() {
+    return this.roomInfo.ownerId;
+  }
 
-    setRoomOwnerId(newOwnerId: number) {
-        this.roomInfo.ownerId = newOwnerId;
-    }
+  setRoomOwnerId(newOwnerId: number) {
+    this.roomInfo.ownerId = newOwnerId;
+  }
 
-    getRoomOwnerEmail() {
-        return this.roomInfo.ownerEmail;
-    }
+  getRoomOwnerEmail() {
+    return this.roomInfo.ownerEmail;
+  }
 
-    setRoomOwnerEmail(newOwnerEmail: string) {
-        this.roomInfo.ownerEmail = newOwnerEmail;
-    }
+  setRoomOwnerEmail(newOwnerEmail: string) {
+    this.roomInfo.ownerEmail = newOwnerEmail;
+  }
 
-    setUsers(users: UserSessions[]) {
-        this.roomInfo.users = users;
-    }
+  setUsers(users: UserSessions[]) {
+    this.roomInfo.users = users;
+  }
 
-    getUsers() {
-        return this.roomInfo.users;
-    }
+  getUsers() {
+    return this.roomInfo.users;
+  }
 
-    getRoomState() {
-        return this.roomInfo.state;
-    }
+  setRoomState(state: RoomStateType) {
+    this.roomInfo.state = state;
+  }
 
-    getRoomMaxUser() {
-        return this.roomInfo.maxUserNum;
-    }
+  getRoomState() {
+    return this.roomInfo.state;
+  }
 
-    getRoomName() {
-        return this.roomInfo.name;
-    }
+  getRoomMaxUser() {
+    return this.roomInfo.maxUserNum;
+  }
+
+  getRoomName() {
+    return this.roomInfo.name;
+  }
 }
 
 export default GameRoom;
