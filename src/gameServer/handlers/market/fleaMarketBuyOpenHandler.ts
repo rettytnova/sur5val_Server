@@ -18,7 +18,7 @@ export const fleaMarketBuyOpenHandler = (socket: CustomSocket) => {
   // 유저가 속한 room 찾기
   const room = Server.getInstance()
     .getRooms()
-    .find((room) => room.getUsers().find((user) => user.getId() === user.getId()));
+    .find((room) => room.getUsers().find((user: UserSessions) => user.getId() === user.getId()));
   if (!room) {
     console.error('구매 시도하는 유저의 room 데이터를 찾을 수 없음');
     return;

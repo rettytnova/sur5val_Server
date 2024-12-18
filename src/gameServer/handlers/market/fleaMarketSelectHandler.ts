@@ -1,4 +1,4 @@
-import { CustomSocket, Room } from '../../../gameServer/interface/interface.js';
+import { CustomSocket } from '../../../gameServer/interface/interface.js';
 import GameRoom from '../../class/room.js';
 import Server from '../../class/server.js';
 import UserSessions from '../../class/userSessions.js';
@@ -17,7 +17,7 @@ export const fleaMarketSelectHandler = (socket: CustomSocket, payload: object) =
 
   // 유저의 roomData 가져오기
   const rooms: GameRoom[] = Server.getInstance().getRooms();
-  const room = rooms.find((room) => room.getUsers().some((user) => user.getId() === user.getId()));
+  const room = rooms.find((room) => room.getUsers().some((user: UserSessions) => user.getId() === user.getId()));
   if (!room) {
     console.error('fleaMarketItemSelect 방이 없음');
     return;

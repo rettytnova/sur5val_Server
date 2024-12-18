@@ -2,7 +2,7 @@
 import { CustomSocket } from '../../../gameServer/interface/interface.js';
 import { config } from '../../../config/config.js';
 import { sendPacket } from '../../../packet/createPacket.js';
-import { convertSendRoomData, getRoomByUserId, getUserBySocket, setRedisData } from '../handlerMethod.js';
+import { convertSendRoomData, getRoomByUserId, getUserBySocket } from '../handlerMethod.js';
 import { socketSessions } from '../../session/socketSession.js';
 import { CardType } from '../enumTyps.js';
 import Server from '../../class/server.js';

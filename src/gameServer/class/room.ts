@@ -1,5 +1,5 @@
 import { RoomStateType } from '../handlers/enumTyps.js';
-import { Room } from '../interface/interface.js';
+import { RoomData } from '../interface/interface.js';
 import UserSessions from './userSessions.js';
 
 class GameRoom {

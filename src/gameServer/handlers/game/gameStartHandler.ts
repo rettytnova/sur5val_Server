@@ -2,22 +2,17 @@
 import { CardType, GlobalFailCode, PhaseType, RoleType, RoomStateType } from '../enumTyps.js';
 import { sendPacket } from '../../../packet/createPacket.js';
 import { config } from '../../../config/config.js';
-import {
-  convertSendRoomData,
-  getRoomByUserId,
-  getUserBySocket,
-} from '../handlerMethod.js';
+import { convertSendRoomData, getRoomByUserId, getUserBySocket } from '../handlerMethod.js';
 import { socketSessions } from '../../session/socketSession.js';
 import { inGameTimeSessions } from '../../session/inGameTimeSession.js';
 import { shoppingUserIdSessions } from '../../session/shoppingSession.js';
 import Server from '../../class/server.js';
 import { randomNumber } from '../../../utils/utils.js';
-import UserSessions from '../../class/userSessions.js';
 import GameRoom from '../../class/room.js';
 import { monsterSpawnStart } from '../coreMethod/monsterSpawn.js';
 import { userUpdateNotification } from '../notification/userUpdate.js';
 import { fleaMarketCardCreate } from '../coreMethod/fleaMarketCardCreate.js';
-import { monsterAiDatas, monsterMoveStart } from '../coreMethod/monsterMove.js';
+import { monsterMoveStart } from '../coreMethod/monsterMove.js';
 import { gameEndNotification } from '../notification/gameEnd.js';
 
 // 게임 시작 함수 호출
@@ -85,9 +80,12 @@ export const gameStartHandler = (socket: CustomSocket, payload: Object) => {
       inGameTimeSessions[room.getRoomId()] = Date.now();
 
       // 게임 종료 notification 보내기
-      setTimeout(() => {
-        gameEndNotification(room.getRoomId(), 4);
-      }, inGameTime * normalRound + bossGameTime);
+      setTimeout(
+        () => {
+          gameEndNotification(room.getRoomId(), 4);
+        },
+        inGameTime * normalRound + bossGameTime
+      );
     }
   } catch (err) {
     const responseData = {
@@ -106,10 +104,12 @@ export const normalPhaseNotification = (level: number, roomId: number, sendTime:
     shoppingUserIdSessions[roomId] = [];
     monsterSpawnStart(roomId, level, -1);
 
-    const characterPositionDatas = Server.getInstance().getPositions().find((position) => position.getPositionRoomId() === roomId);
+    const characterPositionDatas = Server.getInstance()
+      .getPositions()
+      .find((position) => position.getPositionRoomId() === roomId);
     if (!characterPositionDatas) {
-      console.error("characterPositionDatas데이터를 찾지 못하였습니다.")
-      return
+      console.error('characterPositionDatas데이터를 찾지 못하였습니다.');
+      return;
     }
     const rooms: GameRoom[] = Server.getInstance().getRooms();
     let room: GameRoom | null = null;
@@ -169,10 +169,12 @@ export const bossPhaseNotification = (level: number, roomId: number, sendTime: n
     shoppingUserIdSessions[roomId] = [];
     const idx: number = randomNumber(0, 3);
     monsterSpawnStart(roomId, level, idx);
-    const characterPositionDatas = Server.getInstance().getPositions().find((position) => position.getPositionRoomId() === roomId);
+    const characterPositionDatas = Server.getInstance()
+      .getPositions()
+      .find((position) => position.getPositionRoomId() === roomId);
     if (!characterPositionDatas) {
-      console.error("characterPositionDatas데이터를 찾지 못하였습니다.")
-      return
+      console.error('characterPositionDatas데이터를 찾지 못하였습니다.');
+      return;
     }
     const rooms: GameRoom[] = Server.getInstance().getRooms();
     let room: GameRoom | null = null;
@@ -213,7 +215,7 @@ export const setBossStat = (room: GameRoom, level: number) => {
   for (let i = 0; i < room.getUsers().length; i++) {
     if (room.getUsers()[i].getCharacter().roleType === RoleType.BOSS_MONSTER) {
       room.getUsers()[i].getCharacter().aliveState = true;
-      room.getUsers()[i].getCharacter().level = level
+      room.getUsers()[i].getCharacter().level = level;
       room.getUsers()[i].getCharacter().attack = 10 * level;
       room.getUsers()[i].getCharacter().armor = 1 * level;
 

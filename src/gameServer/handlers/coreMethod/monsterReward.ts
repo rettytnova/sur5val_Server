@@ -1,6 +1,4 @@
 import { UserCharacterType, RoleType, CardType } from '../enumTyps.js';
-//import { Room, User } from '../../../gameServer/interface/interface.js';
-//import { setRedisData } from '../handlerMethod.js';
 import Server from '../../class/server.js';
 import GameRoom from '../../class/room.js';
 import UserSessions from '../../class/userSessions.js';
@@ -15,12 +13,7 @@ import UserSessions from '../../class/userSessions.js';
  * @param {User} target - 몬스터
  * @returns {Promise<void>} 별도의 반환 값은 없으며, 성공 여부와 메시지를 클라이언트에게 전송.
  */
-export const monsterRewardTwo = (
-  rooms: GameRoom[],
-  room: GameRoom,
-  attacker: UserSessions,
-  target: UserSessions
-) => {
+export const monsterReward = (rooms: GameRoom[], room: GameRoom, attacker: UserSessions, target: UserSessions) => {
   // 데이터 초기화 ----------------------------------------------------------------------
   let logMessage: string = '';
   let rewardSuccess: boolean = true;
@@ -76,7 +69,9 @@ export const monsterRewardTwo = (
 const removeMonsterFromRoom = (monsterId: number, room: GameRoom): boolean => {
   // users 배열에서 몬스터 찾기
   // monster.id와 mosterId는 같은 값이지만 타입이 다르기 때문에 toString()을 사용하여 비교
-  const monsterIndex = room.getUsers().findIndex((monster) => monster.getId().toString() === monsterId.toString());
+  const monsterIndex = room
+    .getUsers()
+    .findIndex((monster: UserSessions) => monster.getId().toString() === monsterId.toString());
 
   if (monsterIndex !== -1) {
     // 몬스터 죽은 상태로 변경
@@ -112,12 +107,12 @@ const setRewards = (attacker: UserSessions, target: UserSessions): boolean => {
           attacker.getCharacter().maxExp = 10 * attacker.getCharacter().level;
 
           // 레벨업시 직업별 스탯 증가
-          if (!setStatRewardsTwo(attacker)) {
+          if (!setStatRewards(attacker)) {
             console.error('setStatRewards 실패');
             return false;
           }
           // 레벨업시 직업별 카드 보상 지급
-          else if (!setStatRewardsTwo(attacker)) {
+          else if (!setStatRewards(attacker)) {
             console.error('setCardRewards 실패');
             return false;
           }
@@ -228,7 +223,7 @@ const setRewards = (attacker: UserSessions, target: UserSessions): boolean => {
  */
 
 // 캐릭터 타입에 따라 스탯 증가
-export const setStatRewardsTwo = (attacker: UserSessions): boolean => {
+export const setStatRewards = (attacker: UserSessions): boolean => {
   const levelUpStatDBData = Server.getInstance().characterLevelUpStatInfo;
   if (!levelUpStatDBData) {
     console.error('CharacterLevelUpStatDBData 정보가 존재하지 않습니다.');
@@ -300,7 +295,7 @@ export const setStatRewardsTwo = (attacker: UserSessions): boolean => {
  * @param {UserSessions} attacker - 스탯을 증가시킬 유저
  * @returns {boolean} 반환 값을 통해 카드 보상 성공 여부를 알 수 있다.
  */
-export const setCardRewardsTwo = (attacker: UserSessions) => {
+export const setCardRewards = (attacker: UserSessions) => {
   // 레벨업시 특정 레벨을 도달할 때 마다 캐릭터 타입에 따라 카드 보상 지급
   switch (attacker.getCharacter().level) {
     case 3: // 3레벨일 경우

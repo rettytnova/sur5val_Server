@@ -5,7 +5,7 @@ import Server from '../../class/server.js';
 import UserSessions from '../../class/userSessions.js';
 import { socketSessions } from '../../session/socketSession.js';
 import { monsterAI } from '../handlerMethod.js';
-import { monsterAttackCheckTwo } from './monsterAttackTwo.js';
+import { monsterAttackCheck } from './monsterAttack.js';
 
 export const monsterAiDatas: {
   [roomId: number]: {
@@ -24,7 +24,7 @@ export const directionChangeRandom = 3;
 export const animationDelay = 6;
 
 // 몬스터 이동 및 공격 시작
-export const monsterMoveStartTwo = (roomId: number, totalTime: number) => {
+export const monsterMoveStart = (roomId: number, totalTime: number) => {
   // 몬스터 이동을 n초마다 반복
   const time = Date.now();
   let callme = 0;
@@ -66,10 +66,10 @@ export const monsterMoveStartTwo = (roomId: number, totalTime: number) => {
       console.log('함수 실행 횟수:', callme, '함수 실행 시간:', Date.now() - time), clearInterval(monsterMove);
       return;
     }
-    const characterPositions = positionSessions.getCharacterPositions()
+    const characterPositions = positionSessions.getCharacterPositions();
 
     // 몬스터 공격 실행
-    monsterAttackCheckTwo(room, rooms);
+    monsterAttackCheck(room, rooms);
     callme++;
     // 각 몬스터 별로 움직이기 작업 실행
     for (let i = 0; i < monsterAiDatas[roomId].length; i++) {

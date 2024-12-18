@@ -34,7 +34,7 @@ export const fleaMarketItemSell = (socket: CustomSocket, payload: Object) => {
 
   // 유저의 roomData 가져오기
   const rooms: GameRoom[] = Server.getInstance().getRooms();
-  const room = rooms.find((room) => room.getUsers().some((user) => user.getId() === user.getId()));
+  const room = rooms.find((room) => room.getUsers().some((user: UserSessions) => user.getId() === user.getId()));
   if (!room) {
     console.error('fleaMarketItemSelect 방이 없음');
     return;

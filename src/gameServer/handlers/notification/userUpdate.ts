@@ -21,7 +21,7 @@ export const userUpdateNotification = (room: GameRoom | null) => {
   room.getUsers().forEach((user: UserSessions) => {
     sendUsers.push(user.getUserInfo());
   });
-  room.getUsers().forEach((user) => {
+  room.getUsers().forEach((user: UserSessions) => {
     const userSocket = socketSessions[user.getId()];
 
     if (userSocket) {
