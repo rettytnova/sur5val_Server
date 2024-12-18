@@ -6,43 +6,6 @@ import UserSessions from '../class/userSessions.js';
 import { socketSessions } from '../session/socketSession.js';
 import { directionChangeBasic, directionChangeRandom, monsterAiDatas, moveSpeed } from './coreMethod/monsterMove.js';
 
-// 레디스에서 데이터 가져오기 ex: getRedisData("roomData")
-export const getRedisData = async (key: string) => {
-  const redisClient = await getRedis();
-  const jsonDatas = await redisClient.get(key);
-  if (jsonDatas) {
-    const datas = JSON.parse(jsonDatas);
-    return datas;
-  }
-};
-
-// 레디스에 데이터 설정하기 ex: setRedisData("roomData", data)
-export const setRedisData = async <T>(key: string, data: T) => {
-  const redisClient = await getRedis();
-  const redisData = JSON.stringify(data);
-  await redisClient.set(key, redisData);
-};
-
-// 레디스에서 데이터 삭제하기 ex: deleteRedisData("roomData")
-export const deleteRedisData = async (key: string) => {
-  const redisClient = await getRedis();
-  await redisClient.del(key);
-};
-
-// socket으로 유저 데이터 가져오기 ex: getUserBySocket(socket)
-export const getUserIdBySocket = async (socket: CustomSocket) => {
-  const userDatas = await getRedisData('userData');
-  if (userDatas) {
-    for (let i = 0; i < userDatas.length; i++) {
-      if (socketSessions[userDatas[i].id] === socket) {
-        return userDatas[i].id;
-      }
-    }
-  }
-
-  return null;
-};
-
 // socket으로 유저 데이터 가져오기 ex: getUserBySocket(socket)
 export const getUserBySocket = (socket: CustomSocket) => {
   const users = Server.getInstance().getUsers();
@@ -57,17 +20,8 @@ export const getUserBySocket = (socket: CustomSocket) => {
   return null;
 };
 
-// userid로 방 찾기
-export const getRoomByUserId = async (userId: number) => {
-  const rooms: Room[] = await getRedisData('roomData');
-  const room = rooms.find((room) => room.users.some((user) => user.id === userId));
-  if (!room) {
-    return null;
-  }
-  return room;
-};
 
-export const getRoomByUserIdTwo = (userId: number) => {
+export const getRoomByUserId = (userId: number) => {
   const rooms: GameRoom[] = Server.getInstance().getRooms();
   const room = rooms.find((room) => room.getUsers().some((user) => user.getId() === userId));
   if (!room) {

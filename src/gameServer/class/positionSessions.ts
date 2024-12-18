@@ -2,19 +2,23 @@ import { CharacterPositionData } from '../interface/interface.js';
 
 class PositionSessions {
     private roomId: number;
-    private characterPositons: CharacterPositionData[]
+    private characterPositions: CharacterPositionData[]
 
     constructor(roomId: number, characterPositions: CharacterPositionData[]) {
         this.roomId = roomId;
-        this.characterPositons = characterPositions;
+        this.characterPositions = characterPositions;
     }
 
-    getPositionUserId() {
+    getPositionRoomId() {
         return this.roomId;
     }
 
-    getCharacterPosition() {
-        return this.characterPositons;
+    getCharacterPositions() {
+        return this.characterPositions;
+    }
+
+    setCharacterPositions(positions: CharacterPositionData[]) {
+        this.characterPositions = positions
     }
 }
 

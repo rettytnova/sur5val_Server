@@ -1,21 +1,30 @@
-import { gameEndNotification } from '../notification/gameEnd.js';
-import { getRoomByUserId, getUserIdBySocket } from '../handlerMethod.js';
+import { getRoomByUserIdTwo, getUserBySocket } from '../handlerMethod.js';
 import { CustomSocket, GameEndPayload } from '../../../gameServer/interface/interface.js';
+import GameRoom from '../../class/room.js';
+import { gameEndNotificationTwo } from '../notification/gameEndTwo.js';
 
 // 게임 종료
-export const gameEndHandler = async (socket: CustomSocket, payload: Object) => {
-  const userId: number | null = await getUserIdBySocket(socket);
-  const gameEndPayload = payload as GameEndPayload;
-  if (userId === null) return;
-  const room = await getRoomByUserId(userId);
-  if (room === null) {
-    console.error('gameEndHandler: 해당 유저가 속한 roomData를 찾을 수 없습니다.');
-    return;
-  }
-  if (gameEndPayload.reactionType === 1) {
-    await gameEndNotification(room.id, 4);
-  } else {
-    await gameEndNotification(room.id, 2);
-  }
-  console.log('게임 종료');
+export const gameEndHandlerTwo = (socket: CustomSocket, payload: Object) => {
+    const gameEndPayload = payload as GameEndPayload;
+
+    const gameEndUser = getUserBySocket(socket);
+    if (!gameEndUser) {
+        console.log('gameEndHandler user가 없음');
+        return;
+    }
+
+    const gameEndRoom: GameRoom | null = getRoomByUserIdTwo(gameEndUser.getId());
+    if (gameEndRoom === null) {
+        console.error('gameEndHandler room이 없음');
+        return;
+    }
+
+    if (gameEndPayload.resultType === 1) {
+        gameEndNotificationTwo(gameEndRoom.getRoomId(), 4);
+    }
+    else {
+        gameEndNotificationTwo(gameEndRoom.getRoomId(), 2);
+    }
+
+    console.log('게임 종료');
 };

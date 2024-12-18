@@ -1,9 +1,10 @@
+import MarketSessions from '../../class/marketSessions.js';
 import Server from '../../class/server.js';
-import { getRedisData, nonSameRandom, setRedisData } from '../handlerMethod.js';
+import { nonSameRandom } from '../handlerMethod.js';
 
 const shopListNumber = 7;
 
-export const fleaMarketCardCreate = async (round: number, roomId: number): Promise<void> => {
+export const fleaMarketCardCreate = (round: number, roomId: number) => {
   // DB의 shopList 정보 가져오기
   const shopListDBInfo = Server.getInstance().shopListInfo;
   if (!shopListDBInfo) {
@@ -16,21 +17,23 @@ export const fleaMarketCardCreate = async (round: number, roomId: number): Promi
     return;
   }
 
-  const cards: number[] = [];
+  // 서버의 마켓 정보들 가져오기
+  const serverMarkets = Server.getInstance().getMarkets();
+  const marketCards = serverMarkets.find((markets) => markets.getRoomId() === roomId);
 
-  let fleaMarketCards = await getRedisData('fleaMarketCards');
-  if (!fleaMarketCards) {
-    fleaMarketCards = { [roomId]: [] };
-  } else if (!fleaMarketCards[roomId]) {
-    fleaMarketCards[roomId] = [];
-  }
-
+  // 해당 roomId에 해당하는 아이템 리스트 만들어주기
+  let cards: number[] = [];
   const pickedIndex = nonSameRandom(0, shopList.itemList.length - 1, shopListNumber);
   for (let i = 0; i < shopListNumber; i++) {
     cards.push(shopList.itemList[pickedIndex[i]] + 1000);
   }
   cards.push(1000);
 
-  fleaMarketCards[roomId] = cards;
-  await setRedisData('fleaMarketCards', fleaMarketCards);
+  // 서버의 마켓 정보에 만든 아이템 리스트 추가하기
+  if (marketCards) {
+    marketCards.setItemList(cards);
+  } else {
+    const newMarket = new MarketSessions(roomId, cards);
+    serverMarkets.push(newMarket);
+  }
 };

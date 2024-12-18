@@ -2,7 +2,7 @@
 import { CustomSocket } from '../../../gameServer/interface/interface.js';
 import { config } from '../../../config/config.js';
 import { sendPacket } from '../../../packet/createPacket.js';
-import { convertSendRoomData, getRoomByUserIdTwo, getUserBySocket, setRedisData } from '../handlerMethod.js';
+import { convertSendRoomData, getRoomByUserId, getUserBySocket, setRedisData } from '../handlerMethod.js';
 import { socketSessions } from '../../session/socketSession.js';
 import { CardType } from '../enumTyps.js';
 import Server from '../../class/server.js';
@@ -10,13 +10,13 @@ import UserSessions from '../../class/userSessions.js';
 import GameRoom from '../../class/room.js';
 
 // 게임 준비
-export const gamePrepareHandlerTwo = async (socket: CustomSocket, payload: Object) => {
+export const gamePrepareHandler = (socket: CustomSocket, payload: Object) => {
   try {
     // requset 보낸 유저
     const user = getUserBySocket(socket);
     // 유저가 있는 방 찾기
     if (!user) {
-      console.error('위치: gamePrepareHandlerTwo, 유저를 찾을 수 없습니다.');
+      console.error('위치: gamePrepareHandler, 유저를 찾을 수 없습니다.');
       const responseData = {
         success: false,
         failCode: GlobalFailCode.INVALID_REQUEST
@@ -24,12 +24,12 @@ export const gamePrepareHandlerTwo = async (socket: CustomSocket, payload: Objec
       sendPacket(socket, config.packetType.GAME_PREPARE_RESPONSE, responseData);
       return;
     }
-    const room = getRoomByUserIdTwo(user.getId());
+    const room = getRoomByUserId(user.getId());
     if (!room) {
       return;
     }
     if (room.getUsers().length <= 1) {
-      console.error('gamePrepareHandlerTwo: 게임을 시작 할 수 없습니다(인원 부족).');
+      console.error('gamePrepareHandler: 게임을 시작 할 수 없습니다(인원 부족).');
       const responseData = {
         success: false,
         failCode: GlobalFailCode.INVALID_REQUEST
@@ -67,14 +67,11 @@ export const gamePrepareHandlerTwo = async (socket: CustomSocket, payload: Objec
       const notiRoom = convertSendRoomData(room);
       for (let i = 0; i < room.getUsers().length; i++) {
         const userSocket: CustomSocket = socketSessions[room.getUsers()[i].getId()]; // await getSocketByUserId(room.users[i]) 을 바꿈
-        if (!userSocket) {
-          console.error('gamePrepareHandlerTwo: socket not found');
-          return;
+        if (userSocket) {
+          sendPacket(userSocket, config.packetType.GAME_PREPARE_NOTIFICATION, {
+            room: notiRoom
+          });
         }
-        //console.dir(room, { depth: null });
-        sendPacket(userSocket, config.packetType.GAME_PREPARE_NOTIFICATION, {
-          room: notiRoom
-        });
       }
     }
   } catch (err) {
@@ -83,7 +80,7 @@ export const gamePrepareHandlerTwo = async (socket: CustomSocket, payload: Objec
       failCode: GlobalFailCode.INVALID_REQUEST
     };
     sendPacket(socket, config.packetType.GAME_PREPARE_RESPONSE, responseData);
-    console.error('gamePrepareHandlerTwo 오류', err);
+    console.error('gamePrepareHandler 오류', err);
   }
 };
 

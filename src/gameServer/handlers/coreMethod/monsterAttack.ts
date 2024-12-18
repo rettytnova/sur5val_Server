@@ -1,21 +1,22 @@
 import { config } from '../../../config/config.js';
-import { Room, User, CharacterPositionData } from '../../../gameServer/interface/interface.js';
+import { CharacterPositionData } from '../../../gameServer/interface/interface.js';
 import { sendPacket } from '../../../packet/createPacket.js';
 import { socketSessions } from '../../session/socketSession.js';
-import { getRedisData, setRedisData } from '../handlerMethod.js';
 import { animationDelay, monsterAiDatas } from './monsterMove.js';
-import { userUpdateNotification } from '../notification/userUpdate.js';
 import { RoleType } from '../enumTyps.js';
 import Server from '../../class/server.js';
 import { shoppingUserIdSessions } from '../../session/shoppingSession.js';
+import GameRoom from '../../class/room.js';
+import UserSessions from '../../class/userSessions.js';
+import { userUpdateNotification } from '../notification/userUpdate.js';
 
 // 몬스터와 유저의 조합 찾기
-export const monsterAttackCheck = async (room: Room, rooms: Room[]) => {
-  for (let i = 0; i < room.users.length; i++) {
-    if (room.users[i].character.roleType === RoleType.SUR5VAL && room.users[i].character.hp > 0) {
-      for (let j = 0; j < room.users.length; j++) {
-        if (room.users[j].character.roleType === RoleType.WEAK_MONSTER) {
-          await monsterAttackPlayer(room.users[i], room.users[j], room, rooms);
+export const monsterAttackCheck = (room: GameRoom, rooms: GameRoom[]) => {
+  for (let i = 0; i < room.getUsers().length; i++) {
+    if (room.getUsers()[i].getCharacter().roleType === RoleType.SUR5VAL && room.getUsers()[i].getCharacter().hp > 0) {
+      for (let j = 0; j < room.getUsers().length; j++) {
+        if (room.getUsers()[j].getCharacter().roleType === RoleType.WEAK_MONSTER) {
+          monsterAttackPlayer(room.getUsers()[i], room.getUsers()[j], room, rooms);
         }
       }
     }
@@ -23,12 +24,12 @@ export const monsterAttackCheck = async (room: Room, rooms: Room[]) => {
 };
 
 // 몬스터가 유저를 공격가능한 조건인지 모두 검사 실행
-export const monsterAttackPlayer = async (player: User, monster: User, room: Room, rooms: Room[]) => {
+export const monsterAttackPlayer = (player: UserSessions, monster: UserSessions, room: GameRoom, rooms: GameRoom[]) => {
   // 죽은 몬스터일 경우 skip
   for (let i = 0; i < rooms.length; i++) {
-    for (let j = 0; j < rooms[i].users.length; j++) {
-      if (rooms[i].users[j].id === monster.id) {
-        if (rooms[i].users[j].character.hp <= 0) return;
+    for (let j = 0; j < rooms[i].getUsers().length; j++) {
+      if (rooms[i].getUsers()[j].getId() === monster.getId()) {
+        if (rooms[i].getUsers()[j].getCharacter().hp <= 0) return;
         break;
       }
     }
@@ -36,9 +37,9 @@ export const monsterAttackPlayer = async (player: User, monster: User, room: Roo
 
   // 죽은 유저일 경우 skip
   for (let i = 0; i < rooms.length; i++) {
-    for (let j = 0; j < rooms[i].users.length; j++) {
-      if (rooms[i].users[j].id === player.id) {
-        if (rooms[i].users[j].character.hp <= 0) return;
+    for (let j = 0; j < rooms[i].getUsers().length; j++) {
+      if (rooms[i].getUsers()[j].getId() === player.getId()) {
+        if (rooms[i].getUsers()[j].getCharacter().hp <= 0) return;
         break;
       }
     }
@@ -46,40 +47,47 @@ export const monsterAttackPlayer = async (player: User, monster: User, room: Roo
 
   // 몬스터 정보 skillCool 찾아서 검사하기
   let monsterData;
-  if (!monsterAiDatas[room.id]) return;
-  for (let i = 0; i < monsterAiDatas[room.id].length; i++) {
-    if (monsterAiDatas[room.id][i].id === monster.id) {
-      if (monsterAiDatas[room.id][i].attackCool > 0) return;
-      else monsterData = monsterAiDatas[room.id][i];
+  if (!monsterAiDatas[room.getRoomId()]) return;
+  for (let i = 0; i < monsterAiDatas[room.getRoomId()].length; i++) {
+    if (monsterAiDatas[room.getRoomId()][i].id === monster.getId()) {
+      if (monsterAiDatas[room.getRoomId()][i].attackCool > 0) return;
+      else monsterData = monsterAiDatas[room.getRoomId()][i];
       break;
     }
   }
   if (!monsterData) {
-    console.error('존재하지 않는 monsterAiDatas를 찾고 있습니다.', monsterAiDatas[room.id], monster);
+    console.error('존재하지 않는 monsterAiDatas를 찾고 있습니다.', monsterAiDatas[room.getRoomId()], monster);
     return;
   }
 
   // 몬스터 위치 정보 찾기
-  const characterPositions = await getRedisData('characterPositionDatas');
-  if (!characterPositions) return;
-  if (!characterPositions[room.id]) return;
+  const positionSessions = Server.getInstance()
+    .getPositions()
+    .find((PositionSessions) => PositionSessions.getPositionRoomId() === room.getRoomId());
+  if (!positionSessions) return;
+  if (!positionSessions.getCharacterPositions()) return;
+  const characterPositions = positionSessions.getCharacterPositions();
   let monsterPosition;
-  for (let i = 0; i < characterPositions[room.id].length; i++) {
-    if (characterPositions[room.id][i].id === monster.id) {
-      monsterPosition = characterPositions[room.id][i];
+  for (let i = 0; i < characterPositions.length; i++) {
+    if (characterPositions[i].id === monster.getId()) {
+      monsterPosition = characterPositions[i];
       break;
     }
   }
   if (!monsterPosition) {
-    console.error('존재하지 않는 monsterPosition를 찾고 있습니다.', characterPositions[room.id], room.users);
+    console.error(
+      '존재하지 않는 monsterPosition를 찾고 있습니다.',
+      characterPositions[room.getRoomId()],
+      room.getUsers()
+    );
     return;
   }
 
   // 유저 위치 정보 찾기
   let playerPosition;
-  for (let i = 0; i < characterPositions[room.id].length; i++) {
-    if (characterPositions[room.id][i].id === player.id) {
-      playerPosition = characterPositions[room.id][i];
+  for (let i = 0; i < characterPositions.length; i++) {
+    if (characterPositions[i].id === player.getId()) {
+      playerPosition = characterPositions[i];
       break;
     }
   }
@@ -94,9 +102,9 @@ export const monsterAttackPlayer = async (player: User, monster: User, room: Roo
     monsterData.attackRange ** 2
   ) {
     // 유저가 범위 안에 들어와 있지만 공격 불가능한 위치일 경우 skip
-    for (let i = 0; i < characterPositions[room.id].length; i++) {
-      let characterPos: CharacterPositionData = characterPositions[room.id][i];
-      if (player !== null && characterPos.id === player.id) {
+    for (let i = 0; i < characterPositions.length; i++) {
+      let characterPos: CharacterPositionData = characterPositions[i];
+      if (player !== null && characterPos.id === player.getId()) {
         if (
           (-23 <= characterPos.x && characterPos.x <= -12 && 5 <= characterPos.y && characterPos.y <= 10) || // 건물 1
           (-7 <= characterPos.x && characterPos.x <= 0 && 5 <= characterPos.y && characterPos.y <= 10) || // 건물 2
@@ -125,7 +133,7 @@ export const monsterAttackPlayer = async (player: User, monster: User, room: Roo
       return;
     }
     const attackCool = monsterDBInfo.find(
-      (data) => data.monsterType === monster.character.characterType && data.level === monster.character.level
+      (data) => data.monsterType === monster.getCharacter().characterType && data.level === monster.getCharacter().level
     )?.attackCool;
     if (!attackCool) {
       console.error('몬스터의 attackeCool DB정보를 찾지 못하였습니다.');
@@ -135,47 +143,44 @@ export const monsterAttackPlayer = async (player: User, monster: User, room: Roo
 
     // 공격 실행
     for (let i = 0; i < rooms.length; i++) {
-      for (let j = 0; j < rooms[i].users.length; j++) {
-        if (rooms[i].users[j].id === player.id) {
-          rooms[i].users[j].character.hp -= Math.max(monster.character.attack - player.character.armor, 0);
-          if (rooms[i].users[j].character.hp <= 0) {
-            rooms[i].users[j].character.aliveState = false;
-            rooms[i].users[j].character.stateInfo.state = 15;
-            rooms[i].users[j].character.hp = 0;
-            for (let i = 0; i < shoppingUserIdSessions[room.id].length; i++) {
-              if (shoppingUserIdSessions[room.id][i][0] === player.id) {
-                shoppingUserIdSessions[room.id].splice(i, 1);
+      for (let j = 0; j < rooms[i].getUsers().length; j++) {
+        if (rooms[i].getUsers()[j].getId() === player.getId()) {
+          rooms[i].getUsers()[j].getCharacter().hp -= Math.max(
+            monster.getCharacter().attack - player.getCharacter().armor,
+            0
+          );
+          if (rooms[i].getUsers()[j].getCharacter().hp <= 0) {
+            rooms[i].getUsers()[j].getCharacter().aliveState = false;
+            rooms[i].getUsers()[j].getCharacter().stateInfo.state = 15;
+            rooms[i].getUsers()[j].getCharacter().hp = 0;
+            for (let i = 0; i < shoppingUserIdSessions[room.getRoomId()].length; i++) {
+              if (shoppingUserIdSessions[room.getRoomId()][i][0] === player.getId()) {
+                shoppingUserIdSessions[room.getRoomId()].splice(i, 1);
                 break;
               }
             }
           }
-          await userUpdateNotification(rooms[i]);
-          await setRedisData('roomData', rooms);
+          userUpdateNotification(rooms[i]);
         }
       }
     }
 
     // 몬스터 딜레이 만들기
-    for (let i = 0; i < monsterAiDatas[room.id].length; i++) {
-      if (monsterAiDatas[room.id][i].id === monster.id) {
-        monsterAiDatas[room.id][i].animationDelay = animationDelay;
+    for (let i = 0; i < monsterAiDatas[room.getRoomId()].length; i++) {
+      if (monsterAiDatas[room.getRoomId()][i].id === monster.getId()) {
+        monsterAiDatas[room.getRoomId()][i].animationDelay = animationDelay;
         break;
       }
     }
 
     // 애니메이셔 효과 보내기
-    for (let i = 0; i < room.users.length; i++) {
-      if (socketSessions[room.users[i].id]) {
-        sendPacket(socketSessions[room.users[i].id], config.packetType.ANIMATION_NOTIFICATION, {
-          userId: player.id,
+    for (let i = 0; i < room.getUsers().length; i++) {
+      if (socketSessions[room.getUsers()[i].getId()]) {
+        sendPacket(socketSessions[room.getUsers()[i].getId()], config.packetType.ANIMATION_NOTIFICATION, {
+          userId: player.getId(),
           animationType: 2
         });
       }
-    }
-
-    // 에러 찾기 임시 함수
-    if (room.users.length !== characterPositions[room.id].length) {
-      throw new Error(`monsterAttack에서 에러 발생 ${room.users}, ${characterPositions[room.id]}`);
     }
   }
 };

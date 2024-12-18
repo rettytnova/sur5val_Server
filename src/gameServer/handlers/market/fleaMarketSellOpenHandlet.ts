@@ -6,7 +6,7 @@ import UserSessions from '../../class/userSessions.js';
 import { shoppingUserIdSessions } from '../../session/shoppingSession.js';
 import { getUserBySocket } from '../handlerMethod.js';
 
-export const fleaMarketItemSellOpenHandlerTwo = (socket: CustomSocket) => {
+export const fleaMarketItemSellOpenHandler = (socket: CustomSocket) => {
   // 유저 데이터 가져오기 (userId 용도)
   const user: UserSessions | null | undefined = getUserBySocket(socket);
   if (!user) {

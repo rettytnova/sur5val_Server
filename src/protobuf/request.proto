@@ -73,9 +73,9 @@ message C2SFleaMarketCardPickRequest{
     int32 pickIndex = 1;
 }
 
-// 리액션(이모션) 요청
-message C2SReactionRequest {
-    ReactionType reactionType = 1; // NOT_USE_CARD = 1
+// 결과창 요청
+message C2SResultRequest {
+    ResultType resultType = 1; // 0: 생존자 승, 1: 보스 승
 }
 
 // 카드 삭제 요청

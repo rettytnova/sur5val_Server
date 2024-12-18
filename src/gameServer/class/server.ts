@@ -61,8 +61,11 @@ class Server {
   private characterPositions: PositionSessions[];
   private markets: MarketSessions[];
 
+  public connectingClientCount: number;
+
   private constructor() {
-    this.server = net.createServer(this.clientConnection);
+    this.connectingClientCount = 0;
+    this.server = net.createServer(this.clientConnection.bind(this));
     this.chattingServerSocket = new net.Socket();
     this.chattingServerReconnect = 0;
 
@@ -116,6 +119,11 @@ class Server {
 
   getPositions() {
     return this.characterPositions;
+  }
+
+  setPositions(characterPositions: PositionSessions[]) {
+    this.characterPositions = [];
+    this.characterPositions = characterPositions;
   }
 
   connect() {
@@ -235,7 +243,11 @@ class Server {
   clientConnection(socket: net.Socket) {
     const customSocket = socket as CustomSocket;
 
-    console.log(`Client connected from: ${socket.remoteAddress}:${socket.remotePort}`);
+    this.connectingClientCount++;
+
+    console.log(
+      `Game 클라 연결 from: ${socket.remoteAddress}:${socket.remotePort} 연결 중인 클라 ${this.connectingClientCount}`
+    );
 
     customSocket.id = uuidv4();
     customSocket.buffer = Buffer.alloc(0);

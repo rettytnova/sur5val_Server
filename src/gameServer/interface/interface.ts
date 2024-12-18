@@ -183,7 +183,7 @@ export interface User {
   character: Character;
 }
 
-export interface RoomTwo {
+export interface RoomData {
   id: number;
   ownerId: number;
   ownerEmail: string;
@@ -302,5 +302,5 @@ export interface CardEffectNotification {
 }
 
 export interface GameEndPayload {
-  reactionType: number;
+  resultType: number;
 }

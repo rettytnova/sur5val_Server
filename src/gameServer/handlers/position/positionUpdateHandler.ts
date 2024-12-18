@@ -1,55 +1,47 @@
 import net from 'net';
-import { getRedisData, getUserIdBySocket, setRedisData } from '../handlerMethod.js';
-import { CharacterPositionData, CustomSocket, position, Room, User } from '../../interface/interface.js';
+import Server from '../../class/server.js';
+import { getRoomByUserId, getUserBySocket } from '../handlerMethod.js';
+import { CharacterPositionData, CustomSocket, position } from '../../interface/interface.js';
+import UserSessions from '../../class/userSessions.js';
+import PositionSessions from '../../class/positionSessions.js';
 
-export const positionUpdateHandler = async (socket: net.Socket, payload: Object) => {
-  const update = payload as position;
-  // roomData 찾기
-  const userId: number | null = await getUserIdBySocket(socket as CustomSocket);
-  if (!userId) {
-    console.log('비정상적인 접근입니다. => 유저를 찾을 수 없습니다.');
-    return;
-  }
-  const roomDatas: Room[] = await getRedisData('roomData');
-  if (!roomDatas) {
-    console.log('비정상적인 접근입니다. => 방을 찾을 수 없습니다.');
-    return;
-  }
+export const positionUpdateHandler = (socket: net.Socket, payload: Object) => {
+    const update = payload as position;
 
-  for (let i = 0; i < roomDatas.length; i++) {
-    for (let j = 0; j < roomDatas[i].users.length; j++) {
-      if (roomDatas[i].users[j].id === userId) {
-        const positionDatas = await getRedisData('characterPositionDatas'); // 모든 방의 위치데이터
-        const positionData: CharacterPositionData[] = positionDatas[roomDatas[i].id]; // 유저가 속한 방의 위치데이터
-
-        // positionData 중 socket보낸 사람의 data를 찾아서 update하기
-        if (!positionData) return;
-
-        const changedPosition: CharacterPositionData = {
-          id: userId,
-          x: update.x,
-          y: update.y
-        };
-
-        // 움직인 유저의 위치값 변경
-        for (let idx = 0; idx < positionData.length; idx++) {
-          if (positionData[idx].id === userId) {
-            positionData[idx].x = changedPosition.x;
-            positionData[idx].y = changedPosition.y;
-          }
-        }
-        // 유저 위치 동기화
-        // for (let idx = 0; idx < positionData.length; idx++) {
-        //   const roomUserSocket = socketSessions[positionData[idx].id];
-        //   if (roomUserSocket) {
-        //     sendPacket(roomUserSocket, config.packetType.POSITION_UPDATE_NOTIFICATION, {
-        //       characterPositions: positionData
-        //     });
-        //   }
-        // }
-
-        await setRedisData('characterPositionDatas', positionDatas); // 모든 방에 있는 위치데이터 값
-      }
+    const user: UserSessions | null | undefined = getUserBySocket(socket as CustomSocket);
+    if (!user) {
+        console.log('비정상적인 접근입니다. => 유저를 찾을 수 없습니다.');
+        return;
     }
-  }
+
+    const userId = user.getId();
+    if (!userId) {
+        console.log('비정상적인 접근입니다. => 유저를 찾을 수 없습니다.');
+        return;
+    }
+
+    const room = getRoomByUserId(userId);
+    if (!room) {
+        console.log('해당 유저id가 참여하고 있는 방이 없습니다.');
+        return;
+    }
+
+    const positionDatas = Server.getInstance().getPositions(); // 모든 방의 위치데이터
+    const positionData = positionDatas.find((position) => position.getPositionRoomId() === room.getRoomId())
+
+    // positionData 중 socket보낸 사람의 data를 찾아서 update하기
+    if (!positionData) return;
+
+    const changedPosition: CharacterPositionData = {
+        id: userId,
+        x: update.x,
+        y: update.y
+    };
+
+    for (let i = 0; i < positionData.getCharacterPositions().length; i++) {
+        if (positionData.getCharacterPositions()[i].id === changedPosition.id) {
+            positionData.getCharacterPositions()[i].x = changedPosition.x;
+            positionData.getCharacterPositions()[i].y = changedPosition.y;
+        }
+    }
 };

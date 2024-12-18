@@ -1,11 +1,11 @@
 import { RoomStateType } from '../handlers/enumTyps.js';
-import { RoomTwo } from '../interface/interface.js';
+import { Room } from '../interface/interface.js';
 import UserSessions from './userSessions.js';
 
 class GameRoom {
-  private roomInfo: RoomTwo;
+  private roomInfo: RoomData;
 
-  constructor(roomInfo: RoomTwo) {
+  constructor(roomInfo: RoomData) {
     this.roomInfo = roomInfo;
   }
 

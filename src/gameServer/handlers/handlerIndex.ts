@@ -1,23 +1,23 @@
 import { config } from '../../config/config.js';
 import { registerHandler } from './user/registerHandler.js';
+import { destoryCardHandler } from './card/destoryCardHandler.js';
+import { cardSelectHandler } from './card/cardSelectHandler.js';
+import { passDebuffHandler } from './user/passDebuffHandler.js';
+import { createPositionDataHandler } from './position/createPositionDataHandler.js';
 import { loginHandler } from './user/loginHandler.js';
 import { createRoomHandler } from './room/createRoomHandler.js';
 import { getRoomListHandler } from './room/getRoomListHandler.js';
 import { joinRoomHandler } from './room/joinRoomHandler.js';
 import { joinRandomRoomHandler } from './room/joinRandomRoomHandler.js';
 import { leaveRoomHandler } from './room/leaveRoomHandler.js';
-import { gamePrepareHandler } from './game/gamePrepareHandler.js';
+import { gamePrepareHandler } from './game/gamePrepareHandlers.js';
 import { gameStartHandler } from './game/gameStartHandler.js';
 import { positionUpdateHandler } from './position/positionUpdateHandler.js';
 import { useCardHandler } from './card/useCardHandler.js';
 import { fleaMarketBuyOpenHandler } from './market/fleaMarketBuyOpenHandler.js';
-import { destoryCardHandler } from './card/destoryCardHandler.js';
-import { cardSelectHandler } from './card/cardSelectHandler.js';
-import { passDebuffHandler } from './user/passDebuffHandler.js';
 import { fleaMarketSelectHandler } from './market/fleaMarketSelectHandler.js';
+import { fleaMarketItemSell } from './market/fleaMarketSellHandler.js';
 import { gameEndHandler } from './game/gameEndHandler.js';
-import { fleaMarketItemSellOpenHandler } from './market/fleaMarketSellOpenHandler.js';
-import { createPositionDataHandler } from './position/createPositionDataHandler.js';
 
 const handlers = {
   [config.packetType.REGISTER_REQUEST]: {
@@ -57,16 +57,13 @@ const handlers = {
     handler: fleaMarketBuyOpenHandler
   },
   [config.packetType.FLEA_MARKET_SELL_REQUEST]: {
-    handler: fleaMarketItemSellOpenHandler
+    handler: fleaMarketItemSell
   },
   [config.packetType.FLEA_MARKET_CARD_PICK_REQUEST]: {
     handler: fleaMarketSelectHandler
   },
-  [config.packetType.REACTION_REQUEST]: {
+  [config.packetType.RESULT_REQUEST]: {
     handler: gameEndHandler
-  },
-  [config.packetType.DESTORY_CARD_REQUEST]: {
-    handler: destoryCardHandler
   },
   [config.packetType.CARD_SELECT_REQUEST]: {
     handler: cardSelectHandler

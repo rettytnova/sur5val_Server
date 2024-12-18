@@ -1,9 +1,11 @@
 import { config } from '../../../config/config.js';
-import { CharacterPositionData, Room, User } from '../../../gameServer/interface/interface.js';
 import { sendPacket } from '../../../packet/createPacket.js';
+import GameRoom from '../../class/room.js';
+import Server from '../../class/server.js';
+import UserSessions from '../../class/userSessions.js';
 import { socketSessions } from '../../session/socketSession.js';
-import { getRedisData, monsterAI, setRedisData } from '../handlerMethod.js';
-import { monsterAttackCheck } from './monsterAttack.js';
+import { monsterAI } from '../handlerMethod.js';
+import { monsterAttackCheckTwo } from './monsterAttackTwo.js';
 
 export const monsterAiDatas: {
   [roomId: number]: {
@@ -22,27 +24,27 @@ export const directionChangeRandom = 3;
 export const animationDelay = 6;
 
 // 몬스터 이동 및 공격 시작
-export const monsterMoveStart = async (roomId: number, totalTime: number) => {
+export const monsterMoveStartTwo = (roomId: number, totalTime: number) => {
   // 몬스터 이동을 n초마다 반복
   const time = Date.now();
   let callme = 0;
   totalTime -= 500;
 
   // setInterval 반복 시작
-  const monsterMove = setInterval(async () => {
+  const monsterMove = setInterval(() => {
     // 시간 다되면 함수 종료
     if (Date.now() - time >= totalTime)
       console.log('함수 실행 횟수:', callme, '함수 실행 시간:', Date.now() - time), clearInterval(monsterMove);
 
     // roomdData 없으면 함수 종료 (게임 종료 시 없어짐)
-    const rooms: Room[] | undefined = await getRedisData('roomData');
+    const rooms: GameRoom[] | undefined = Server.getInstance().getRooms();
     if (!rooms) {
       console.log('함수 실행 횟수:', callme, '함수 실행 시간:', Date.now() - time), clearInterval(monsterMove);
       return;
     }
-    let room: Room | null = null;
+    let room: GameRoom | null = null;
     for (let i = 0; i < rooms.length; i++) {
-      if (rooms[i].id === roomId) {
+      if (rooms[i].getRoomId() === roomId) {
         room = rooms[i];
         break;
       }
@@ -53,43 +55,44 @@ export const monsterMoveStart = async (roomId: number, totalTime: number) => {
     }
 
     // characterPositions 없으면 함수 종료 (게임 종료 시 없어짐)
-    const characterPositions: { [roomId: number]: CharacterPositionData[] | undefined } | undefined =
-      await getRedisData('characterPositionDatas');
-    if (characterPositions === undefined) {
+    const positionSessions = Server.getInstance()
+      .getPositions()
+      .find((PositionSessions) => PositionSessions.getPositionRoomId() === room.getRoomId());
+    if (!positionSessions) {
       console.log('함수 실행 횟수:', callme, '함수 실행 시간:', Date.now() - time), clearInterval(monsterMove);
       return;
     }
-    if (characterPositions[roomId] === undefined) {
+    if (!positionSessions.getCharacterPositions()) {
       console.log('함수 실행 횟수:', callme, '함수 실행 시간:', Date.now() - time), clearInterval(monsterMove);
       return;
     }
+    const characterPositions = positionSessions.getCharacterPositions()
 
     // 몬스터 공격 실행
-    await monsterAttackCheck(room, rooms);
+    monsterAttackCheckTwo(room, rooms);
     callme++;
-
     // 각 몬스터 별로 움직이기 작업 실행
     for (let i = 0; i < monsterAiDatas[roomId].length; i++) {
       // 죽은 몬스터일 경우 움직이기 작업 생략
-      let monsterData: User | null = null;
-      for (let j = 0; j < room.users.length; j++) {
-        if (room.users[j].id === monsterAiDatas[roomId][i].id) {
-          monsterData = room.users[j];
+      let monsterData: UserSessions | null = null;
+      for (let j = 0; j < room.getUsers().length; j++) {
+        if (room.getUsers()[j].getId() === monsterAiDatas[roomId][i].id) {
+          monsterData = room.getUsers()[j];
         }
       }
       if (!monsterData) {
         console.error('움직이려는 몬스터의 정보를 찾을 수 없습니다.');
         return;
       }
-      if (monsterData.character.hp <= 0) continue;
+      if (monsterData.getCharacter().hp <= 0) continue;
 
       // 남은 거리가 없을 경우 새로운 경로 지정
       if (monsterAiDatas[roomId][i].distance <= 0) {
         const position: number[] = [];
-        for (let j = 0; j < characterPositions[roomId].length; j++) {
-          if (characterPositions[roomId][j].id === monsterAiDatas[roomId][i].id) {
-            position.push(characterPositions[roomId][j].x);
-            position.push(characterPositions[roomId][j].y);
+        for (let j = 0; j < characterPositions.length; j++) {
+          if (characterPositions[j].id === monsterAiDatas[roomId][i].id) {
+            position.push(characterPositions[j].x);
+            position.push(characterPositions[j].y);
             break;
           }
         }
@@ -112,9 +115,9 @@ export const monsterMoveStart = async (roomId: number, totalTime: number) => {
       else if (monsterAiDatas[roomId][i].direction === 0) {
         monsterAiDatas[roomId][i].distance--;
         monsterAiDatas[roomId][i].attackCool--;
-        for (let j = 0; j < characterPositions[roomId].length; j++) {
-          if (monsterAiDatas[roomId][i].id === characterPositions[roomId][j].id) {
-            characterPositions[roomId][j].y += moveSpeed;
+        for (let j = 0; j < characterPositions.length; j++) {
+          if (monsterAiDatas[roomId][i].id === characterPositions[j].id) {
+            characterPositions[j].y += moveSpeed;
             break;
           }
         }
@@ -122,9 +125,9 @@ export const monsterMoveStart = async (roomId: number, totalTime: number) => {
       else if (monsterAiDatas[roomId][i].direction === 1) {
         monsterAiDatas[roomId][i].distance--;
         monsterAiDatas[roomId][i].attackCool--;
-        for (let j = 0; j < characterPositions[roomId].length; j++) {
-          if (monsterAiDatas[roomId][i].id === characterPositions[roomId][j].id) {
-            characterPositions[roomId][j].x += moveSpeed;
+        for (let j = 0; j < characterPositions.length; j++) {
+          if (monsterAiDatas[roomId][i].id === characterPositions[j].id) {
+            characterPositions[j].x += moveSpeed;
             break;
           }
         }
@@ -132,9 +135,9 @@ export const monsterMoveStart = async (roomId: number, totalTime: number) => {
       else if (monsterAiDatas[roomId][i].direction === 2) {
         monsterAiDatas[roomId][i].distance--;
         monsterAiDatas[roomId][i].attackCool--;
-        for (let j = 0; j < characterPositions[roomId].length; j++) {
-          if (monsterAiDatas[roomId][i].id === characterPositions[roomId][j].id) {
-            characterPositions[roomId][j].y -= moveSpeed;
+        for (let j = 0; j < characterPositions.length; j++) {
+          if (monsterAiDatas[roomId][i].id === characterPositions[j].id) {
+            characterPositions[j].y -= moveSpeed;
             break;
           }
         }
@@ -142,29 +145,23 @@ export const monsterMoveStart = async (roomId: number, totalTime: number) => {
       else if (monsterAiDatas[roomId][i].direction === 3) {
         monsterAiDatas[roomId][i].distance--;
         monsterAiDatas[roomId][i].attackCool--;
-        for (let j = 0; j < characterPositions[roomId].length; j++) {
-          if (monsterAiDatas[roomId][i].id === characterPositions[roomId][j].id) {
-            characterPositions[roomId][j].x -= moveSpeed;
+        for (let j = 0; j < characterPositions.length; j++) {
+          if (monsterAiDatas[roomId][i].id === characterPositions[j].id) {
+            characterPositions[j].x -= moveSpeed;
             break;
           }
         }
       }
     }
 
-    // 이동 종료: redis에 위치 데이터 저장 및 notification 뿌리기
-    await setRedisData('characterPositionDatas', characterPositions);
-    for (let i = 0; i < room.users.length; i++) {
-      const roomUserSocket = socketSessions[room.users[i].id];
+    // 이동 종료: notification 뿌리기
+    for (let i = 0; i < room.getUsers().length; i++) {
+      const roomUserSocket = socketSessions[room.getUsers()[i].getId()];
       if (roomUserSocket) {
         sendPacket(roomUserSocket, config.packetType.POSITION_UPDATE_NOTIFICATION, {
-          characterPositions: characterPositions[roomId]
+          characterPositions: characterPositions
         });
       }
-    }
-
-    // 에러 찾기 임시 함수
-    if (room.users.length !== characterPositions[roomId].length) {
-      throw new Error(`monsterSpawn에서 에러 발생 ${room.users}, ${characterPositions[roomId]}`);
     }
   }, 100);
 };

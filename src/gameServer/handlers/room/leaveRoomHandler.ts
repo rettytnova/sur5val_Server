@@ -1,107 +1,106 @@
 import net from 'net';
-import { getRedisData, getRoomByUserId, getUserIdBySocket, setRedisData } from '../handlerMethod.js';
-import { CustomSocket, Room, User } from '../../interface/interface.js';
+import { convertSendRoomData, getRoomByUserId, getUserBySocket } from '../handlerMethod.js';
+import { CustomSocket } from '../../interface/interface.js';
 import { sendPacket } from '../../../packet/createPacket.js';
 import { config } from '../../../config/config.js';
-import { GlobalFailCode, RoomStateType, RoleType } from '../enumTyps.js';
+import { GlobalFailCode, RoomStateType } from '../enumTyps.js';
 import { socketSessions } from '../../session/socketSession.js';
 import Server from '../../class/server.js';
+import UserSessions from '../../class/userSessions.js';
+import GameRoom from '../../class/room.js';
 
 export const leaveRoomHandler = async (socket: net.Socket) => {
-  // 해당 소켓으로 전달받는 데이터에 유저가 있는지
-  const userId: number | null = await getUserIdBySocket(socket as CustomSocket);
-  if (!userId) {
-    sendPacket(socket, config.packetType.LEAVE_ROOM_RESPONSE, {
-      success: false,
-      failCode: GlobalFailCode.LEAVE_ROOM_FAILED
-    });
-    console.log('비정상적인 접근입니다. => 유저를 찾을 수 없습니다.');
-    return;
-  } // 모든 방 데이터  
-
-  const rooms: Room[] = await getRedisData('roomData');
-  if (!rooms) return;
-  const room = await getRoomByUserId(userId);
-  if (!room) {
-    sendPacket(socket, config.packetType.LEAVE_ROOM_RESPONSE, {
-      success: false,
-      failCode: GlobalFailCode.LEAVE_ROOM_FAILED
-    });
-    return;
-  }
-
-  if (room.state !== RoomStateType.WAIT) {
-    console.log('플레이 중이던 유저 퇴장');
-    return;
-  }
-
-  let user: User | undefined
-  let roomIndex: number | null = null;
-  let userIndex: number | null = null;
-  for (let i = 0; i < rooms.length; i++) {
-    for (let j = 0; j < rooms[i].users.length; j++) {
-      if (rooms[i].users[j].id === userId) {
-        roomIndex = i;
-        userIndex = j;
-        user = rooms[i].users[j];
-      }
+    const leaveRoomFailSendData = {
+        success: false,
+        failCode: GlobalFailCode.LEAVE_ROOM_FAILED
     }
-  }
-  if (roomIndex === null) return;
-  if (userIndex === null) return;
 
-  // 방에서 해당 유저 삭제
-  rooms[roomIndex].users.splice(userIndex, 1);
+    const user = getUserBySocket(socket as CustomSocket);
+    if (!user) {
+        console.log('leaveRoomHandler user 없음');
+        sendPacket(socket, config.packetType.LEAVE_ROOM_RESPONSE, leaveRoomFailSendData);
+        return;
+    }
 
-  // 나가는 유저가 방장일 경우 방장 변경
-  if (userId === rooms[roomIndex].ownerId && rooms[roomIndex].users.length > 0) {
-    rooms[roomIndex].ownerId = rooms[roomIndex].users[0].id;
-    rooms[roomIndex].ownerEmail = rooms[roomIndex].users[0].email;
-  }
+    const leaveRoom = getRoomByUserId(user.getId());
+    if (!leaveRoom) {
+        console.log('leaveRoomHandler 방에 참여중이 아님');
+        sendPacket(socket, config.packetType.LEAVE_ROOM_RESPONSE, leaveRoomFailSendData);
+        return;
+    }
 
-  if (!user) {
-    return;
-  }
+    if (leaveRoom.getUsers().length === 0) {
+        console.log('방에 유저가 없는데 방 나가기 시도함')
+        sendPacket(socket, config.packetType.LEAVE_ROOM_RESPONSE, leaveRoomFailSendData);
+        return;
+    }
 
-  Server.getInstance().chattingServerSend(
-    config.chattingPacketType.CHATTING_LEAVE_ROOM_REQUEST, { email: user.email }
-  );
+    if (leaveRoom.getRoomState() !== RoomStateType.WAIT) {
+        return;
+    }
 
-  // 유저에게 success response 전달
-  sendPacket(socket, config.packetType.LEAVE_ROOM_RESPONSE, {
-    success: true,
-    fail: GlobalFailCode.NONE
-  });
+    // 방에서 해당 유저 삭제
+    const remainUsers = leaveRoom.getUsers().filter((roomUser: UserSessions) => roomUser.getId() !== user.getId());
+    leaveRoom.setUsers(remainUsers);
 
-  // 모든 유저에게 해당 데이터 기반으로 업데이트
-  for (let userIdx = 0; userIdx < rooms[roomIndex].users.length; userIdx++) {
-    const roomUserSocket = socketSessions[rooms[roomIndex].users[userIdx].id];
-    if (roomUserSocket) {
-      sendPacket(roomUserSocket, config.packetType.LEAVE_ROOM_NOTIFICATION, {
-        userId: userId
-      });
+    if (remainUsers.length > 0) {
+        // 나가는 유저가 방장일 경우 방장 변경
+        if (leaveRoom.getRoomOwnerId() === user.getId()) {
+            leaveRoom.setRoomOwnerId(leaveRoom.getUsers()[0].getId());
+            leaveRoom.setRoomOwnerEmail(leaveRoom.getUsers()[0].getEmail());
+        }
+    }
 
-      const sendData = {
+    Server.getInstance().chattingServerSend(
+        config.chattingPacketType.CHATTING_LEAVE_ROOM_REQUEST, { email: user.getEmail() }
+    );
+
+    const leaveRoomSuccessSendData = {
         success: true,
-        room: rooms[roomIndex],
+        room: convertSendRoomData(leaveRoom),
         failCode: GlobalFailCode.NONE
-      };
-      sendPacket(roomUserSocket, config.packetType.JOIN_ROOM_RESPONSE, sendData);
-    }
-  }
+    };
 
-  // 방에 roleType이 2와 4(player, boss)인 user가 0명일때 방을 없애기
-  let isClosedRoom: boolean = true;
-  for (let i = 0; i < rooms[roomIndex].users.length; i++) {
-    const userRoleType = rooms[roomIndex].users[i].character.roleType;
-    if (userRoleType === RoleType.SUR5VAL || userRoleType === RoleType.BOSS_MONSTER) {
-      isClosedRoom = false;
-      break;
-    }
-  }
-  if (isClosedRoom) {
-    rooms.splice(roomIndex, 1);
-  }
+    // 유저에게 success response 전달
+    sendPacket(socket, config.packetType.LEAVE_ROOM_RESPONSE, leaveRoomSuccessSendData);
 
-  await setRedisData('roomData', rooms);
+    // 모든 유저에게 해당 데이터 기반으로 업데이트
+    for (let i = 0; i < leaveRoom.getUsers().length; i++) {
+        const roomUser = leaveRoom.getUsers()[i];
+        if (!roomUser) {
+            console.log("leaveRoom roomUser 없음");
+            break;
+        }
+
+        const roomUserSocket = socketSessions[roomUser.getId()];
+        if (!roomUserSocket) {
+            console.log("leaveRoom roomUserSocket 없음");
+            break;
+        }
+
+        sendPacket(roomUserSocket, config.packetType.LEAVE_ROOM_NOTIFICATION,
+            {
+                userId: user.getId()
+            }
+        );
+
+        const room = getRoomByUserId(roomUser.getId());
+        if (room === null) {
+            console.log("leaveRoom 참여중인 방이 없음");
+            break;
+        }
+
+        const joinRoomSendData = {
+            success: true,
+            room: convertSendRoomData(room),
+            failCode: GlobalFailCode.NONE
+        };
+        sendPacket(roomUserSocket, config.packetType.JOIN_ROOM_RESPONSE, joinRoomSendData);
+    }
+
+    if (remainUsers.length === 0) {
+        const rooms = Server.getInstance().getRooms();
+        const remainRooms = rooms.filter((room: GameRoom) => room.getRoomId() !== leaveRoom.getRoomId());
+        Server.getInstance().setRooms(remainRooms);
+    }
 };
