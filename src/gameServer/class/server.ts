@@ -146,7 +146,7 @@ class Server {
       switch (err.code) {
         case 'ECONNREFUSED':
           if (this.chattingServerReconnect < 20) {
-            console.log(`채팅 서버와 연결 시도중.. 재시도 횟수: ${this.chattingServerReconnect + 1}`);
+            //console.log(`채팅 서버와 연결 시도중.. 재시도 횟수: ${this.chattingServerReconnect + 1}`);
             this.chattingServerReconnect++;
             setTimeout(() => {
               this.connect();
