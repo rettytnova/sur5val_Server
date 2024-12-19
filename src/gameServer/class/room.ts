@@ -13,6 +13,10 @@ class GameRoom {
     return this.roomInfo.id;
   }
 
+  setRoomId(roomId: number) {
+    this.roomInfo.id = roomId;
+  }
+
   getRoomOwnerId() {
     return this.roomInfo.ownerId;
   }
