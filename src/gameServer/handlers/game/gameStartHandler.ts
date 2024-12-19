@@ -16,10 +16,7 @@ import { monsterMoveStart } from '../coreMethod/monsterMove.js';
 import { gameEndNotification } from '../notification/gameEnd.js';
 
 // 게임 시작 함수 호출
-export const gameStartHandler = (socket: CustomSocket, payload: Object) => {
-  // 핸들러가 호출되면 success. response 만들어서 보냄
-  // responseData = { success: true, failCode: GlobalFailCode.value }
-  // sendPacket(socket, config.packetType.GAME_START_RESPONSE, responseData)
+export const gameStartHandler = (socket: CustomSocket) => {
   try {
     // requset 보낸 유저
     const user = getUserBySocket(socket);
@@ -224,7 +221,7 @@ export const setBossStat = (room: GameRoom, level: number) => {
       room.getUsers()[i].getCharacter().aliveState = true;
       room.getUsers()[i].getCharacter().level = level;
       room.getUsers()[i].getCharacter().attack = 10 * level;
-      room.getUsers()[i].getCharacter().armor = 1 * level;
+      room.getUsers()[i].getCharacter().armor = 2 * level;
 
       switch (level) {
         case 1: // 일반 라운드
