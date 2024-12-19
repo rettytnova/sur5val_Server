@@ -18,6 +18,7 @@ import { fleaMarketBuyOpenHandler } from './market/fleaMarketBuyOpenHandler.js';
 import { fleaMarketSelectHandler } from './market/fleaMarketSelectHandler.js';
 import { fleaMarketItemSell } from './market/fleaMarketSellHandler.js';
 import { gameEndHandler } from './game/gameEndHandler.js';
+import { fleaMarketItemSellOpenHandler } from './market/fleaMarketSellOpenHandler.js';
 
 const handlers = {
   [config.packetType.REGISTER_REQUEST]: {
@@ -57,7 +58,7 @@ const handlers = {
     handler: fleaMarketBuyOpenHandler
   },
   [config.packetType.FLEA_MARKET_SELL_REQUEST]: {
-    handler: fleaMarketItemSell
+    handler: fleaMarketItemSellOpenHandler
   },
   [config.packetType.FLEA_MARKET_CARD_PICK_REQUEST]: {
     handler: fleaMarketSelectHandler

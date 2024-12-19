@@ -36,7 +36,6 @@ export const useCardHandler = async (socket: CustomSocket, payload: Object): Pro
   const { cardType, targetUserId: targetUserIdRaw } = payload as UseCardRequest;
 
   const targetUserId = Number(targetUserIdRaw);
-  console.log('cardType: ', cardType);
   try {
     // redisUser 정보 찾기
     const user = getUserBySocket(socket);

@@ -19,7 +19,7 @@ export const fleaMarketItemSellOpenHandler = (socket: CustomSocket) => {
     .getRooms()
     .find((room) => room.getUsers().find((user: UserSessions) => user.getId() === user.getId()));
   if (!room) {
-    console.error('판판매 시도하는 유저의 room 데이터를 찾을 수 없음');
+    console.error('판매 시도하는 유저의 room 데이터를 찾을 수 없음');
     return;
   }
 
@@ -44,13 +44,11 @@ export const fleaMarketItemSellOpenHandler = (socket: CustomSocket) => {
 
   // 해당 유저의 handCards 목록을 sellCards에 담기
   const sellCards: number[] = [];
-  for (let i = 0; i < fleaMarketOpenUser.getCharacter().handCards.length; i++) {
-    if (
-      fleaMarketOpenUser.getCharacter().handCards[i].type > 200 &&
-      fleaMarketOpenUser.getCharacter().handCards[i].count > 0
-    ) {
-      sellCards.push(fleaMarketOpenUser.getCharacter().handCards[i].type + 2000);
-      fleaMarketOpenUser.getCharacter().handCards[i].count--;
+  const handCards = JSON.parse(JSON.stringify(fleaMarketOpenUser.getCharacter().handCards));
+  for (let i = 0; i < handCards.length; i++) {
+    if (handCards[i].type > 200 && handCards[i].count > 0) {
+      sellCards.push(handCards[i].type + 2000);
+      handCards[i].count--;
       i--;
       if (sellCards.length >= 7) break;
     }

@@ -74,10 +74,11 @@ export const userUpdateNotification = (room: GameRoom | null) => {
       }
 
       const cards: number[] = [];
-      for (let i = 0; i < sellingUser.getCharacter().handCards.length; i++) {
-        if (sellingUser.getCharacter().handCards[i].type > 200 && sellingUser.getCharacter().handCards[i].count > 0) {
-          cards.push(sellingUser.getCharacter().handCards[i].type + 2000);
-          sellingUser.getCharacter().handCards[i].count--;
+      const handCards = JSON.parse(JSON.stringify(sellingUser.getCharacter().handCards));
+      for (let i = 0; i < handCards.length; i++) {
+        if (handCards[i].type > 200 && handCards[i].count > 0) {
+          cards.push(handCards[i].type + 2000);
+          handCards[i].count--;
           i--;
           if (cards.length >= 7) break;
         }

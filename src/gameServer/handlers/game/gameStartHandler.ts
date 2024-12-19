@@ -79,9 +79,10 @@ export const gameStartHandler = (socket: CustomSocket, payload: Object) => {
       inGameTimeSessions[room.getRoomId()] = Date.now();
 
       // 게임 종료 notification 보내기
+      const roomIdNow = JSON.parse(JSON.stringify(room.getRoomId()));
       setTimeout(
         () => {
-          gameEndNotification(room.getRoomId(), 4);
+          gameEndNotification(roomIdNow, 4);
         },
         inGameTime * normalRound + bossGameTime
       );
@@ -99,17 +100,7 @@ export const gameStartHandler = (socket: CustomSocket, payload: Object) => {
 // 일반 라운드 시작
 export const normalPhaseNotification = (level: number, roomId: number, sendTime: number) => {
   setTimeout(() => {
-    fleaMarketCardCreate(level, roomId);
-    shoppingUserIdSessions[roomId] = [];
-    monsterSpawnStart(roomId, level, -1);
-
-    const characterPositionDatas = Server.getInstance()
-      .getPositions()
-      .find((position) => position.getPositionRoomId() === roomId);
-    if (!characterPositionDatas) {
-      console.error('characterPositionDatas데이터를 찾지 못하였습니다.');
-      return;
-    }
+    // room정보 찾지 못할 경우 return (게임 이미 종료)
     const rooms: GameRoom[] = Server.getInstance().getRooms();
     let room: GameRoom | null = null;
     for (let i = 0; i < rooms.length; i++) {
@@ -120,13 +111,25 @@ export const normalPhaseNotification = (level: number, roomId: number, sendTime:
     }
     if (!room) return;
     if (room.getRoomId() !== roomId) return;
-    const roomData: Room = convertSendRoomData(room);
-    setBossStat(room, level);
 
+    // 라운드 기본 생성자 생성
+    shoppingUserIdSessions[roomId] = [];
+    fleaMarketCardCreate(level, roomId);
+    monsterSpawnStart(roomId, level, -1);
+    setBossStat(room, level);
+    const characterPositionDatas = Server.getInstance()
+      .getPositions()
+      .find((position) => position.getPositionRoomId() === roomId);
+    if (!characterPositionDatas) {
+      console.error('characterPositionDatas데이터를 찾지 못하였습니다.');
+      return;
+    }
+
+    // 라운드 시작 noti 보내기
+    const roomData: Room = convertSendRoomData(room);
     const initGameInfo = Server.getInstance().initGameInfo;
     if (!initGameInfo) return;
     const inGameTime = initGameInfo[0].normalRoundTime;
-
     let phaseType: PhaseType = PhaseType.NONE_PHASE;
     switch (level) {
       case 1:
@@ -148,7 +151,6 @@ export const normalPhaseNotification = (level: number, roomId: number, sendTime:
       users: roomData.users,
       characterPositions: characterPositionDatas.getCharacterPositions()
     };
-
     for (let i = 0; i < roomData.users.length; i++) {
       const userSocket = socketSessions[roomData.users[i].id];
       if (userSocket) {
@@ -156,6 +158,7 @@ export const normalPhaseNotification = (level: number, roomId: number, sendTime:
       }
     }
 
+    // 몬스터 움직임 시작 및 업데이트 정보 전달
     monsterMoveStart(roomId, inGameTime);
     userUpdateNotification(room);
   }, sendTime);
@@ -164,17 +167,7 @@ export const normalPhaseNotification = (level: number, roomId: number, sendTime:
 // 보스 라운드 시작
 export const bossPhaseNotification = (level: number, roomId: number, sendTime: number) => {
   setTimeout(() => {
-    fleaMarketCardCreate(level, roomId);
-    shoppingUserIdSessions[roomId] = [];
-    const idx: number = randomNumber(0, 3);
-    monsterSpawnStart(roomId, level, idx);
-    const characterPositionDatas = Server.getInstance()
-      .getPositions()
-      .find((position) => position.getPositionRoomId() === roomId);
-    if (!characterPositionDatas) {
-      console.error('characterPositionDatas데이터를 찾지 못하였습니다.');
-      return;
-    }
+    // room정보 찾지 못할 경우 return (게임 이미 종료)
     const rooms: GameRoom[] = Server.getInstance().getRooms();
     let room: GameRoom | null = null;
     for (let i = 0; i < rooms.length; i++) {
@@ -185,9 +178,23 @@ export const bossPhaseNotification = (level: number, roomId: number, sendTime: n
     }
     if (!room) return;
     if (room.getRoomId() !== roomId) return;
-    const roomData: Room = convertSendRoomData(room);
+
+    // 라운드 기본 생성자 생성
+    shoppingUserIdSessions[roomId] = [];
+    fleaMarketCardCreate(level, roomId);
+    const idx: number = randomNumber(0, 3);
+    monsterSpawnStart(roomId, level, idx);
+    const characterPositionDatas = Server.getInstance()
+      .getPositions()
+      .find((position) => position.getPositionRoomId() === roomId);
+    if (!characterPositionDatas) {
+      console.error('characterPositionDatas데이터를 찾지 못하였습니다.');
+      return;
+    }
     setBossStat(room, level);
 
+    // 라운드 시작 noti 보내기
+    const roomData: Room = convertSendRoomData(room);
     const initGameInfo = Server.getInstance().initGameInfo;
     if (!initGameInfo) return;
     const bossGameTime = initGameInfo[0].bossRoundTime;
@@ -197,7 +204,6 @@ export const bossPhaseNotification = (level: number, roomId: number, sendTime: n
       users: roomData.users,
       characterPositions: characterPositionDatas.getCharacterPositions()
     };
-
     for (let i = 0; i < roomData.users.length; i++) {
       const userSocket = socketSessions[roomData.users[i].id];
       if (userSocket) {
@@ -205,6 +211,8 @@ export const bossPhaseNotification = (level: number, roomId: number, sendTime: n
         sendPacket(userSocket, config.packetType.BOSSROUND_RESPONSE, { success: 1, extranceIdx: idx });
       }
     }
+
+    // 몬스터 움직임 시작 및 업데이트 정보 전달
     monsterMoveStart(roomId, bossGameTime);
   }, sendTime);
 };

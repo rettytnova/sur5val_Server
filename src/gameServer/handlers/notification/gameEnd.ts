@@ -9,10 +9,10 @@ import { shoppingUserIdSessions } from '../../session/shoppingSession.js';
 import { socketSessions } from '../../session/socketSession.js';
 import { monsterAiDatas } from '../coreMethod/monsterMove.js';
 import { RoomStateType, RoleType } from '../enumTyps.js';
+import { addgRoomId, getgRoomId } from '../room/createRoomHandler.js';
 
 // 시간 안에 탈출하지 못했을 경우
 export const gameEndNotification = (roomId: number, winRType: number) => {
-  console.log('winRType: ', winRType);
   const rooms = Server.getInstance().getRooms();
   const endRoom = rooms.find((room: GameRoom) => room.getRoomId() === roomId);
   if (!endRoom) {
@@ -89,4 +89,8 @@ export const gameEndNotification = (roomId: number, winRType: number) => {
       endRoom.setRoomOwnerEmail(endRoom.getUsers()[0].getEmail());
     }
   }
+
+  // 방 번호 증가
+  endRoom.setRoomId(getgRoomId());
+  addgRoomId();
 };

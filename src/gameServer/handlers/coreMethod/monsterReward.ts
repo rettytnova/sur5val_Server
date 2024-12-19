@@ -112,7 +112,7 @@ const setRewards = (attacker: UserSessions, target: UserSessions): boolean => {
             return false;
           }
           // 레벨업시 직업별 카드 보상 지급
-          else if (!setStatRewards(attacker)) {
+          else if (!setCardRewards(attacker)) {
             console.error('setCardRewards 실패');
             return false;
           }
