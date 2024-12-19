@@ -30,7 +30,7 @@ class DatabaseManager {
       password: dbConfig.password,
       database: dbConfig.name,
       waitForConnections: true,
-      connectionLimit: 60,
+      connectionLimit: 10,
       queueLimit: 0
     });
 

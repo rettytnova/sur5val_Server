@@ -42,7 +42,7 @@ export const registerHandler = async (socket: CustomSocket, payload: Object): Pr
     const userByNickname = await dbManager.findUserByNickname(nickname);
     if (userByNickname) {
       responseData.success = false;
-      responseData.message = '이 닉네임은 이미 사용되고 있습니다.';
+      responseData.message = `${nickname}은 이미 사용되고 있습니다.`;
       responseData.failCode = GlobalFailCode.AUTHENTICATION_FAILED;
       throw new Error(responseData.message);
     }

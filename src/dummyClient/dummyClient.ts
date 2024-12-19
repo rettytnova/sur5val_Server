@@ -243,6 +243,8 @@ export class UserClient {
   private gameRoomId: number;
   private chattingRoomId: number;
 
+  private getRoomListReqInterval: NodeJS.Timer | null;
+
   private gameDataListener: ((data: Buffer) => void) | null;
   private chattingDataListener: ((data: Buffer) => void) | null;
 
@@ -255,6 +257,7 @@ export class UserClient {
     this.gameRoomId = 0;
     this.chattingRoomId = 0;
 
+    this.getRoomListReqInterval = null;
     this.gameDataListener = null;
     this.chattingDataListener = null;
   }
@@ -283,7 +286,10 @@ export class UserClient {
     this.nickname = nickname;
   }
 
-  CreateGamePacket(gamePacketType: number, version: string, sequence: number, payload: object) {
+  CreateGamePacket(gamePacketType: number, payload: object) {
+    const version: string = '1.0.0';
+    const sequence: number = 1;
+
     let versionLength = version.length;
 
     const typeBuffer = Buffer.alloc(config.packet.typeLength);
@@ -316,7 +322,10 @@ export class UserClient {
     ]);
   }
 
-  CreateChattingPacket(chattingPacketType: number, version: string, sequence: number, payload: object) {
+  CreateChattingPacket(chattingPacketType: number, payload: object) {
+    const version: string = '1.0.0';
+    const sequence: number = 1;
+
     const versionLength = version.length;
 
     const typeBuffer = Buffer.alloc(config.packet.typeLength);
@@ -575,11 +584,12 @@ export class UserClient {
 
   GameServerRegisterSend() {
     return new Promise<void>((resolve, reject) => {
-      const registerGameServerPacket = this.CreateGamePacket(config.packetType.REGISTER_REQUEST, '1.0.0', 1, {
-        email: `dummy_${gDummyRegisterClientId}@naver.com`,
-        nickname: `dummy_${gDummyRegisterClientId}`,
-        password: `!Dummy${gDummyRegisterClientId}`
-      });
+      const registerGameServerPacket = this.CreateGamePacket(config.packetType.REGISTER_REQUEST,
+        {
+          email: `dummy_${gDummyRegisterClientId}@naver.com`,
+          nickname: `dummy_${gDummyRegisterClientId}`,
+          password: `!Dummy${gDummyRegisterClientId}`
+        });
 
       gDummyRegisterClientId++;
 
@@ -591,12 +601,14 @@ export class UserClient {
     });
   }
 
-  ServerLoginSend() {
+  async ServerLoginSend() {
+    await delay(1000);
     return new Promise<void>((resolve, reject) => {
-      const loginGameServerPacket = this.CreateGamePacket(config.packetType.LOGIN_REQUEST, '1.0.0', 1, {
-        email: `dummy_${gDummyLoginClientId}@naver.com`,
-        password: `!Dummy${gDummyLoginClientId}`
-      });
+      const loginGameServerPacket = this.CreateGamePacket(config.packetType.LOGIN_REQUEST,
+        {
+          email: `dummy_${gDummyLoginClientId}@naver.com`,
+          password: `!Dummy${gDummyLoginClientId}`
+        });
 
       gDummyLoginClientId++;
 
@@ -606,9 +618,10 @@ export class UserClient {
       this.gameClientSocket.on('data', this.gameDataListener);
 
       const loginChattingServerPacket = this.CreateChattingPacket(
-        config.chattingPacketType.CHATTING_LOGIN_REQUEST, '1.0.0', 1, {
-        email: `dummy_${gDummyChattingLoginClientId}@naver.com`,
-      });
+        config.chattingPacketType.CHATTING_LOGIN_REQUEST,
+        {
+          email: `dummy_${gDummyChattingLoginClientId}@naver.com`,
+        });
 
       gDummyChattingLoginClientId++;
 
@@ -617,16 +630,31 @@ export class UserClient {
   }
 
   GameServerGetRoomList() {
-    setInterval(() => {
-      const getRoomListGameServerPacket = this.CreateGamePacket(
-        config.packetType.GET_ROOM_LIST_REQUEST,
-        '1.0.0',
-        1,
+    //console.log("getRoomList call");
+    this.getRoomListReqInterval = setInterval(() => {
+      const getRoomListGameServerPacket = this.CreateGamePacket(config.packetType.GET_ROOM_LIST_REQUEST,
         {}
       );
 
       this.gameClientSocket.write(getRoomListGameServerPacket);
     }, 1000);
+  }
+
+  GameServerCreateRoom() {
+    if (this.getRoomListReqInterval !== null) {
+      clearInterval(this.getRoomListReqInterval as unknown as number);
+    }
+
+    const createRoomGameServerPacket = this.CreateGamePacket(config.packetType.CREATE_ROOM_REQUEST,
+      {
+        name: `더미_방${gDummyRoomId}`,
+        maxUserNum: 5
+      }
+    );
+
+    gDummyRoomId++;
+
+    this.gameClientSocket.write(createRoomGameServerPacket);
   }
 }
 
@@ -649,13 +677,13 @@ function displayLobby() {
   const line = chalk.magentaBright('='.repeat(68));
   console.log(line);
 
-  console.log(chalk.yellowBright.bold('더미 클라이언트 작동 시작'));
+  console.log(chalk.yellowBright.bold(`더미 클라이언트 작동 시작 `) + chalk.redBright.bold(`[${gDummyClients.length}]`) + chalk.yellowBright.bold(' 개 활성화 중'));
   console.log('');
-  console.log(chalk.red('1. ') + chalk.white('더미 클라 생성'));
-  console.log(chalk.red('2. ') + chalk.white('더미 클라 회원가입'));
-  console.log(chalk.red('3. ') + chalk.white('더미 클라 로그인'));
-  console.log(chalk.red('4. ') + chalk.white('더미 클라 시작'));
-  console.log(chalk.red('5. ') + chalk.white('더미 클라 접속 종료'));
+  console.log(chalk.red('1. ') + chalk.white('더미 클라 ') + chalk.green('생성'));
+  console.log(chalk.red('2. ') + chalk.white('더미 클라 ') + chalk.green('회원가입'));
+  console.log(chalk.red('3. ') + chalk.white('더미 클라 ') + chalk.green('로그인'));
+  console.log(chalk.red('4. ') + chalk.white('더미 클라 ') + chalk.green('시작'));
+  console.log(chalk.red('5. ') + chalk.white('더미 클라 ') + chalk.green('접속 종료'));
 }
 
 function handleUserInput() {
@@ -672,6 +700,7 @@ function handleUserInput() {
       DummyClientLogin();
       break;
     case '4':
+      DummyClientGameStart();
       break;
     case '5':
       DummyClientDisconnect();
@@ -741,17 +770,37 @@ function DummyClientRegister() {
   }, 500);
 }
 
-function DummyClientLogin() {
+async function DummyClientLogin() {
   console.clear();
   console.log(chalk.white(`[생성한 더미 클라로 로그인을 진행합니다.] ${gDummyClients.length}`));
 
   setTimeout(async () => {
-    await Promise.all(gDummyClients.map((dummy: UserClient) => dummy.ServerLoginSend()));
+    await Promise.all(gDummyClients.map(async (dummy: UserClient) => dummy.ServerLoginSend()));
     console.log(chalk.green(`[더미 클라 로그인 전송 완료]`));
     await GameDataListenerRemove();
 
     DummyClientLobbyScreen();
   }, 500);
+}
+
+function DummyClientGameStart() {
+  console.clear();
+  console.log(chalk.green(`[게임을 시작합니다.] ${gDummyClients.length}`));
+
+  setTimeout(() => {
+    const dummyLength = gDummyClients.length;
+    const leaderDummyCount = Math.floor(dummyLength * 0.3);
+    console.log('leader Count', leaderDummyCount);
+    for (let i = 0; i < leaderDummyCount; i++) {
+      console.log(`leader Email ${gDummyClients[i].getEmail()}`);
+      gDummyClients[i].GameServerCreateRoom();
+    }
+
+    for (let j = leaderDummyCount; j < dummyLength; j++) {
+      console.log(`member Email ${gDummyClients[j].getEmail()}`);
+      gDummyClients[j].GameServerGetRoomList();
+    }
+  }, 1000);
 }
 
 async function DummyClientDisconnect() {

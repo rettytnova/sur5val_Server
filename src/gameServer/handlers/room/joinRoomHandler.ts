@@ -70,7 +70,8 @@ export const joinRoomHandler = async (socket: CustomSocket, payload: Object) => 
     sendPacket(socket, config.packetType.JOIN_ROOM_RESPONSE, joinRoomSuccessSendData);
 
     Server.getInstance().chattingServerSend(config.chattingPacketType.CHATTING_JOIN_ROOM_REQUEST, {
-      email: user.getEmail()
+      email: user.getEmail(),
+      ownerEmail: findRoom.getRoomOwnerEmail()
     });
 
     for (let i = 0; i < findRoom.getUsers().length; i++) {
