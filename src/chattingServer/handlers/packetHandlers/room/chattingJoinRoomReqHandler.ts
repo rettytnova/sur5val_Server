@@ -5,11 +5,9 @@ import { ChattingJoinRoomRequestPayload, Job } from "../../../interface/chatting
 
 // 채팅 방 참여 요청
 export const chattingJoinRoomReqHandler = async (socket: CustomSocket, payload: Object): Promise<void> => {
-    console.log("채팅 방 참여 요청");
-
     const chattingJoinRoomPayload = payload as ChattingJoinRoomRequestPayload;
 
-    console.log(`chattingJoinUser ${chattingJoinRoomPayload.email}`);
+    console.log(`채팅 방 참여 요청 요청 대상 ${chattingJoinRoomPayload.email} 방장 email ${chattingJoinRoomPayload.ownerEmail}`);
 
     const chattingUser = ChattingServer.getInstance().getUserByEmail(chattingJoinRoomPayload.email);
     if (chattingUser === undefined) {
