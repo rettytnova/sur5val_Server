@@ -24,7 +24,7 @@ export const monsterSpawnStart = (roomId: number, level: number, bossIdx: number
     // 유저가 속한 room 찾기
     const room = Server.getInstance()
       .getRooms()
-      .find((room) => room.getUsers().find((user: UserSessions) => user.getId() === user.getId()));
+      .find((room) => room.getRoomId() === roomId);
     if (!room) {
       console.error('몬스터 소환을 요청받은 roomId의 데이터를 찾을 수 없음');
       return;
@@ -144,7 +144,7 @@ const monsterSpawn = (roomId: number, level: number, positionList: SpawnPosition
   // 유저가 속한 room 찾기
   const room = Server.getInstance()
     .getRooms()
-    .find((room) => room.getUsers().find((user: UserSessions) => user.getId() === user.getId()));
+    .find((room) => room.getRoomId() === roomId);
   if (!room) {
     console.error('몬스터 소환을 요청받은 roomId의 데이터를 찾을 수 없음');
     return;
