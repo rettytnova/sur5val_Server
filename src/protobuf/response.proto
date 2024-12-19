@@ -84,10 +84,10 @@ message S2CFleaMarketCardPickResponse{
     repeated CardData handCards = 2;   
 }
 
-// 리액션(이모션) 요청 응답
-message S2CReactionResponse {
+// 보스라운드 시작 응답
+message S2CBossRoundResponse {
     bool success = 1;
-    GlobalFailCode failCode = 2;
+    int32 extranceIdx = 2;
 }
 
 // 카드 삭제 요청 응답
