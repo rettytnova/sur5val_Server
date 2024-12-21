@@ -96,10 +96,8 @@ src 디렉토리에서 작성하여 dist 디렉토리에서 파일이 빌드됨
 ![더미 화면](https://github.com/user-attachments/assets/75a6dcd0-e3a9-4502-823f-6f054cd27594)
     
     메뉴 설명
-     - 1 더미 클라 생성
-![더미 생성 화면](https://github.com/user-attachments/assets/057e4c11-62f7-4bce-a0f5-57aa456f0eb3)
-    
-    생성할 더미의 개수를 입력 ( 입력 후 일정 시간이 지나면 서버에 접속 )
+     - 1 더미 클라 생성 (생성할 더미의 개수를 입력 ( 입력 후 일정 시간이 지나면 서버에 접속 ) )
+![더미 생성 화면](https://github.com/user-attachments/assets/057e4c11-62f7-4bce-a0f5-57aa456f0eb3)    
 
      - 2 더미 클라 회원가입 ( 생성한 더미의 개수 만큼 회원가입 진행 )
      - 3 더미 클라 로그인 ( 생성한 더미의 개수 만큼 로그인 진행 )
