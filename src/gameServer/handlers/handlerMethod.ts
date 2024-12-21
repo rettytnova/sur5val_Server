@@ -1,38 +1,17 @@
-import { getRedis } from '../../database/redis.js';
-import { CustomSocket, Room } from '../../gameServer/interface/interface.js';
+import { CustomSocket, Room, User } from '../../gameServer/interface/interface.js';
+import GameRoom from '../class/room.js';
+import Server from '../class/server.js';
+import UserSessions from '../class/userSessions.js';
 import { socketSessions } from '../session/socketSession.js';
 import { directionChangeBasic, directionChangeRandom, monsterAiDatas, moveSpeed } from './coreMethod/monsterMove.js';
 
-// 레디스에서 데이터 가져오기 ex: getRedisData("roomData")
-export const getRedisData = async (key: string) => {
-  const redisClient = await getRedis();
-  const jsonDatas = await redisClient.get(key);
-  if (jsonDatas) {
-    const datas = JSON.parse(jsonDatas);
-    return datas;
-  }
-};
-
-// 레디스에 데이터 설정하기 ex: setRedisData("roomData", data)
-export const setRedisData = async <T>(key: string, data: T) => {
-  const redisClient = await getRedis();
-  const redisData = JSON.stringify(data);
-  await redisClient.set(key, redisData);
-};
-
-// 레디스에서 데이터 삭제하기 ex: deleteRedisData("roomData")
-export const deleteRedisData = async (key: string) => {
-  const redisClient = await getRedis();
-  await redisClient.del(key);
-};
-
 // socket으로 유저 데이터 가져오기 ex: getUserBySocket(socket)
-export const getUserIdBySocket = async (socket: CustomSocket) => {
-  const userDatas = await getRedisData('userData');
-  if (userDatas) {
-    for (let i = 0; i < userDatas.length; i++) {
-      if (socketSessions[userDatas[i].id] === socket) {
-        return userDatas[i].id;
+export const getUserBySocket = (socket: CustomSocket) => {
+  const users = Server.getInstance().getUsers();
+  if (users) {
+    for (let i = 0; i < users.length; i++) {
+      if (socketSessions[users[i].getId()] === socket) {
+        return Server.getInstance().getUser(users[i].getId());
       }
     }
   }
@@ -40,14 +19,45 @@ export const getUserIdBySocket = async (socket: CustomSocket) => {
   return null;
 };
 
-// userid로 방 찾기
-export const getRoomByUserId = async (userId: number) => {
-  const rooms: Room[] = await getRedisData('roomData');
-  const room = rooms.find((room) => room.users.some((user) => user.id === userId));
+export const getRoomByUserId = (userId: number) => {
+  const rooms: GameRoom[] = Server.getInstance().getRooms();
+  const room = rooms.find((room) => room.getUsers().some((user: UserSessions) => user.getId() === userId));
   if (!room) {
     return null;
   }
   return room;
+};
+
+// UserSession을 User로 변환
+export const convertSendUserData = (user: UserSessions) => {
+  const sendUser: User = {
+    id: user.getId(),
+    email: user.getEmail(),
+    nickname: user.getNickname(),
+    character: user.getCharacter()
+  };
+
+  return sendUser;
+};
+
+// GameRoom을 Room으로 변환
+export const convertSendRoomData = (room: GameRoom) => {
+  const sendUsers: User[] = [];
+  room.getUsers().forEach((user: UserSessions) => {
+    sendUsers.push(user.getUserInfo());
+  });
+
+  const sendRoom: Room = {
+    id: room.getRoomId(),
+    ownerId: room.getRoomOwnerId(),
+    ownerEmail: room.getRoomOwnerEmail(),
+    name: room.getRoomName(),
+    maxUserNum: room.getRoomMaxUser(),
+    state: room.getRoomState(),
+    users: sendUsers
+  };
+
+  return sendRoom;
 };
 
 // 몬스터 이동 방향 및 거리 설정 / 0:위, 1: 오른쪽, 2: 아래, 3: 왼쪽

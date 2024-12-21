@@ -101,8 +101,8 @@ export const config = {
     FLEA_MARKET_CARD_PICK_RESPONSE: 34,
     USER_UPDATE_NOTIFICATION: 35,
     PHASE_UPDATE_NOTIFICATION: 36,
-    REACTION_REQUEST: 37,
-    REACTION_RESPONSE: 38,
+    RESULT_REQUEST: 37,
+    BOSSROUND_RESPONSE: 38,
     DESTORY_CARD_REQUEST: 39,
     DESTORY_CARD_RESPONSE: 40,
     GAME_END_NOTIFICATION: 41,
@@ -180,8 +180,8 @@ export const packetMaps = {
 
   [config.packetType.PHASE_UPDATE_NOTIFICATION]: 'phaseUpdateNotification',
 
-  [config.packetType.REACTION_REQUEST]: 'reactionRequest',
-  [config.packetType.REACTION_RESPONSE]: 'reactionResponse',
+  [config.packetType.RESULT_REQUEST]: 'resultRequest',
+  [config.packetType.BOSSROUND_RESPONSE]: 'bossRoundResponse',
 
   [config.packetType.DESTORY_CARD_REQUEST]: 'destroyCardRequest',
   [config.packetType.DESTORY_CARD_RESPONSE]: 'destroyCardResponse',

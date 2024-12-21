@@ -1,31 +1,39 @@
-import { CustomSocket, Room } from '../../../gameServer/interface/interface.js';
+import { CustomSocket } from '../../../gameServer/interface/interface.js';
+import GameRoom from '../../class/room.js';
+import Server from '../../class/server.js';
+import UserSessions from '../../class/userSessions.js';
 import { shoppingUserIdSessions } from '../../session/shoppingSession.js';
-import { getRoomByUserId, getUserIdBySocket } from '../handlerMethod.js';
+import { getUserBySocket } from '../handlerMethod.js';
 import { fleaMarketItemBuy } from './fleaMarketItemBuyHandler.js';
 import { fleaMarketItemSell } from './fleaMarketSellHandler.js';
 
-export const fleaMarketSelectHandler = async (socket: CustomSocket, payload: object) => {
-  const userId: number | null = await getUserIdBySocket(socket);
-  if (!userId) {
-    console.error('userId 정보를 찾을 수 없습니다.');
+export const fleaMarketSelectHandler = (socket: CustomSocket, payload: object) => {
+  // 유저 데이터 가져오기 (userId 용도)
+  const user: UserSessions | null | undefined = getUserBySocket(socket);
+  if (!user) {
+    console.error('구매 시도하는 유저의 유저 정보가 없음');
     return;
   }
 
-  const room: Room | null = await getRoomByUserId(userId);
+  // 유저의 roomData 가져오기
+  const rooms: GameRoom[] = Server.getInstance().getRooms();
+  const room = rooms.find((room) => room.getUsers().some((user: UserSessions) => user.getId() === user.getId()));
   if (!room) {
-    console.error('room 정보를 찾을 수 없습니다.');
+    console.error('fleaMarketItemSelect 방이 없음');
     return;
   }
 
-  if (!shoppingUserIdSessions[room.id]) {
+  // 쇼핑 정보 확인
+  if (!shoppingUserIdSessions[room.getRoomId()]) {
     console.error('해당 유저의 room이 속한 쇼핑 정보를 찾을 수 없습니다.');
     return;
   }
 
+  // 구매 중인지 판매중인지 판단
   let isBuy: boolean | null = null;
-  for (let i = 0; i < shoppingUserIdSessions[room.id].length; i++) {
-    if (shoppingUserIdSessions[room.id][i][0] === userId) {
-      isBuy = shoppingUserIdSessions[room.id][i][1];
+  for (let i = 0; i < shoppingUserIdSessions[room.getRoomId()].length; i++) {
+    if (shoppingUserIdSessions[room.getRoomId()][i][0] === user.getId()) {
+      isBuy = shoppingUserIdSessions[room.getRoomId()][i][1];
     }
   }
   if (isBuy === null) {
@@ -33,9 +41,10 @@ export const fleaMarketSelectHandler = async (socket: CustomSocket, payload: obj
     return;
   }
 
+  // 구매,판매 handler로 보내주기
   if (isBuy) {
-    await fleaMarketItemBuy(socket, payload);
+    fleaMarketItemBuy(socket, payload);
   } else {
-    await fleaMarketItemSell(socket, payload);
+    fleaMarketItemSell(socket, payload);
   }
 };

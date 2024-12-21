@@ -27,6 +27,10 @@ import { onEnd } from '../events/onEnd.js';
 import { onChattingServerOnData } from '../events/onChattingServerOnData.js';
 import { sendChattingPacket } from '../../packet/createPacket.js';
 import { chattingPacketNames } from '../../chattingProtobuf/chattingPacketNames.js';
+import GameRoom from './room.js';
+import UserSessions from './userSessions.js';
+import PositionSessions from './positionSessions.js';
+import MarketSessions from './marketSessions.js';
 /**
  *   const bossSpawnPositionList: SpawnPositionData[] = await dbManager.spawnPositionInfo(1, 'boss');
   const monsterSpawnPositionList: SpawnPositionData[] = await dbManager.spawnPositionInfo(1, 'monster');
@@ -52,10 +56,23 @@ class Server {
   private chattingServerSocket: net.Socket;
   private chattingServerReconnect: number;
 
+  private users: UserSessions[];
+  private rooms: GameRoom[];
+  private characterPositions: PositionSessions[];
+  private markets: MarketSessions[];
+
+  public connectingClientCount: number;
+
   private constructor() {
-    this.server = net.createServer(this.clientConnection);
+    this.connectingClientCount = 0;
+    this.server = net.createServer(this.clientConnection.bind(this));
     this.chattingServerSocket = new net.Socket();
     this.chattingServerReconnect = 0;
+
+    this.users = [];
+    this.rooms = [];
+    this.characterPositions = [];
+    this.markets = [];
   }
 
   static getInstance() {
@@ -64,6 +81,49 @@ class Server {
     }
 
     return Server.gInstance;
+  }
+
+  getUsers() {
+    return this.users;
+  }
+
+  setUsers(users: UserSessions[]) {
+    this.users = [];
+    this.users = users;
+  }
+
+  getRooms() {
+    return this.rooms;
+  }
+
+  getMarkets() {
+    return this.markets;
+  }
+
+  setRooms(rooms: GameRoom[]) {
+    this.rooms = [];
+    this.rooms = rooms;
+  }
+
+  setMarkets(markets: MarketSessions[]) {
+    this.markets = markets;
+  }
+
+  getRoomByRoomId(findRoomId: number) {
+    return this.rooms.find((room: GameRoom) => room.getRoomId() === findRoomId);
+  }
+
+  getUser(id: number) {
+    return this.users.find((user: UserSessions) => user.getId() === id);
+  }
+
+  getPositions() {
+    return this.characterPositions;
+  }
+
+  setPositions(characterPositions: PositionSessions[]) {
+    this.characterPositions = [];
+    this.characterPositions = characterPositions;
   }
 
   connect() {
@@ -86,7 +146,7 @@ class Server {
       switch (err.code) {
         case 'ECONNREFUSED':
           if (this.chattingServerReconnect < 20) {
-            console.log(`채팅 서버와 연결 시도중.. 재시도 횟수: ${this.chattingServerReconnect + 1}`);
+            //console.log(`채팅 서버와 연결 시도중.. 재시도 횟수: ${this.chattingServerReconnect + 1}`);
             this.chattingServerReconnect++;
             setTimeout(() => {
               this.connect();
@@ -183,7 +243,11 @@ class Server {
   clientConnection(socket: net.Socket) {
     const customSocket = socket as CustomSocket;
 
-    console.log(`Client connected from: ${socket.remoteAddress}:${socket.remotePort}`);
+    this.connectingClientCount++;
+
+    console.log(
+      `Game 클라 연결 from: ${socket.remoteAddress}:${socket.remotePort} 연결 중인 클라 ${this.connectingClientCount}`
+    );
 
     customSocket.id = uuidv4();
     customSocket.buffer = Buffer.alloc(0);
