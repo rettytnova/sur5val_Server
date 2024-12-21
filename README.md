@@ -90,6 +90,7 @@ src 디렉토리에서 작성하여 dist 디렉토리에서 파일이 빌드됨
     
 ---
 
+
  ## dummyClient 사용법
     - npm run dummyClient를 터미널에 입력해 실행   
 ![더미 화면](https://github.com/user-attachments/assets/75a6dcd0-e3a9-4502-823f-6f054cd27594)
