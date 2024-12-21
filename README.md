@@ -7,6 +7,7 @@
 - [브로셔](https://www.notion.so/teamsparta/Luck7-SUR-5-VAL-9be9151bd85f453ba04ce804b9423c8e)
 - [노션](https://teamsparta.notion.site/Luck7-bdc25ef742fb4f96b650d4f83b7a804f?pvs=25)
 
+#### 프로젝트 간략 소개
 - 게임명 : SUR5VAL
 - 장르 : 서바이벌 / RPG
 - 특징 : 비대칭 pvp 서바이벌과 RPG요소(역할부여, 성장)를 섞은 게임
