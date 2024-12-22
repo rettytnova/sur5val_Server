@@ -43,7 +43,7 @@
     - 게임 서버와 별도의 채팅 서버가 존재합니다. 이는 '채팅'만을 담당한 서버입니다.
     - 클라이언트가 채팅 패킷을 보낼 시 채팅 서버에서 해당 이벤트를 처리합니다.
 ## 기술 
-![image](https://github.com/user-attachments/assets/c475b050-b789-457a-9b52-20348b696b02)
+![image](https://github.com/user-attachments/assets/2d104b7d-d918-402f-866a-a7545653c827)
 
 ---
 
