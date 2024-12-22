@@ -16,6 +16,12 @@
 
 ## 서비스 아키텍처
 ![서비스 아키텍처 PNG](https://github.com/user-attachments/assets/262ba460-1794-4e30-a557-c76eb1e28def)
+![image](https://github.com/user-attachments/assets/ad992e6a-d11b-4121-80a0-77a6f9a2eab1)
+![image](https://github.com/user-attachments/assets/2720d429-7085-46e2-8546-0a7c39b7912c)
+![image](https://github.com/user-attachments/assets/ce512825-f535-415d-9744-41c3a297cf24)
+![image](https://github.com/user-attachments/assets/de6ed113-80d8-473b-8362-2c28b2b83c09)
+![image](https://github.com/user-attachments/assets/c31739ae-ead0-4164-bce7-e0b2a5a031c9)
+![image](https://github.com/user-attachments/assets/9bc0f5d8-f9fa-4ce3-a8b3-6b5883510451)
 
 ## 구현 기능 
 1. 역할 분배
