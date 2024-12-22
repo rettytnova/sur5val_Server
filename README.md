@@ -16,13 +16,6 @@
 
 ## 서비스 아키텍처
 ![서비스 아키텍처 PNG](https://github.com/user-attachments/assets/262ba460-1794-4e30-a557-c76eb1e28def)
-![image](https://github.com/user-attachments/assets/ad992e6a-d11b-4121-80a0-77a6f9a2eab1)
-![image](https://github.com/user-attachments/assets/46ccb634-fa54-4e59-8e83-3553c5666b70)
-![image](https://github.com/user-attachments/assets/ce512825-f535-415d-9744-41c3a297cf24)
-![image](https://github.com/user-attachments/assets/de6ed113-80d8-473b-8362-2c28b2b83c09)
-![image](https://github.com/user-attachments/assets/c31739ae-ead0-4164-bce7-e0b2a5a031c9)
-![image](https://github.com/user-attachments/assets/8bcfb60e-fe98-45c9-94de-a50c0c4fc2ac)
-
 
 ## 구현 기능 
 1. 역할 분배
@@ -49,9 +42,18 @@
 7. 채팅
     - 게임 서버와 별도의 채팅 서버가 존재합니다. 이는 '채팅'만을 담당한 서버입니다.
     - 클라이언트가 채팅 패킷을 보낼 시 채팅 서버에서 해당 이벤트를 처리합니다.
-## 기술 
+## 기술
+#### BackEnd
 ![image](https://github.com/user-attachments/assets/2d104b7d-d918-402f-866a-a7545653c827)
-
+![image](https://github.com/user-attachments/assets/ad992e6a-d11b-4121-80a0-77a6f9a2eab1)
+#### DataBase
+![image](https://github.com/user-attachments/assets/46ccb634-fa54-4e59-8e83-3553c5666b70)
+![image](https://github.com/user-attachments/assets/4c5c1c9e-0341-4822-83c9-0a93e965f145)
+#### FrontEnd
+![image](https://github.com/user-attachments/assets/de6ed113-80d8-473b-8362-2c28b2b83c09)
+![image](https://github.com/user-attachments/assets/c31739ae-ead0-4164-bce7-e0b2a5a031c9)
+#### communication 
+![image](https://github.com/user-attachments/assets/8bcfb60e-fe98-45c9-94de-a50c0c4fc2ac)
 ---
 
 #### Code Convention
