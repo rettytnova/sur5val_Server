@@ -9,8 +9,9 @@ import { fileURLToPath } from 'url';
 import { packetNames } from '../protobuf/packetNames.js';
 import { chattingPacketMaps, CLIENT_VERSION, config, packetMaps, TOTAL_LENGTH, VERSION_START } from '../config/config.js';
 import { chattingPacketNames } from '../chattingProtobuf/chattingPacketNames.js';
-import { CustomSocket, Room } from '../gameServer/interface/interface.js';
+import { CustomSocket, DummyRoomData } from '../gameServer/interface/interface.js';
 import { getDummyClientResponseHandlerByPacketType } from './responseHandlers/responseHandlerIndex.js';
+import { randomNumber } from '../utils/utils.js';
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -94,21 +95,12 @@ class DummyClientProto {
   }
 }
 
-let gDummyClients: UserClient[] = [];
-let gDummyGameRooms: DummyGameRoom[] = [];
-
-export const getGDummyGameRooms = () => {
-  return gDummyGameRooms;
-};
-
-export const setGDummyGameRoomsInit = () => {
-  gDummyGameRooms = [];
-};
+export let gDummyClients: UserClient[] = [];
 
 export class DummyGameRoom {
-  private roomData: Room;
+  private roomData: DummyRoomData;
 
-  constructor(roomData: Room) {
+  constructor(roomData: DummyRoomData) {
     this.roomData = roomData;
   }
 
@@ -173,6 +165,7 @@ const onDataGameRegisterResponseListener = (socket: CustomSocket, resolve: (valu
             break;
         }
       }
+      break;
     }
   }
 }
@@ -226,6 +219,7 @@ const onDataGameLoginResponseListener = (socket: CustomSocket, resolve: (value?:
             break;
         }
       }
+      break;
     }
   }
 }
@@ -240,10 +234,15 @@ export class UserClient {
   public gameClientSocket: any;
   public chattingClientSocket: any;
 
-  private gameRoomId: number;
+  public gameRoomId: number;
   private chattingRoomId: number;
 
+  public dummyClientRoom: DummyGameRoom[];
+
   private getRoomListReqInterval: NodeJS.Timer | null;
+  private gameStartRoomCheckInterval: NodeJS.Timer | null;
+
+  private randomMoveInterval: NodeJS.Timer | null;
 
   private gameDataListener: ((data: Buffer) => void) | null;
   private chattingDataListener: ((data: Buffer) => void) | null;
@@ -257,7 +256,13 @@ export class UserClient {
     this.gameRoomId = 0;
     this.chattingRoomId = 0;
 
+    this.dummyClientRoom = [];
+
     this.getRoomListReqInterval = null;
+    this.gameStartRoomCheckInterval = null;
+
+    this.randomMoveInterval = null;
+
     this.gameDataListener = null;
     this.chattingDataListener = null;
   }
@@ -382,7 +387,7 @@ export class UserClient {
           this.gameClientSocket = new net.Socket();
 
           this.gameClientSocket.connect(5555, '127.0.0.1', () => {
-            //console.log('게임 서버와 연결');
+            console.log('게임 서버와 연결');
 
             this.gameClientSocket.buffer = Buffer.alloc(0);
 
@@ -405,8 +410,9 @@ export class UserClient {
                 while (this.gameClientSocket.buffer.length >= totalHeaderLength) {
                   const version = this.gameClientSocket.buffer.toString('utf8', offset, offset + versionLength);
                   offset += versionLength;
+
                   if (version !== CLIENT_VERSION) {
-                    console.error('버전이 다릅니다.');
+                    console.error(`버전이 다릅니다. ${version} ${packetType}`);
                     break;
                   }
 
@@ -437,6 +443,7 @@ export class UserClient {
                       console.error(error);
                     }
                   }
+                  break;
                 }
               }
             });
@@ -465,7 +472,7 @@ export class UserClient {
           this.chattingClientSocket = new net.Socket();
           // 채팅 서버 연결
           this.chattingClientSocket.connect(5556, '127.0.0.1', () => {
-            //console.log('채팅 서버와 연결');
+            console.log('채팅 서버와 연결');
 
             this.chattingClientSocket.buffer = Buffer.alloc(0);
 
@@ -519,6 +526,7 @@ export class UserClient {
                         break;
                     }
                   }
+                  break;
                 }
               }
             });
@@ -641,9 +649,24 @@ export class UserClient {
   }
 
   GameServerCreateRoom() {
-    if (this.getRoomListReqInterval !== null) {
-      clearInterval(this.getRoomListReqInterval as unknown as number);
-    }
+    this.gameStartRoomCheckInterval = setInterval(() => {
+      const myRoom = this.dummyClientRoom.find((room: DummyGameRoom) => room.getRoomData().id === this.gameRoomId);
+      if (myRoom) {
+        //console.log(`my Room ${myRoom.getRoomData().name} length ${myRoom.getRoomData().users.length}`);
+
+        if (myRoom.getRoomData().users.length === myRoom.getRoomData().maxUserNum) {
+          console.log(`${myRoom.getRoomData().id} 방 게임 시작`);
+          clearInterval(this.gameStartRoomCheckInterval as unknown as number);
+          this.GameServerGamePrepare();
+        }
+        else {
+          //console.log(`room len ${myRoom.getRoomData().users.length}`);
+        }
+      }
+      else {
+        console.log(`방장의 방이 없음`);
+      }
+    }, 2000);
 
     const createRoomGameServerPacket = this.CreateGamePacket(config.packetType.CREATE_ROOM_REQUEST,
       {
@@ -655,6 +678,54 @@ export class UserClient {
     gDummyRoomId++;
 
     this.gameClientSocket.write(createRoomGameServerPacket);
+  }
+
+  GameServerJoinRoom(roomId: number) {
+    const joinRoomGameServerPacket = this.CreateGamePacket(config.packetType.JOIN_ROOM_REQUEST,
+      {
+        roomId
+      }
+    )
+
+    this.gameClientSocket.write(joinRoomGameServerPacket);
+  }
+
+  GameServerGamePrepare() {
+    const gamePrepareGameServerPacket = this.CreateGamePacket(config.packetType.GAME_PREPARE_REQUEST, {
+
+    })
+
+    this.gameClientSocket.write(gamePrepareGameServerPacket);
+  }
+
+  GameServerGameStart() {
+    const gameStartGameServerPacket = this.CreateGamePacket(config.packetType.GAME_START_REQUEST, {
+
+    });
+
+    this.gameClientSocket.write(gameStartGameServerPacket);
+  }
+
+  GameServerGetRoomListReqIntervalClear() {
+    if (this.getRoomListReqInterval !== null) {
+      clearInterval(this.getRoomListReqInterval as unknown as number);
+    }
+  }
+
+  DummyRandomMoveStart() {
+    this.randomMoveInterval = setInterval(() => {
+      const xPosition = randomNumber(1, 100);
+      const yPosition = randomNumber(1, 50);
+
+      //console.log(`dummyId randomMove Req ${this.id} x : ${xPosition} y : ${yPosition}`);
+      const positionUpdateGameServerPacket = this.CreateGamePacket(config.packetType.POSITION_UPDATE_REQUEST,
+        {
+          x: xPosition,
+          y: yPosition
+        });
+
+      this.gameClientSocket.write(positionUpdateGameServerPacket);
+    }, 20);
   }
 }
 
@@ -748,7 +819,9 @@ function DummyClientConnect() {
 
   setTimeout(async () => {
     try {
-      await Promise.all(gDummyClients.map((dummy: UserClient) => dummy.Connect()));
+      await Promise.all(gDummyClients.map(async (dummy: UserClient) => {
+        await dummy.Connect();
+      }));
     }
     catch (err: any) {
 
@@ -789,15 +862,33 @@ function DummyClientGameStart() {
 
   setTimeout(() => {
     const dummyLength = gDummyClients.length;
+
+    let isLogin = false;
+    for (let i = 0; i < dummyLength; i++) {
+      if (gDummyClients[i].getId() !== 0) {
+        isLogin = true;
+      }
+    }
+
+    if (!isLogin) {
+      console.log("로그인을 하고 게임을 시작하세요");
+      DummyClientLobbyScreen();
+      return;
+    }
+
     const leaderDummyCount = Math.floor(dummyLength * 0.3);
+    const memberDummyCount = gDummyClients.length - leaderDummyCount;
+
     console.log('leader Count', leaderDummyCount);
+    console.log('member Count', memberDummyCount);
+
     for (let i = 0; i < leaderDummyCount; i++) {
-      console.log(`leader Email ${gDummyClients[i].getEmail()}`);
+      console.log(`leader Id ${gDummyClients[i].getId()}`);
       gDummyClients[i].GameServerCreateRoom();
     }
 
     for (let j = leaderDummyCount; j < dummyLength; j++) {
-      console.log(`member Email ${gDummyClients[j].getEmail()}`);
+      console.log(`member Id ${gDummyClients[j].getId()}`);
       gDummyClients[j].GameServerGetRoomList();
     }
   }, 1000);
@@ -816,6 +907,7 @@ async function DummyClientDisconnect() {
         //console.log(`[클라 ${index}] Disconnect 완료`);
       })
     );
+
     gDummyClients = [];
 
     gDummyRegisterClientId = 0;
