@@ -19,6 +19,7 @@
 ## 구현 기능 
 
 ## 기술 
+![서비스 아키텍처 PNG](https://github.com/user-attachments/assets/262ba460-1794-4e30-a557-c76eb1e28def)
 
 ---
 
