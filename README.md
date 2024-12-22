@@ -114,14 +114,28 @@ src 디렉토리에서 작성하여 dist 디렉토리에서 파일이 빌드됨
         실행되는 게임 서버를 클래스로 정의한 파일
     - events (folder)
         서버의 패킷 수신/연결 상태에 따른 기능이 정의된 폴더
-        onData.ts에서 데이터를 받을 때 버퍼를 해석하여 패킷의 타입, 버전, 페이로드 등을 해석하여 데이터를 처리한다.
+        onData.ts에서 데이터를 받고 파싱한 후 패킷의 타입, 버전, 페이로드 등을 해석하여 데이터를 처리한다.
     - handlers (folder)
         onData.ts에서 데이터를 받을 때 데이터를 처리하기 위해 기능 별로 정의되어있는 handlers 폴더 내 파일들이 핸들러 파일로서 정의되어 있음
     - interface/interface.ts (file)
         커스터마이징한 인터페이스(ts문법에 따른 interface)가 정의되어 있는 파일
     - session (folder)
         데이터베이스(Redis, MySQL)이 아닌 게임 서버 자체적으로 데이터를 저장하기 위한 세션 객체들이 정의되어 있음
-    
+#### chattingServer
+    - class/chattingServer.ts
+        실행되는 채팅 서버를 클래스로 정의한 파일
+    - events ( folder )
+        서버의 패킷 수신 이벤트를 정의한 폴더
+        chattingOnData.ts에서 데이터를 받고 파싱한 후 패킷의 타입, 버전, 페이로드 등을 가져와 데이터를 처리한다.
+    - handlers ( folder ) 
+        chattingOnData.ts에서 파싱한 패킷의 타입에 따라 핸들러 함수를 호출해 처리해주는 함수들
+        - jobHandlers ( folder )
+          job으로 구성한 메세지를 해석하고 처리 하는 함수들
+        - packetHandlers ( foler )
+          packetType으로 구성한 데이터를 해석하고 job을 생성하는 함수들
+     - interface
+        커스터마이징한 인터페이스(ts문법에 따른 interface)가 정의되어 있는 파일
+        
 ---
 
 
