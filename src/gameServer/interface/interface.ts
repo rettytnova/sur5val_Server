@@ -1,6 +1,7 @@
 import net from 'net';
 import { CardType, PhaseType, RoomStateType } from '../handlers/enumTyps.js';
 import UserSessions from '../class/userSessions.js';
+import { UserClient } from '../../dummyClient/dummyClient.js';
 //#region 레디스 인터페이스
 
 //#endregion
@@ -201,6 +202,16 @@ export interface Room {
   maxUserNum: number;
   state: RoomStateType;
   users: User[];
+}
+
+export interface DummyRoomData {
+  id: number;
+  ownerId: number;
+  ownerEmail: string;
+  name: string;
+  maxUserNum: number;
+  state: RoomStateType;
+  users: UserClient[];
 }
 
 export interface GameStateData {
