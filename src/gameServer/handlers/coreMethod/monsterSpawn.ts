@@ -10,6 +10,7 @@ import { monsterAiDatas } from './monsterMove.js';
 let monsterNumber = 10000000;
 let positionIndex = 0;
 let monsterIdx = 0;
+let playerIdx = 0;
 
 // 게임 시작 시 몬스터 스폰 시작
 export const monsterSpawnStart = (roomId: number, level: number, bossIdx: number) => {
@@ -85,7 +86,7 @@ export const monsterSpawnStart = (roomId: number, level: number, bossIdx: number
     characterPositionDatas.setCharacterPositions([]);
 
     const userPositionDatas = [];
-    let playerIdx = 0;
+
     for (let i = 0; i < room.getUsers().length; i++) {
       let characterPositionData: CharacterPositionData = { id: -1, x: -1, y: -1 };
       if (room.getUsers()[i].getCharacter().roleType === RoleType.BOSS_MONSTER) {
@@ -104,6 +105,7 @@ export const monsterSpawnStart = (roomId: number, level: number, bossIdx: number
           y: playerSpawnPositionList[playerIdx].y
         };
         playerIdx++;
+        playerIdx = playerIdx % playerSpawnPositionList.length;
       } else if (room.getUsers()[i].getCharacter().roleType === RoleType.WEAK_MONSTER) {
         characterPositionData = {
           id: room.getUsers()[i].getId(),
@@ -115,7 +117,7 @@ export const monsterSpawnStart = (roomId: number, level: number, bossIdx: number
       }
       userPositionDatas.push(characterPositionData);
     }
-    playerIdx = 0;
+
     characterPositionDatas.setCharacterPositions(userPositionDatas);
 
     // 이전 몬스터의 monsterAiDatas 삭제

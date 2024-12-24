@@ -85,8 +85,8 @@ export const gameEndNotification = (roomId: number, winRType: number) => {
       .getUsers()
       .some((endRoomUser: UserSessions) => endRoomUser.getId() === endRoom.getRoomOwnerId());
     if (!isHaveOwner) {
-      endRoom.setRoomOwnerId(endRoom.getUsers()[0].getId());
-      endRoom.setRoomOwnerEmail(endRoom.getUsers()[0].getEmail());
+      endRoom.setRoomOwnerId(endRoom.getUsers()[0]?.getId());
+      endRoom.setRoomOwnerEmail(endRoom.getUsers()[0]?.getEmail());
     }
   }
 

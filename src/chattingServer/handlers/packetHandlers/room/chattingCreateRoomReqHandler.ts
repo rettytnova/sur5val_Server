@@ -5,11 +5,7 @@ import { ChattingCreateRoomPayload, Job } from "../../../interface/chattingServe
 
 // 채팅 방 생성 요청
 export const chattingCreateRoomReqHandler = async (socket: CustomSocket, payload: Object): Promise<void> => {
-    console.log("채팅 방 생성 요청");
-
     const chattingCreateRoomPayload = payload as ChattingCreateRoomPayload;
-
-    console.log(`chattingCreateRoom ${chattingCreateRoomPayload.email}`);
 
     const chattingUser = ChattingServer.getInstance().getUserByEmail(chattingCreateRoomPayload.email);
     if (chattingUser === undefined) {
