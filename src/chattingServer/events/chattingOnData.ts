@@ -1,7 +1,8 @@
 import { CLIENT_VERSION, config, TOTAL_LENGTH, VERSION_START } from "../../config/config.js";
 import { CustomSocket } from "../../gameServer/interface/interface.js";
 import { chattingPacketParser } from "../chattingPacket/chattingPacketParser.js";
-import { getChattingServerHandlerByPacketType } from "../handlers/packetHandlers/chattingHandlerIndex.js";
+import ChattingServer from "../class/chattingServer.js";
+import { Job } from "../interface/chattingServerInterface.js";
 
 export const chattingOnData = (socket: CustomSocket) => async (data: Buffer) => {
     socket.buffer = Buffer.concat([socket.buffer, data]);
@@ -44,12 +45,13 @@ export const chattingOnData = (socket: CustomSocket) => async (data: Buffer) => 
 
                 socket.buffer = socket.buffer.subarray(offset + payloadLength);
 
-                try {
-                    const handler = getChattingServerHandlerByPacketType(packetType);
-                    handler?.(socket, parsedData);
-                } catch (error) {
-                    console.error(error);
-                }
+                console.log(`packetType ${packetType}`);
+
+                // payload[0] parsedData
+                // payload[1] socket
+
+                const job = new Job(packetType, parsedData, socket);
+                ChattingServer.getInstance().chattingServerJobQue.push(job);
             }
             break;
         }
