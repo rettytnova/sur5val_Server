@@ -1,9 +1,15 @@
 import ChattingServer from "../../../class/chattingServer.js";
 import ChattingUser from "../../../class/chattingUser.js";
-import { Job } from "../../../interface/chattingServerInterface.js";
+import { ChattingLeaveRoomPayload, Job } from "../../../interface/chattingServerInterface.js";
 
 export const chattingLeaveRoomJobHandler = (job: Job): void => {
-    const chattingLeaveRoomUser = job.payload[0] as ChattingUser;
+    const chattingLeaveRoomPayload = job.payload[0] as ChattingLeaveRoomPayload;
+
+    const chattingLeaveRoomUser = ChattingServer.getInstance().getUserByEmail(chattingLeaveRoomPayload.email);
+    if (chattingLeaveRoomUser === undefined) {
+        console.log("채팅 방 떠나기 요청 user 없음");
+        return;
+    }
 
     const leaveChattingRoomId = chattingLeaveRoomUser.getJoinRoomId();
 

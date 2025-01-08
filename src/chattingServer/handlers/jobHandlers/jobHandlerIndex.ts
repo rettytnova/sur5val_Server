@@ -6,19 +6,19 @@ import { chattingLeaveRoomJobHandler } from "./room/chattingLeaveRoomJobHandler.
 import { chattingLoginJobHandler } from "./user/chattingLoginJobHandler.js";
 
 const chattingJobHandlers = {
-    [config.jobType.CHATTING_LOGIN_REQUEST_JOB]: {
+    [config.chattingPacketType.CHATTING_LOGIN_REQUEST]: {
         jobHandler: chattingLoginJobHandler
     },
-    [config.jobType.CHATTING_CREATE_ROOM_REQUEST_JOB]: {
+    [config.chattingPacketType.CHATTING_CREATE_ROOM_REQUEST]: {
         jobHandler: chattingCreateRoomJobHandler
     },
-    [config.jobType.CHATTING_JOIN_ROOM_REQUEST_JOB]: {
+    [config.chattingPacketType.CHATTING_JOIN_ROOM_REQUEST]: {
         jobHandler: chattingJoinRoomJobHandler
     },
-    [config.jobType.CHATTING_LEAVE_ROOM_REQUEST_JOB]: {
+    [config.chattingPacketType.CHATTING_LEAVE_ROOM_REQUEST]: {
         jobHandler: chattingLeaveRoomJobHandler
     },
-    [config.jobType.CHATTING_CHAT_SEND_REQUEST_JOB]: {
+    [config.chattingPacketType.CHATTING_CHAT_SEND_REQUEST]: {
         jobHandler: chattingChatSendJobHandler
     }
 }
