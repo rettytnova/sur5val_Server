@@ -16,13 +16,13 @@ message ChattingCommonPacket{
 
 message ChattingPacket{
     oneof chattingPayload{
-        C2SChattingServerLoginRequest chattingServerLoginRequest = 1;
-        S2CChattingServerLoginResponse chattingServerLoginResponse = 2;  
-        C2SChattingServerCreateRoomRequest chattingServerCreateRoomRequest = 3;
-        S2CChattingServerCreateRoomResponse chattingServerCreateRoomResponse = 4; 
-        C2SChattingServerJoinRoomRequest chattingServerJoinRoomRequest = 5; 
-        C2SChattingServerLeaveRoomRequest chattingServerLeaveRoomRequest = 6;
-        C2SChattingServerChatSendRequest chattingServerChatSendRequest = 7;
-        S2CChattingServerChatSendResponse chattingServerChatSendResponse = 8;
+        C2SChattingServerLoginRequest chattingServerLoginRequest = 1001;
+        S2CChattingServerLoginResponse chattingServerLoginResponse = 1002;  
+        C2SChattingServerCreateRoomRequest chattingServerCreateRoomRequest = 1003;
+        S2CChattingServerCreateRoomResponse chattingServerCreateRoomResponse = 1004; 
+        C2SChattingServerJoinRoomRequest chattingServerJoinRoomRequest = 1005; 
+        C2SChattingServerLeaveRoomRequest chattingServerLeaveRoomRequest = 1006;
+        C2SChattingServerChatSendRequest chattingServerChatSendRequest = 1007;
+        S2CChattingServerChatSendResponse chattingServerChatSendResponse = 1008; 
     }
 }
