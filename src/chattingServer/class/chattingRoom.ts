@@ -78,7 +78,7 @@ class ChattingRoom {
             }
 
             switch (job.jobType) {
-                case config.jobType.CHATTING_CHAT_SEND_REQUEST_JOB:
+                case config.chattingPacketType.CHATTING_CHAT_SEND_REQUEST:
                     const chattingSendUser = job.payload[0] as ChattingUser;
                     const chatMessage = job.payload[1] as string;
 
